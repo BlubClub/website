@@ -36,6 +36,7 @@
         .login-box {
             max-width: 400px;
             margin: 100px auto;
+            padding: 30px;
         }
 
         input {
@@ -77,6 +78,12 @@
             border-radius: 12px;
             padding: 20px;
             margin: 12px 0;
+        }
+
+        .visitor-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 8px;
         }
 
         .visitor-id {
@@ -143,14 +150,14 @@
         </p>
 
         <input
-            id="email"
-            type="email"
-            placeholder="Admin email"
+            id="adminName"
+            type="text"
+            placeholder="BLUB admin name"
             autocomplete="username"
         >
 
         <input
-            id="password"
+            id="adminPassword"
             type="password"
             placeholder="Admin password"
             autocomplete="current-password"
@@ -217,20 +224,28 @@
 
         async function login() {
 
-            const email =
-                document.getElementById("email").value.trim();
+            const name =
+                document
+                    .getElementById("adminName")
+                    .value
+                    .trim();
 
             const password =
-                document.getElementById("password").value;
+                document
+                    .getElementById("adminPassword")
+                    .value;
 
             const errorBox =
                 document.getElementById("loginError");
 
             errorBox.textContent = "";
 
-            if (!email || !password) {
+
+            if (!name || !password) {
+
                 errorBox.textContent =
-                    "Please enter your email and password.";
+                    "Please enter your admin name and password.";
+
                 return;
             }
 
@@ -239,45 +254,44 @@
                 data,
                 error
             } =
-                await supabaseClient.auth.signInWithPassword({
-                    email: email,
-                    password: password
-                });
-
-
-            if (error) {
-                errorBox.textContent =
-                    "Login failed: " + error.message;
-                return;
-            }
-
-
-            // Check whether the authenticated
-            // account is actually an admin.
-
-            const {
-                data: admin,
-                error: adminError
-            } =
                 await supabaseClient
-                    .from("admins")
-                    .select("id")
-                    .eq("id", data.user.id)
+                    .from("blub_admins")
+                    .select("name")
+                    .eq("name", name)
+                    .eq("password", password)
                     .maybeSingle();
 
 
-            if (adminError || !admin) {
+            if (error) {
 
-                await supabaseClient.auth.signOut();
+                console.error(error);
 
                 errorBox.textContent =
-                    "This account is not a BLUB CLUB admin.";
+                    "Could not check admin credentials.";
 
                 return;
             }
 
 
+            if (!data) {
+
+                errorBox.textContent =
+                    "Incorrect admin name or password.";
+
+                return;
+            }
+
+
+            // Successful BLUB admin login
+
+            sessionStorage.setItem(
+                "blubAdmin",
+                data.name
+            );
+
+
             showAdminPanel();
+
         }
 
 
@@ -298,6 +312,7 @@
                 .remove("hidden");
 
             await loadVisitors();
+
         }
 
 
@@ -361,7 +376,8 @@
                 const div =
                     document.createElement("div");
 
-                div.className = "visitor";
+                div.className =
+                    "visitor";
 
 
                 const status =
@@ -402,9 +418,19 @@
                     `;
 
 
+                const displayName =
+                    visitor.display_name
+                        ? escapeHtml(visitor.display_name)
+                        : "Unnamed BLUB";
+
+
                 div.innerHTML = `
 
                     ${status}
+
+                    <div class="visitor-name">
+                        🫧 ${displayName}
+                    </div>
 
                     <div class="visitor-id">
                         ${escapeHtml(visitor.id)}
@@ -427,6 +453,7 @@
                 list.appendChild(div);
 
             });
+
         }
 
 
@@ -480,6 +507,7 @@
 
 
             await loadVisitors();
+
         }
 
 
@@ -487,9 +515,11 @@
         // LOG OUT
         // =========================
 
-        async function logout() {
+        function logout() {
 
-            await supabaseClient.auth.signOut();
+            sessionStorage.removeItem(
+                "blubAdmin"
+            );
 
             document
                 .getElementById("adminScreen")
@@ -500,6 +530,11 @@
                 .getElementById("loginScreen")
                 .classList
                 .remove("hidden");
+
+            document
+                .getElementById("adminPassword")
+                .value = "";
+
         }
 
 
@@ -509,35 +544,40 @@
 
         async function checkExistingLogin() {
 
-            const {
-                data: {
-                    session
-                }
-            } =
-                await supabaseClient.auth.getSession();
+            const adminName =
+                sessionStorage.getItem(
+                    "blubAdmin"
+                );
 
 
-            if (!session) {
+            if (!adminName) {
                 return;
             }
 
 
             const {
-                data: admin
+                data,
+                error
             } =
                 await supabaseClient
-                    .from("admins")
-                    .select("id")
-                    .eq(
-                        "id",
-                        session.user.id
-                    )
+                    .from("blub_admins")
+                    .select("name")
+                    .eq("name", adminName)
                     .maybeSingle();
 
 
-            if (admin) {
+            if (!error && data) {
+
                 showAdminPanel();
+
+            } else {
+
+                sessionStorage.removeItem(
+                    "blubAdmin"
+                );
+
             }
+
         }
 
 
@@ -553,6 +593,7 @@
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+
         }
 
 
