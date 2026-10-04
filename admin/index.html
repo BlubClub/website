@@ -156,7 +156,7 @@
 
         .stats {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin-bottom: 30px;
         }
@@ -227,11 +227,6 @@
             border-radius: 20px;
             font-size: 12px;
             font-weight: bold;
-        }
-
-        .active {
-            background: rgba(70, 200, 100, 0.15);
-            color: #66dd88;
         }
 
         .banned {
@@ -357,7 +352,7 @@
             <div>
 
                 <div class="title">
-                     BLUB CONTROL
+                    BLUB CONTROL
                 </div>
 
                 <div class="welcome" id="welcomeText"></div>
@@ -385,22 +380,6 @@
 
                 <div class="stat-label">
                     Total Visitors
-                </div>
-
-            </div>
-
-
-            <div class="stat">
-
-                <div
-                    class="stat-number"
-                    id="activeVisitors"
-                >
-                    0
-                </div>
-
-                <div class="stat-label">
-                    Active
                 </div>
 
             </div>
@@ -708,17 +687,16 @@
                 document.createElement("span");
 
             status.className =
-                "status " +
-                (
-                    visitor.banned
-                        ? "banned"
-                        : "active"
-                );
+                "status banned";
 
-            status.textContent =
-                visitor.banned
-                    ? "BANNED"
-                    : "ACTIVE";
+            if (visitor.banned) {
+
+                status.textContent =
+                    "BANNED";
+
+                visitorInfo.appendChild(status);
+
+            }
 
 
             visitorInfo.appendChild(name);
@@ -726,8 +704,6 @@
             visitorInfo.appendChild(id);
 
             visitorInfo.appendChild(joined);
-
-            visitorInfo.appendChild(status);
 
 
             const actions =
@@ -798,18 +774,9 @@
             ).length;
 
 
-        const active =
-            total - banned;
-
-
         document.getElementById(
             "totalVisitors"
         ).textContent = total;
-
-
-        document.getElementById(
-            "activeVisitors"
-        ).textContent = active;
 
 
         document.getElementById(
