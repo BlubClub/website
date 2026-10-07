@@ -838,1076 +838,2135 @@
         }
     </script>
     
-<!-- BLUB CLUB BAN + VISITOR NAMING SYSTEM -->
+<!-- BLUB CLUB EMAIL AUTH + VISITOR NAMING SYSTEM -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-    const SUPABASE_URL =
-        "https://mkygrpgdsncnenyywtyy.supabase.co";
 
-    const SUPABASE_PUBLISHABLE_KEY =
-        "sb_publishable_bI-GRwcfRztZYDeZiBBRNA_3Gmtzwbb";
+const SUPABASE_URL =
+    "https://mkygrpgdsncnenyywtyy.supabase.co";
 
-    const supabaseClient =
-        window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_PUBLISHABLE_KEY
+const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_bI-GRwcfRztZYDeZiBBRNA_3Gmtzwbb";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+    );
+
+const BLUB_SITE_URL =
+    "https://blubclub.github.io/website/";
+
+
+/* ==========================================
+   BLUB AUTH INITIALIZATION
+========================================== */
+
+async function initializeBlubVisitor() {
+
+    try {
+
+        /*
+         * Supabase automatically processes the
+         * email-confirmation redirect when the
+         * page loads.
+         */
+
+        const {
+            data: { session },
+            error: sessionError
+        } = await supabaseClient.auth.getSession();
+
+
+        if (sessionError) {
+            throw sessionError;
+        }
+
+
+        /*
+         * No authenticated session:
+         * show login/signup screen.
+         */
+
+        if (!session) {
+
+            showBlubAuthScreen();
+
+            return;
+        }
+
+
+        const visitorId =
+            session.user.id;
+
+
+        console.log(
+            "BLUB USER ID:",
+            visitorId
         );
 
 
-    async function initializeBlubVisitor() {
+        /*
+         * Find the visitor profile.
+         */
 
-        try {
+        const {
+            data: visitor,
+            error: lookupError
+        } = await supabaseClient
+            .from("visitors")
+            .select(
+                "id, display_name, banned"
+            )
+            .eq(
+                "id",
+                visitorId
+            )
+            .maybeSingle();
 
-            let {
-                data: { session }
-            } = await supabaseClient.auth.getSession();
+
+        if (lookupError) {
+            throw lookupError;
+        }
 
 
-            // Create anonymous visitor if needed
-            if (!session) {
+        /*
+         * First verified login.
+         * Create their BLUB profile.
+         */
 
-                const {
-                    data,
-                    error
-                } = await supabaseClient.auth.signInAnonymously();
+        if (!visitor) {
 
-                if (error) {
-                    throw error;
-                }
+            const {
+                error: insertError
+            } = await supabaseClient
+                .from("visitors")
+                .insert({
+                    id: visitorId
+                });
 
-                session = data.session;
+
+            if (insertError) {
+                throw insertError;
             }
 
 
-            const visitorId = session.user.id;
-
-            console.log(
-                " BLUB VISITOR ID:",
+            showBlubNameScreen(
                 visitorId
             );
 
-
-            // Find visitor
-            const {
-                data: visitor,
-                error: lookupError
-            } = await supabaseClient
-                .from("visitors")
-                .select("id, display_name, banned")
-                .eq("id", visitorId)
-                .maybeSingle();
-
-
-            if (lookupError) {
-                throw lookupError;
-            }
-
-
-            // First-time visitor
-            if (!visitor) {
-
-                const {
-                    error: insertError
-                } = await supabaseClient
-                    .from("visitors")
-                    .insert({
-                        id: visitorId
-                    });
-
-
-                if (insertError) {
-                    throw insertError;
-                }
-
-
-                showBlubNameScreen(visitorId);
-
-                return;
-            }
-
-
-            // Check ban
-            if (visitor.banned) {
-
-                showBlubBanScreen(visitorId);
-
-                return;
-            }
-
-
-            // Existing visitor without a name
-            if (!visitor.display_name) {
-
-                showBlubNameScreen(visitorId);
-
-                return;
-            }
-
-
-            console.log(
-                " Welcome back,",
-                visitor.display_name
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "BLUB authentication error:",
-                error
-            );
-
+            return;
         }
+
+
+        /*
+         * Check whether the visitor
+         * has been banned.
+         */
+
+        if (visitor.banned) {
+
+            showBlubBanScreen(
+                visitorId
+            );
+
+            return;
+        }
+
+
+        /*
+         * Verified account but no BLUB name yet.
+         */
+
+        if (!visitor.display_name) {
+
+            showBlubNameScreen(
+                visitorId
+            );
+
+            return;
+        }
+
+
+        console.log(
+            "Welcome back,",
+            visitor.display_name
+        );
 
     }
 
+    catch (error) {
 
-    /* ==========================================
-       BLUB NAME SCREEN
-       ========================================== */
+        console.error(
+            "BLUB authentication error:",
+            error
+        );
 
-    function showBlubNameScreen(visitorId) {
+        showBlubAuthError(
+            error.message
+        );
 
-        document.body.innerHTML = `
+    }
 
-            <style>
+}
 
-                * {
-                    box-sizing: border-box;
-                }
 
-                html,
-                body {
-                    margin: 0;
-                    width: 100%;
-                    min-height: 100%;
-                    background: #050505;
-                    color: white;
-                    font-family:
-                        Arial,
-                        Helvetica,
-                        sans-serif;
-                }
+/* ==========================================
+   AUTH SCREEN
+========================================== */
 
-                body {
-                    overflow: hidden;
-                }
+function showBlubAuthScreen() {
 
-                .blub-name-page {
+    document.body.innerHTML = `
 
-                    min-height: 100vh;
+        <style>
 
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+            * {
+                box-sizing: border-box;
+            }
 
-                    position: relative;
-                    overflow: hidden;
+            html,
+            body {
 
-                    padding: 25px;
+                margin: 0;
 
-                    background:
-                        radial-gradient(
-                            circle at center,
-                            #211b0d 0%,
-                            #0b0b0b 35%,
-                            #050505 75%
-                        );
+                width: 100%;
+                min-height: 100%;
 
-                }
+                background: #050505;
+                color: white;
 
-                .blub-name-page::before {
+                font-family:
+                    Arial,
+                    Helvetica,
+                    sans-serif;
 
-                    content: "";
+            }
 
-                    position: absolute;
+            body {
+                overflow: hidden;
+            }
 
-                    width: 600px;
-                    height: 600px;
 
-                    border:
-                        1px solid
-                        rgba(212, 175, 55, 0.12);
+            .blub-auth-page {
 
-                    border-radius: 50%;
+                min-height: 100vh;
 
-                    animation:
-                        nameRing 4s
-                        infinite
-                        ease-in-out;
+                display: flex;
 
-                }
+                align-items: center;
+                justify-content: center;
 
-                .blub-name-card {
+                padding: 25px;
 
-                    width: 100%;
-                    max-width: 520px;
+                position: relative;
 
-                    position: relative;
-                    z-index: 2;
+                overflow: hidden;
 
-                    text-align: center;
+                background:
+                    radial-gradient(
+                        circle at center,
+                        #211b0d 0%,
+                        #0b0b0b 35%,
+                        #050505 75%
+                    );
 
-                    padding: 50px 35px;
+            }
 
-                    border:
-                        1px solid
-                        rgba(212, 175, 55, 0.35);
 
-                    border-radius: 24px;
+            .blub-auth-page::before {
 
-                    background:
-                        rgba(10, 10, 10, 0.94);
+                content: "";
 
-                    box-shadow:
-                        0 0 60px
-                        rgba(212, 175, 55, 0.08);
+                position: absolute;
 
-                    backdrop-filter: blur(15px);
+                width: 650px;
+                height: 650px;
 
-                }
+                border:
+                    1px solid
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.12
+                    );
 
-                .blub-logo {
+                border-radius: 50%;
 
-                    font-size: 70px;
+                animation:
+                    authRing 4s
+                    infinite
+                    ease-in-out;
 
-                    margin-bottom: 18px;
+            }
 
-                    animation:
-                        blubBob 2.5s
-                        infinite
-                        ease-in-out;
 
-                }
+            .blub-auth-card {
 
-                .name-label {
+                width: 100%;
+                max-width: 520px;
 
-                    font-size: 11px;
+                position: relative;
+                z-index: 2;
 
-                    letter-spacing: 4px;
+                padding: 45px 35px;
 
-                    color: #d4af37;
+                text-align: center;
 
-                    font-weight: bold;
+                border:
+                    1px solid
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.35
+                    );
 
-                    margin-bottom: 12px;
+                border-radius: 24px;
 
-                }
+                background:
+                    rgba(
+                        10,
+                        10,
+                        10,
+                        0.95
+                    );
 
-                .name-title {
+                box-shadow:
+                    0 0 60px
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.08
+                    );
 
-                    margin: 0;
+                backdrop-filter:
+                    blur(15px);
 
-                    font-size:
-                        clamp(
-                            38px,
-                            8vw,
-                            58px
-                        );
+            }
 
-                    font-weight: 900;
 
-                    letter-spacing: 2px;
+            .blub-auth-logo {
 
-                }
+                font-size: 65px;
 
-                .name-subtitle {
+                margin-bottom: 15px;
 
-                    margin-top: 16px;
+                animation:
+                    authBob 2.5s
+                    infinite
+                    ease-in-out;
 
-                    color: #999;
+            }
 
-                    font-size: 15px;
 
-                    line-height: 1.6;
+            .blub-auth-label {
 
-                }
+                font-size: 11px;
 
-                .blub-name-form {
+                letter-spacing: 4px;
 
-                    margin-top: 30px;
+                color: #d4af37;
 
-                }
+                font-weight: bold;
 
-                .blub-name-input {
+            }
 
-                    width: 100%;
 
-                    padding: 16px 18px;
+            .blub-auth-title {
 
-                    border-radius: 12px;
+                margin:
+                    10px 0 0;
 
-                    border:
-                        1px solid
-                        rgba(212, 175, 55, 0.35);
+                font-size:
+                    clamp(
+                        34px,
+                        8vw,
+                        55px
+                    );
 
-                    background: #111;
+                font-weight: 900;
 
-                    color: white;
+                letter-spacing: 2px;
 
-                    font-size: 16px;
+            }
 
-                    outline: none;
 
-                    text-align: center;
+            .blub-auth-subtitle {
 
-                }
+                margin-top: 15px;
 
-                .blub-name-input:focus {
+                color: #999;
 
-                    border-color: #d4af37;
+                font-size: 14px;
 
-                    box-shadow:
-                        0 0 20px
-                        rgba(212, 175, 55, 0.12);
+                line-height: 1.6;
 
-                }
+            }
 
-                .blub-enter-button {
 
-                    width: 100%;
+            .blub-auth-form {
 
-                    margin-top: 14px;
+                margin-top: 28px;
 
-                    padding: 15px;
+            }
 
-                    border: none;
 
-                    border-radius: 12px;
+            .blub-auth-input {
 
-                    background: #d4af37;
+                width: 100%;
 
-                    color: #050505;
+                padding: 15px 17px;
 
-                    font-size: 13px;
+                margin-bottom: 12px;
 
-                    font-weight: 900;
+                border-radius: 12px;
 
-                    letter-spacing: 2px;
+                border:
+                    1px solid
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.3
+                    );
 
-                    cursor: pointer;
+                background: #111;
 
-                    transition:
-                        transform 0.2s ease,
-                        box-shadow 0.2s ease;
+                color: white;
 
-                }
+                font-size: 15px;
 
-                .blub-enter-button:hover {
+                outline: none;
+
+            }
+
+
+            .blub-auth-input:focus {
+
+                border-color:
+                    #d4af37;
+
+                box-shadow:
+                    0 0 20px
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.12
+                    );
+
+            }
+
+
+            .blub-auth-button {
+
+                width: 100%;
+
+                padding: 15px;
+
+                border: none;
+
+                border-radius: 12px;
+
+                background:
+                    #d4af37;
+
+                color: #050505;
+
+                font-size: 13px;
+
+                font-weight: 900;
+
+                letter-spacing: 2px;
+
+                cursor: pointer;
+
+                transition:
+                    transform 0.2s ease,
+                    box-shadow 0.2s ease;
+
+            }
+
+
+            .blub-auth-button:hover {
+
+                transform:
+                    translateY(-2px);
+
+                box-shadow:
+                    0 8px 25px
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.2
+                    );
+
+            }
+
+
+            .blub-auth-switch {
+
+                margin-top: 20px;
+
+                color: #777;
+
+                font-size: 12px;
+
+            }
+
+
+            .blub-auth-switch button {
+
+                border: none;
+
+                background: none;
+
+                color: #d4af37;
+
+                font-weight: bold;
+
+                cursor: pointer;
+
+            }
+
+
+            .blub-auth-error {
+
+                min-height: 20px;
+
+                margin-top: 12px;
+
+                color: #ff7070;
+
+                font-size: 12px;
+
+                line-height: 1.5;
+
+            }
+
+
+            @keyframes authRing {
+
+                0%,
+                100% {
 
                     transform:
-                        translateY(-2px);
+                        scale(0.8);
 
-                    box-shadow:
-                        0 8px 25px
-                        rgba(212, 175, 55, 0.2);
+                    opacity: 0.2;
 
                 }
 
-                .name-error {
+                50% {
 
-                    min-height: 20px;
+                    transform:
+                        scale(1.15);
 
-                    margin-top: 12px;
-
-                    color: #ff7070;
-
-                    font-size: 12px;
+                    opacity: 0.6;
 
                 }
 
-                .name-footer {
+            }
 
-                    margin-top: 25px;
 
-                    color: #444;
+            @keyframes authBob {
 
-                    font-size: 10px;
+                0%,
+                100% {
 
-                    letter-spacing: 2px;
-
-                    text-transform: uppercase;
-
-                }
-
-                @keyframes nameRing {
-
-                    0%,
-                    100% {
-
-                        transform:
-                            scale(0.8);
-
-                        opacity: 0.2;
-
-                    }
-
-                    50% {
-
-                        transform:
-                            scale(1.15);
-
-                        opacity: 0.6;
-
-                    }
+                    transform:
+                        translateY(0);
 
                 }
 
-                @keyframes blubBob {
+                50% {
 
-                    0%,
-                    100% {
-
-                        transform:
-                            translateY(0);
-
-                    }
-
-                    50% {
-
-                        transform:
-                            translateY(-10px);
-
-                    }
+                    transform:
+                        translateY(-10px);
 
                 }
 
-                @media (max-width: 600px) {
+            }
 
-                    .blub-name-card {
 
-                        padding:
-                            40px 22px;
+            @media (max-width: 600px) {
 
-                    }
+                .blub-auth-card {
 
-                    .blub-logo {
-
-                        font-size: 55px;
-
-                    }
+                    padding:
+                        40px 22px;
 
                 }
 
-            </style>
+                .blub-auth-logo {
+
+                    font-size: 52px;
+
+                }
+
+            }
+
+        </style>
 
 
-            <div class="blub-name-page">
+        <div class="blub-auth-page">
 
-                <div class="blub-name-card">
+            <div class="blub-auth-card">
 
-                    <div class="blub-logo">
-                        
-                    </div>
+                <div class="blub-auth-logo">
+                    🫧
+                </div>
 
-                    <div class="name-label">
-                        BLUB CLUB
-                    </div>
+                <div class="blub-auth-label">
+                    BLUB CLUB
+                </div>
 
-                    <h1 class="name-title">
-                        WELCOME, BLUB
-                    </h1>
+                <h1
+                    class="blub-auth-title"
+                    id="blub-auth-title"
+                >
+                    JOIN THE BLUBS
+                </h1>
 
-                    <p class="name-subtitle">
-                        Before entering the BLUB CLUB,
-                        choose your BLUB name.
-                    </p>
+                <p
+                    class="blub-auth-subtitle"
+                    id="blub-auth-subtitle"
+                >
+                    Create your BLUB CLUB account.
+                    You'll need to verify your email
+                    before entering.
+                </p>
 
 
-                    <form
-                        class="blub-name-form"
-                        id="blub-name-form"
+                <form
+                    class="blub-auth-form"
+                    id="blub-auth-form"
+                >
+
+                    <input
+                        id="blub-email"
+                        class="blub-auth-input"
+                        type="email"
+                        autocomplete="email"
+                        placeholder="Email address"
+                        required
                     >
 
-                        <input
-                            id="blub-name-input"
-                            class="blub-name-input"
-                            type="text"
-                            maxlength="32"
-                            autocomplete="off"
-                            placeholder="Enter your BLUB name..."
-                            required
-                        >
 
-                        <button
-                            class="blub-enter-button"
-                            type="submit"
-                        >
-                            ENTER THE BLUB CLUB
-                        </button>
-
-                        <div
-                            id="blub-name-error"
-                            class="name-error"
-                            aria-live="polite"
-                        ></div>
-
-                    </form>
+                    <input
+                        id="blub-password"
+                        class="blub-auth-input"
+                        type="password"
+                        autocomplete="new-password"
+                        placeholder="Password"
+                        minlength="6"
+                        required
+                    >
 
 
-                    <div class="name-footer">
-                         BLUB CLUB • MEMBER REGISTRATION
-                    </div>
+                    <button
+                        class="blub-auth-button"
+                        id="blub-auth-submit"
+                        type="submit"
+                    >
+                        CREATE BLUB ACCOUNT
+                    </button>
+
+
+                    <div
+                        id="blub-auth-error"
+                        class="blub-auth-error"
+                        aria-live="polite"
+                    ></div>
+
+                </form>
+
+
+                <div
+                    class="blub-auth-switch"
+                    id="blub-auth-switch"
+                >
+                    Already a member?
+
+                    <button
+                        type="button"
+                        id="blub-switch-button"
+                    >
+                        LOG IN
+                    </button>
 
                 </div>
 
             </div>
-        `;
+
+        </div>
+    `;
 
 
-        const form =
-            document.getElementById(
-                "blub-name-form"
-            );
-
-        const input =
-            document.getElementById(
-                "blub-name-input"
-            );
-
-        const error =
-            document.getElementById(
-                "blub-name-error"
-            );
+    let loginMode = false;
 
 
-        input.focus();
+    const form =
+        document.getElementById(
+            "blub-auth-form"
+        );
+
+    const email =
+        document.getElementById(
+            "blub-email"
+        );
+
+    const password =
+        document.getElementById(
+            "blub-password"
+        );
+
+    const title =
+        document.getElementById(
+            "blub-auth-title"
+        );
+
+    const subtitle =
+        document.getElementById(
+            "blub-auth-subtitle"
+        );
+
+    const submit =
+        document.getElementById(
+            "blub-auth-submit"
+        );
+
+    const switchButton =
+        document.getElementById(
+            "blub-switch-button"
+        );
+
+    const error =
+        document.getElementById(
+            "blub-auth-error"
+        );
 
 
-        form.addEventListener(
-            "submit",
-            async function (event) {
-
-                event.preventDefault();
+    email.focus();
 
 
-                const displayName =
-                    input.value.trim();
+    switchButton.addEventListener(
+        "click",
+        () => {
+
+            loginMode =
+                !loginMode;
 
 
-                if (!displayName) {
+            error.textContent = "";
 
-                    error.textContent =
-                        "Please enter a BLUB name.";
+
+            if (loginMode) {
+
+                title.textContent =
+                    "WELCOME BACK";
+
+                subtitle.textContent =
+                    "Log back into your BLUB CLUB account.";
+
+                submit.textContent =
+                    "LOG IN";
+
+                password.autocomplete =
+                    "current-password";
+
+                switchButton.textContent =
+                    "CREATE ACCOUNT";
+
+            }
+
+            else {
+
+                title.textContent =
+                    "JOIN THE BLUBS";
+
+                subtitle.textContent =
+                    "Create your BLUB CLUB account. You'll need to verify your email before entering.";
+
+                submit.textContent =
+                    "CREATE BLUB ACCOUNT";
+
+                password.autocomplete =
+                    "new-password";
+
+                switchButton.textContent =
+                    "LOG IN";
+
+            }
+
+        }
+    );
+
+
+    form.addEventListener(
+        "submit",
+        async event => {
+
+            event.preventDefault();
+
+            error.textContent = "";
+
+            const userEmail =
+                email.value.trim();
+
+            const userPassword =
+                password.value;
+
+
+            submit.disabled = true;
+
+            submit.style.opacity =
+                "0.6";
+
+
+            try {
+
+                if (loginMode) {
+
+                    submit.textContent =
+                        "LOGGING IN...";
+
+
+                    const {
+                        data,
+                        error: loginError
+                    } =
+                        await supabaseClient.auth
+                            .signInWithPassword({
+                                email:
+                                    userEmail,
+
+                                password:
+                                    userPassword
+                            });
+
+
+                    if (loginError) {
+                        throw loginError;
+                    }
+
+
+                    if (!data.session) {
+                        throw new Error(
+                            "Login did not create a session."
+                        );
+                    }
+
+
+                    window.location.reload();
 
                     return;
                 }
 
 
-                if (displayName.length > 32) {
-
-                    error.textContent =
-                        "That BLUB name is too long.";
-
-                    return;
-                }
-
-
-                error.textContent =
-                    "Registering your BLUB...";
+                submit.textContent =
+                    "CREATING ACCOUNT...";
 
 
                 const {
-                    error: updateError
-                } = await supabaseClient
+                    data,
+                    error: signupError
+                } =
+                    await supabaseClient.auth
+                        .signUp({
+
+                            email:
+                                userEmail,
+
+                            password:
+                                userPassword,
+
+                            options: {
+
+                                emailRedirectTo:
+                                    BLUB_SITE_URL
+
+                            }
+
+                        });
+
+
+                if (signupError) {
+                    throw signupError;
+                }
+
+
+                /*
+                 * With Confirm Email enabled,
+                 * session should be null here.
+                 */
+
+                if (!data.session) {
+
+                    showBlubVerifyScreen(
+                        userEmail
+                    );
+
+                    return;
+                }
+
+
+                /*
+                 * Fallback in case email
+                 * confirmation is disabled.
+                 */
+
+                window.location.reload();
+
+            }
+
+            catch (authError) {
+
+                console.error(
+                    "BLUB AUTH ERROR:",
+                    authError
+                );
+
+
+                error.textContent =
+                    authError.message ||
+                    "Authentication failed.";
+
+            }
+
+            finally {
+
+                submit.disabled = false;
+
+                submit.style.opacity =
+                    "1";
+
+                submit.textContent =
+                    loginMode
+                        ? "LOG IN"
+                        : "CREATE BLUB ACCOUNT";
+
+            }
+
+        }
+    );
+
+}
+
+
+/* ==========================================
+   EMAIL VERIFICATION SCREEN
+========================================== */
+
+function showBlubVerifyScreen(
+    emailAddress
+) {
+
+    document.body.innerHTML = `
+
+        <style>
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+
+                margin: 0;
+
+                width: 100%;
+                min-height: 100%;
+
+                background: #050505;
+                color: white;
+
+                font-family:
+                    Arial,
+                    Helvetica,
+                    sans-serif;
+
+            }
+
+            body {
+                overflow: hidden;
+            }
+
+
+            .blub-verify-page {
+
+                min-height: 100vh;
+
+                display: flex;
+
+                align-items: center;
+                justify-content: center;
+
+                padding: 25px;
+
+                background:
+                    radial-gradient(
+                        circle at center,
+                        #211b0d 0%,
+                        #0b0b0b 35%,
+                        #050505 75%
+                    );
+
+            }
+
+
+            .blub-verify-card {
+
+                width: 100%;
+                max-width: 560px;
+
+                text-align: center;
+
+                padding: 50px 35px;
+
+                border:
+                    1px solid
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.35
+                    );
+
+                border-radius: 24px;
+
+                background:
+                    rgba(
+                        10,
+                        10,
+                        10,
+                        0.94
+                    );
+
+                box-shadow:
+                    0 0 60px
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.08
+                    );
+
+            }
+
+
+            .verify-icon {
+
+                font-size: 70px;
+
+                margin-bottom: 20px;
+
+            }
+
+
+            .verify-label {
+
+                color: #d4af37;
+
+                font-size: 11px;
+
+                font-weight: bold;
+
+                letter-spacing: 4px;
+
+            }
+
+
+            .verify-title {
+
+                margin:
+                    12px 0 15px;
+
+                font-size:
+                    clamp(
+                        36px,
+                        8vw,
+                        58px
+                    );
+
+                font-weight: 900;
+
+            }
+
+
+            .verify-email {
+
+                color: #d4af37;
+
+                word-break: break-word;
+
+                margin-top: 15px;
+
+            }
+
+
+            .verify-text {
+
+                color: #999;
+
+                line-height: 1.7;
+
+                font-size: 14px;
+
+            }
+
+
+            .verify-button {
+
+                margin-top: 25px;
+
+                padding:
+                    14px 25px;
+
+                border: none;
+
+                border-radius: 12px;
+
+                background: #151515;
+
+                border:
+                    1px solid
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.3
+                    );
+
+                color: #d4af37;
+
+                cursor: pointer;
+
+                font-weight: bold;
+
+                letter-spacing: 1px;
+
+            }
+
+        </style>
+
+
+        <div class="blub-verify-page">
+
+            <div class="blub-verify-card">
+
+                <div class="verify-icon">
+                    📧
+                </div>
+
+                <div class="verify-label">
+                    BLUB CLUB SECURITY
+                </div>
+
+                <h1 class="verify-title">
+                    CHECK YOUR EMAIL
+                </h1>
+
+                <p class="verify-text">
+
+                    We sent a verification link to:
+
+                </p>
+
+                <div class="verify-email">
+                    ${escapeHtml(emailAddress)}
+                </div>
+
+                <p class="verify-text">
+
+                    Click the link in that email
+                    to activate your BLUB CLUB account.
+
+                    <br><br>
+
+                    Once verified, return here and
+                    BLUB CLUB will let you in.
+
+                </p>
+
+                <button
+                    class="verify-button"
+                    id="blub-back-login"
+                >
+                    BACK TO LOGIN
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+
+    document
+        .getElementById(
+            "blub-back-login"
+        )
+        .addEventListener(
+            "click",
+            () => {
+
+                showBlubAuthScreen();
+
+            }
+        );
+
+}
+
+
+/* ==========================================
+   BLUB NAME SCREEN
+========================================== */
+
+function showBlubNameScreen(
+    visitorId
+) {
+
+    document.body.innerHTML = `
+
+        <style>
+
+            * {
+                box-sizing: border-box;
+            }
+
+            html,
+            body {
+
+                margin: 0;
+
+                width: 100%;
+                min-height: 100%;
+
+                background: #050505;
+                color: white;
+
+                font-family:
+                    Arial,
+                    Helvetica,
+                    sans-serif;
+
+            }
+
+            body {
+                overflow: hidden;
+            }
+
+
+            .blub-name-page {
+
+                min-height: 100vh;
+
+                display: flex;
+
+                align-items: center;
+                justify-content: center;
+
+                position: relative;
+
+                overflow: hidden;
+
+                padding: 25px;
+
+                background:
+                    radial-gradient(
+                        circle at center,
+                        #211b0d 0%,
+                        #0b0b0b 35%,
+                        #050505 75%
+                    );
+
+            }
+
+
+            .blub-name-page::before {
+
+                content: "";
+
+                position: absolute;
+
+                width: 600px;
+                height: 600px;
+
+                border:
+                    1px solid
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.12
+                    );
+
+                border-radius: 50%;
+
+                animation:
+                    nameRing 4s
+                    infinite
+                    ease-in-out;
+
+            }
+
+
+            .blub-name-card {
+
+                width: 100%;
+                max-width: 520px;
+
+                position: relative;
+                z-index: 2;
+
+                text-align: center;
+
+                padding: 50px 35px;
+
+                border:
+                    1px solid
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.35
+                    );
+
+                border-radius: 24px;
+
+                background:
+                    rgba(
+                        10,
+                        10,
+                        10,
+                        0.94
+                    );
+
+                box-shadow:
+                    0 0 60px
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.08
+                    );
+
+                backdrop-filter:
+                    blur(15px);
+
+            }
+
+
+            .blub-logo {
+
+                font-size: 70px;
+
+                margin-bottom: 18px;
+
+                animation:
+                    blubBob 2.5s
+                    infinite
+                    ease-in-out;
+
+            }
+
+
+            .name-label {
+
+                font-size: 11px;
+
+                letter-spacing: 4px;
+
+                color: #d4af37;
+
+                font-weight: bold;
+
+                margin-bottom: 12px;
+
+            }
+
+
+            .name-title {
+
+                margin: 0;
+
+                font-size:
+                    clamp(
+                        38px,
+                        8vw,
+                        58px
+                    );
+
+                font-weight: 900;
+
+                letter-spacing: 2px;
+
+            }
+
+
+            .name-subtitle {
+
+                margin-top: 16px;
+
+                color: #999;
+
+                font-size: 15px;
+
+                line-height: 1.6;
+
+            }
+
+
+            .blub-name-form {
+
+                margin-top: 30px;
+
+            }
+
+
+            .blub-name-input {
+
+                width: 100%;
+
+                padding: 16px 18px;
+
+                border-radius: 12px;
+
+                border:
+                    1px solid
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.35
+                    );
+
+                background: #111;
+
+                color: white;
+
+                font-size: 16px;
+
+                outline: none;
+
+                text-align: center;
+
+            }
+
+
+            .blub-name-input:focus {
+
+                border-color:
+                    #d4af37;
+
+                box-shadow:
+                    0 0 20px
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.12
+                    );
+
+            }
+
+
+            .blub-enter-button {
+
+                width: 100%;
+
+                margin-top: 14px;
+
+                padding: 15px;
+
+                border: none;
+
+                border-radius: 12px;
+
+                background: #d4af37;
+
+                color: #050505;
+
+                font-size: 13px;
+
+                font-weight: 900;
+
+                letter-spacing: 2px;
+
+                cursor: pointer;
+
+            }
+
+
+            .name-error {
+
+                min-height: 20px;
+
+                margin-top: 12px;
+
+                color: #ff7070;
+
+                font-size: 12px;
+
+            }
+
+
+            .name-footer {
+
+                margin-top: 25px;
+
+                color: #444;
+
+                font-size: 10px;
+
+                letter-spacing: 2px;
+
+                text-transform: uppercase;
+
+            }
+
+
+            @keyframes nameRing {
+
+                0%,
+                100% {
+
+                    transform:
+                        scale(0.8);
+
+                    opacity: 0.2;
+
+                }
+
+                50% {
+
+                    transform:
+                        scale(1.15);
+
+                    opacity: 0.6;
+
+                }
+
+            }
+
+
+            @keyframes blubBob {
+
+                0%,
+                100% {
+
+                    transform:
+                        translateY(0);
+
+                }
+
+                50% {
+
+                    transform:
+                        translateY(-10px);
+
+                }
+
+            }
+
+        </style>
+
+
+        <div class="blub-name-page">
+
+            <div class="blub-name-card">
+
+                <div class="blub-logo">
+                    🫧
+                </div>
+
+                <div class="name-label">
+                    BLUB CLUB
+                </div>
+
+                <h1 class="name-title">
+                    WELCOME, BLUB
+                </h1>
+
+                <p class="name-subtitle">
+                    Your email is verified.
+                    Now choose your BLUB name.
+                </p>
+
+
+                <form
+                    class="blub-name-form"
+                    id="blub-name-form"
+                >
+
+                    <input
+                        id="blub-name-input"
+                        class="blub-name-input"
+                        type="text"
+                        maxlength="32"
+                        autocomplete="off"
+                        placeholder="Enter your BLUB name..."
+                        required
+                    >
+
+
+                    <button
+                        class="blub-enter-button"
+                        type="submit"
+                    >
+                        ENTER THE BLUB CLUB
+                    </button>
+
+
+                    <div
+                        id="blub-name-error"
+                        class="name-error"
+                        aria-live="polite"
+                    ></div>
+
+                </form>
+
+
+                <div class="name-footer">
+                    BLUB CLUB • MEMBER REGISTRATION
+                </div>
+
+            </div>
+
+        </div>
+    `;
+
+
+    const form =
+        document.getElementById(
+            "blub-name-form"
+        );
+
+    const input =
+        document.getElementById(
+            "blub-name-input"
+        );
+
+    const error =
+        document.getElementById(
+            "blub-name-error"
+        );
+
+
+    input.focus();
+
+
+    form.addEventListener(
+        "submit",
+        async event => {
+
+            event.preventDefault();
+
+
+            const displayName =
+                input.value.trim();
+
+
+            if (!displayName) {
+
+                error.textContent =
+                    "Please enter a BLUB name.";
+
+                return;
+
+            }
+
+
+            if (displayName.length > 32) {
+
+                error.textContent =
+                    "That BLUB name is too long.";
+
+                return;
+
+            }
+
+
+            error.textContent =
+                "Registering your BLUB...";
+
+
+            const {
+                error: updateError
+            } =
+                await supabaseClient
                     .from("visitors")
                     .update({
                         display_name:
                             displayName
                     })
-                    .eq("id", visitorId);
-
-
-                if (updateError) {
-
-                    console.error(
-                        updateError
+                    .eq(
+                        "id",
+                        visitorId
                     );
 
-                    error.textContent =
-                        "BLUB registration failed. Try again.";
 
-                    return;
-                }
+            if (updateError) {
 
-
-                console.log(
-                    " BLUB NAME:",
-                    displayName
+                console.error(
+                    updateError
                 );
 
+                error.textContent =
+                    "BLUB registration failed. Check your database policies.";
 
-                window.location.reload();
+                return;
 
             }
-        );
 
-    }
 
+            console.log(
+                "BLUB NAME:",
+                displayName
+            );
 
-    /* ==========================================
-       BAN SCREEN
-       ========================================== */
 
-    function showBlubBanScreen(visitorId) {
+            window.location.reload();
 
-        document.body.innerHTML = `
+        }
+    );
 
-            <style>
+}
 
-                * {
-                    box-sizing: border-box;
-                }
 
-                html,
-                body {
-                    margin: 0;
-                    width: 100%;
-                    min-height: 100%;
-                    background: #050505;
-                    color: white;
-                    font-family:
-                        Arial,
-                        Helvetica,
-                        sans-serif;
-                }
+/* ==========================================
+   BAN SCREEN
+========================================== */
 
-                body {
-                    overflow: hidden;
-                }
+function showBlubBanScreen(
+    visitorId
+) {
 
-                .blub-ban-page {
+    document.body.innerHTML = `
 
-                    min-height: 100vh;
+        <style>
 
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+            * {
+                box-sizing: border-box;
+            }
 
-                    position: relative;
-                    overflow: hidden;
+            html,
+            body {
 
-                    padding: 25px;
+                margin: 0;
 
-                    background:
-                        radial-gradient(
-                            circle at center,
-                            #211b0d 0%,
-                            #0b0b0b 35%,
-                            #050505 75%
-                        );
+                width: 100%;
+                min-height: 100%;
 
-                }
+                background: #050505;
+                color: white;
 
-                .blub-ban-page::before {
+                font-family:
+                    Arial,
+                    Helvetica,
+                    sans-serif;
 
-                    content: "";
+            }
 
-                    position: absolute;
+            body {
+                overflow: hidden;
+            }
 
-                    width: 600px;
-                    height: 600px;
 
-                    border:
-                        1px solid
-                        rgba(212, 175, 55, 0.12);
+            .blub-ban-page {
 
-                    border-radius: 50%;
+                min-height: 100vh;
 
-                    animation:
-                        pulseRing 4s
-                        infinite
-                        ease-in-out;
+                display: flex;
 
-                }
+                align-items: center;
+                justify-content: center;
 
-                .blub-ban-page::after {
+                padding: 25px;
 
-                    content: "";
+                background:
+                    radial-gradient(
+                        circle at center,
+                        #211b0d 0%,
+                        #0b0b0b 35%,
+                        #050505 75%
+                    );
 
-                    position: absolute;
+            }
 
-                    width: 850px;
-                    height: 850px;
 
-                    border:
-                        1px solid
-                        rgba(212, 175, 55, 0.06);
+            .ban-card {
 
-                    border-radius: 50%;
+                width: 100%;
+                max-width: 560px;
 
-                }
+                text-align: center;
 
-                .ban-card {
+                padding: 50px 35px;
 
-                    width: 100%;
-                    max-width: 560px;
+                border:
+                    1px solid
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.35
+                    );
 
-                    position: relative;
-                    z-index: 2;
+                border-radius: 24px;
 
-                    text-align: center;
+                background:
+                    rgba(
+                        10,
+                        10,
+                        10,
+                        0.92
+                    );
 
-                    padding: 50px 35px;
+                box-shadow:
+                    0 0 60px
+                    rgba(
+                        212,
+                        175,
+                        55,
+                        0.08
+                    );
 
-                    border:
-                        1px solid
-                        rgba(212, 175, 55, 0.35);
+            }
 
-                    border-radius: 24px;
 
-                    background:
-                        rgba(10, 10, 10, 0.92);
+            .security-icon {
 
-                    box-shadow:
-                        0 0 60px
-                        rgba(212, 175, 55, 0.08),
-                        inset 0 0 40px
-                        rgba(255, 255, 255, 0.02);
+                width: 105px;
+                height: 105px;
 
-                    backdrop-filter: blur(15px);
+                margin:
+                    0 auto 25px;
 
-                }
+                border-radius: 50%;
 
-                .security-icon {
+                display: flex;
 
-                    width: 105px;
-                    height: 105px;
+                align-items: center;
+                justify-content: center;
 
-                    margin:
-                        0 auto 25px;
+                font-size: 48px;
 
-                    border-radius: 50%;
+                border:
+                    2px solid
+                    #d4af37;
 
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
+                background: #111;
 
-                    font-size: 48px;
+            }
 
-                    border:
-                        2px solid #d4af37;
 
-                    background: #111;
+            .security-label {
 
-                    box-shadow:
-                        0 0 25px
-                        rgba(212, 175, 55, 0.2);
+                font-size: 11px;
 
-                    animation:
-                        iconPulse 2.5s
-                        infinite;
+                letter-spacing: 4px;
 
-                }
+                color: #d4af37;
 
-                .security-label {
+                font-weight: bold;
 
-                    font-size: 11px;
+                margin-bottom: 12px;
 
-                    letter-spacing: 4px;
+            }
 
-                    color: #d4af37;
 
-                    font-weight: bold;
+            .ban-title {
 
-                    margin-bottom: 12px;
+                margin: 0;
 
-                }
+                font-size:
+                    clamp(
+                        42px,
+                        9vw,
+                        72px
+                    );
 
-                .ban-title {
+                letter-spacing: 3px;
 
-                    margin: 0;
+                font-weight: 900;
 
-                    font-size:
-                        clamp(
-                            42px,
-                            9vw,
-                            72px
-                        );
+                line-height: 0.95;
 
-                    letter-spacing: 3px;
+            }
 
-                    font-weight: 900;
 
-                    line-height: 0.95;
+            .divider {
 
-                }
+                width: 70px;
+                height: 2px;
 
-                .ban-subtitle {
+                background:
+                    #d4af37;
 
-                    margin-top: 18px;
+                margin:
+                    28px auto;
 
-                    color: #aaa;
+            }
 
-                    font-size: 16px;
 
-                    line-height: 1.6;
+            .status-box {
 
-                }
+                display: inline-flex;
 
-                .divider {
+                align-items: center;
 
-                    width: 70px;
-                    height: 2px;
+                gap: 9px;
 
-                    background: #d4af37;
+                padding:
+                    10px 16px;
 
-                    margin: 28px auto;
+                border-radius: 999px;
 
-                }
+                background:
+                    rgba(
+                        180,
+                        20,
+                        20,
+                        0.12
+                    );
 
-                .status-box {
+                border:
+                    1px solid
+                    rgba(
+                        255,
+                        70,
+                        70,
+                        0.3
+                    );
 
-                    display: inline-flex;
+                color:
+                    #ff7070;
 
-                    align-items: center;
+                font-size: 12px;
 
-                    gap: 9px;
+                font-weight: bold;
 
-                    padding:
-                        10px 16px;
+                letter-spacing: 1px;
 
-                    border-radius: 999px;
+            }
 
-                    background:
-                        rgba(
-                            180,
-                            20,
-                            20,
-                            0.12
-                        );
 
-                    border:
-                        1px solid
-                        rgba(
-                            255,
-                            70,
-                            70,
-                            0.3
-                        );
+            .status-dot {
 
-                    color: #ff7070;
+                width: 8px;
+                height: 8px;
 
-                    font-size: 12px;
+                border-radius: 50%;
 
-                    font-weight: bold;
+                background:
+                    #ff4444;
 
-                    letter-spacing: 1px;
+            }
 
-                }
 
-                .status-dot {
+            .ban-subtitle {
 
-                    width: 8px;
-                    height: 8px;
+                margin-top: 18px;
 
-                    border-radius: 50%;
+                color: #aaa;
 
-                    background: #ff4444;
+                font-size: 16px;
 
-                    box-shadow:
-                        0 0 10px #ff4444;
+                line-height: 1.6;
 
-                    animation:
-                        blink 1.2s
-                        infinite;
+            }
 
-                }
 
-                .visitor-id {
+            .visitor-id {
 
-                    margin-top: 25px;
+                margin-top: 25px;
 
-                    color: #555;
+                color: #555;
 
-                    font-family: monospace;
+                font-family: monospace;
 
-                    font-size: 10px;
+                font-size: 10px;
 
-                    word-break: break-all;
+                word-break: break-all;
 
-                }
+            }
 
-                .blub-footer {
 
-                    margin-top: 35px;
+            .blub-footer {
 
-                    color: #444;
+                margin-top: 35px;
 
-                    font-size: 11px;
+                color: #444;
 
-                    letter-spacing: 2px;
+                font-size: 11px;
 
-                    text-transform: uppercase;
+                letter-spacing: 2px;
 
-                }
+                text-transform: uppercase;
 
-                @keyframes pulseRing {
+            }
 
-                    0%,
-                    100% {
+        </style>
 
-                        transform:
-                            scale(0.8);
 
-                        opacity: 0.2;
+        <div class="blub-ban-page">
 
-                    }
+            <div class="ban-card">
 
-                    50% {
+                <div class="security-icon">
+                    🚫
+                </div>
 
-                        transform:
-                            scale(1.15);
+                <div class="security-label">
+                    BLUB CLUB SECURITY
+                </div>
 
-                        opacity: 0.6;
+                <h1 class="ban-title">
+                    ACCESS<br>
+                    DENIED
+                </h1>
 
-                    }
+                <div class="divider"></div>
 
-                }
+                <div class="status-box">
 
-                @keyframes iconPulse {
+                    <span class="status-dot"></span>
 
-                    0%,
-                    100% {
+                    VISITOR ACCESS REVOKED
 
-                        transform:
-                            scale(1);
+                </div>
 
-                        box-shadow:
-                            0 0 25px
-                            rgba(
-                                212,
-                                175,
-                                55,
-                                0.15
-                            );
+                <p class="ban-subtitle">
 
-                    }
+                    This account has been banned
+                    from the BLUB CLUB.
 
-                    50% {
+                    <br><br>
 
-                        transform:
-                            scale(1.04);
+                    If you believe this was a mistake,
+                    contact a BLUB CLUB administrator.
 
-                        box-shadow:
-                            0 0 45px
-                            rgba(
-                                212,
-                                175,
-                                55,
-                                0.3
-                            );
+                </p>
 
-                    }
+                <div class="visitor-id">
 
-                }
+                    VISITOR ID:
+                    ${escapeHtml(visitorId)}
 
-                @keyframes blink {
+                </div>
 
-                    0%,
-                    100% {
-                        opacity: 1;
-                    }
+                <div class="blub-footer">
 
-                    50% {
-                        opacity: 0.25;
-                    }
-
-                }
-
-                @media (max-width: 600px) {
-
-                    .ban-card {
-
-                        padding:
-                            40px 22px;
-
-                    }
-
-                    .security-icon {
-
-                        width: 85px;
-                        height: 85px;
-
-                        font-size: 38px;
-
-                    }
-
-                    .ban-title {
-
-                        font-size: 44px;
-
-                    }
-
-                }
-
-            </style>
-
-
-            <div class="blub-ban-page">
-
-                <div class="ban-card">
-
-                    <div class="security-icon">
-                        🚫
-                    </div>
-
-                    <div class="security-label">
-                        BLUB CLUB SECURITY
-                    </div>
-
-                    <h1 class="ban-title">
-                        ACCESS<br>
-                        DENIED
-                    </h1>
-
-                    <div class="divider"></div>
-
-                    <div class="status-box">
-
-                        <span class="status-dot"></span>
-
-                        VISITOR ACCESS REVOKED
-
-                    </div>
-
-                    <p class="ban-subtitle">
-
-                        This browser has been banned from
-                        the BLUB CLUB.
-
-                        <br><br>
-
-                        If you believe this was a mistake,
-                        contact a BLUB CLUB administrator.
-
-                    </p>
-
-                    <div class="visitor-id">
-
-                        VISITOR ID:
-                        ${visitorId}
-
-                    </div>
-
-                    <div class="blub-footer">
-
-                         BLUB CLUB • SECURITY SYSTEM
-
-                    </div>
+                    BLUB CLUB • SECURITY SYSTEM
 
                 </div>
 
             </div>
 
-        `;
+        </div>
 
-    }
+    `;
+
+}
 
 
-    // Start BLUB security
-    initializeBlubVisitor();
+/* ==========================================
+   AUTH ERROR
+========================================== */
+
+function showBlubAuthError(
+    message
+) {
+
+    document.body.innerHTML = `
+
+        <div style="
+            min-height:100vh;
+            background:#050505;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-family:Arial,Helvetica,sans-serif;
+            text-align:center;
+            padding:30px;
+        ">
+
+            <div>
+
+                <div style="
+                    font-size:60px;
+                    margin-bottom:20px;
+                ">
+                    🫧
+                </div>
+
+                <h1>
+                    BLUB AUTH ERROR
+                </h1>
+
+                <p style="
+                    color:#999;
+                    max-width:500px;
+                    line-height:1.6;
+                ">
+                    ${escapeHtml(message)}
+                </p>
+
+                <button
+                    onclick="location.reload()"
+                    style="
+                        margin-top:20px;
+                        padding:14px 25px;
+                        border:0;
+                        border-radius:10px;
+                        background:#d4af37;
+                        font-weight:bold;
+                        cursor:pointer;
+                    "
+                >
+                    TRY AGAIN
+                </button>
+
+            </div>
+
+        </div>
+    `;
+
+}
+
+
+/* ==========================================
+   HTML ESCAPE HELPER
+========================================== */
+
+function escapeHtml(
+    value
+) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+/* ==========================================
+   START BLUB AUTH
+========================================== */
+
+initializeBlubVisitor();
+
+</script>
 
 </script>
 
