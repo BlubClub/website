@@ -21,7 +21,7 @@
             background-color: var(--bg-color);
             overflow: hidden;
             font-family: 'Impact', 'Arial Black', sans-serif;
-            touch-action: none; /* Prevent scroll on touch */
+            touch-action: none;
             user-select: none;
         }
 
@@ -40,20 +40,18 @@
             height: 100%;
         }
 
-        /* UI Overlays */
         #ui-layer {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            pointer-events: none; /* Let clicks pass through to game/buttons */
+            pointer-events: none;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
 
-        /* HUD */
         #hud {
             display: flex;
             justify-content: space-between;
@@ -89,7 +87,6 @@
             transition: width 0.2s ease-out;
         }
 
-        /* Screens (Title, Game Over) */
         .screen {
             position: absolute;
             top: 0;
@@ -107,9 +104,7 @@
             text-align: center;
         }
 
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
         h1 {
             font-size: 5rem;
@@ -150,17 +145,9 @@
             box-shadow: 0 0 0 #ccaa00, 0 2px 2px rgba(0,0,0,0.5);
         }
 
-        .stats-display {
-            font-size: 2rem;
-            margin-bottom: 30px;
-            line-height: 1.5;
-        }
+        .stats-display { font-size: 2rem; margin-bottom: 30px; line-height: 1.5; }
+        .highlight { color: var(--primary); }
 
-        .highlight {
-            color: var(--primary);
-        }
-
-        /* Mobile Controls */
         #mobile-controls {
             display: none;
             position: absolute;
@@ -173,9 +160,7 @@
         }
 
         @media (max-width: 768px) {
-            #mobile-controls {
-                display: flex;
-            }
+            #mobile-controls { display: flex; }
             h1 { font-size: 3rem; }
             .subtitle { font-size: 1.2rem; }
             #hud { font-size: 1rem; padding: 10px; }
@@ -197,13 +182,8 @@
             padding: 0;
         }
         
-        #move-controls {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+        #move-controls { display: flex; flex-direction: column; gap: 10px; }
 
-        /* Wave Announcement */
         #wave-announcement {
             position: absolute;
             top: 50%;
@@ -216,6 +196,7 @@
             transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 15;
             opacity: 0;
+            text-align: center;
         }
 
         #wave-announcement.show {
@@ -223,11 +204,7 @@
             opacity: 1;
         }
 
-        /* Pause Screen */
-        #pause-screen {
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-        }
+        #pause-screen { background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(4px); }
     </style>
 </head>
 <body>
@@ -273,6 +250,7 @@
             Control King Cheesecake! Use W/S or Up/Down to move.<br>
             Press SPACE to shoot incoming Spoon Bots.<br>
             Don't let them touch the bakery counter on the right!<br>
+            Boss levels appear every 5 waves!<br>
             Press P or ESC to Pause.
         </p>
         <button id="start-btn">PLAY NOW</button>
@@ -299,70 +277,54 @@
 <script>
 /**
  * BLUB CLUB: DEFEND THE BAKERY
- * Core Game Engine and Logic
+ * Bulletproof Initialization Edition
  */
 
-// --- CONFIGURATION ---
 const CONFIG = {
-    // Player
-    playerSpeed: 400, // pixels per second
-    playerFireRate: 0.25, // seconds between shots
-    playerSize: 80, // Base scale for drawing
-    
-    // Bakery
+    playerSpeed: 400,
+    playerFireRate: 0.25,
+    playerSize: 80,
     maxBakeryHealth: 100,
-    counterWidth: 80, // Width of the bakery counter on the right
-    
-    // Projectiles
-    projectileSpeed: 800, // Moves left (negative X)
-    
-    // Enemies
-    baseEnemySpeed: 150, // Moves right (positive X)
-    baseSpawnRate: 2.0, // Seconds between spawns
-    waveDifficultyMultiplier: 1.15, // Speed/Spawn rate increase per wave
+    counterWidth: 80,
+    projectileSpeed: 800, 
+    baseEnemySpeed: 150,
+    baseSpawnRate: 2.0,
+    waveDifficultyMultiplier: 1.15,
     enemiesPerWave: 10,
-    
-    // Visuals
     colors: {
-        bg: '#2a2015',
-        floorLine: '#3a2d1d',
-        counterTop: '#8b5a2b',
-        counterSide: '#5c3a21',
-        cheesecakeBody: '#fceabb',
-        cheesecakeCrust: '#e59a42',
-        strawberry: '#ff3366',
-        spoonBot: '#a0aab5'
+        bg: '#2a2015', floorLine: '#3a2d1d',
+        counterTop: '#8b5a2b', counterSide: '#5c3a21',
+        cheesecakeBody: '#fceabb', cheesecakeCrust: '#e59a42',
+        strawberry: '#ff3366', spoonBot: '#a0aab5'
     }
 };
 
-// --- GLOBALS & STATE ---
 const canvas = document.getElementById('game-canvas');
-const ctx = canvas.getContext('2d', { alpha: false }); // Optimize for no transparency on base canvas
+const ctx = canvas.getContext('2d'); // Removed {alpha: false} to avoid legacy browser strictness
 
-let GAME_STATE = 'TITLE'; // TITLE, PLAYING, GAMEOVER, WAVE_TRANSITION
+let GAME_STATE = 'TITLE';
 let lastTime = 0;
 let score = 0;
-let highScore = localStorage.getItem('blubclub_highscore') || 0;
 let wave = 1;
 let bakeryHealth = CONFIG.maxBakeryHealth;
 let screenShakeTime = 0;
 let screenShakeIntensity = 0;
 
-// Game Entities Arrays
+// Safe LocalStorage implementation
+let highScore = 0;
+try { highScore = localStorage.getItem('blubclub_highscore') || 0; } 
+catch (e) { console.warn("LocalStorage disabled by environment rules."); }
+
 let projectiles = [];
 let enemies = [];
 let particles = [];
 let floatingTexts = [];
-let allies = []; // Array for CPU helper bots
+let allies = [];
 
-// Input State
-const keys = {
-    w: false, s: false, ArrowUp: false, ArrowDown: false, ' ': false
-};
+const keys = { w: false, s: false, ArrowUp: false, ArrowDown: false, ' ': false };
 let isShootingMobile = false;
-let mobileMoveDir = 0; // -1 up, 1 down, 0 none
+let mobileMoveDir = 0;
 
-// DOM Elements
 const uiHud = document.getElementById('hud');
 const uiMobileControls = document.getElementById('mobile-controls');
 const screenTitle = document.getElementById('title-screen');
@@ -376,39 +338,37 @@ const waveAnnounce = document.getElementById('wave-announcement');
 
 dispHiScore.innerText = highScore;
 
-// --- AUDIO SYSTEM (Web Audio API) ---
+// --- SAFE AUDIO SYSTEM ---
 class AudioManager {
     constructor() {
         this.ctx = null;
         this.enabled = false;
-        
-        // Music Sequencer State
-        this.musicGain = null;
         this.isPlayingMusic = false;
         this.currentNote = 0;
-        this.nextNoteTime = 0;
         this.tempo = 120; 
-        this.melody = [261.63, 293.66, 329.63, 392.00, 440.00, 392.00, 329.63, 293.66]; // Pentatonic
+        this.melody = [261.63, 293.66, 329.63, 392.00, 440.00, 392.00, 329.63, 293.66];
         this.bass = [130.81, 130.81, 98.00, 110.00]; 
         this.musicTimer = null;
     }
 
     init() {
-        if (!this.ctx) {
+        if (this.ctx) return;
+        try {
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AudioContext();
-            this.enabled = true;
-            
-            this.musicGain = this.ctx.createGain();
-            this.musicGain.connect(this.ctx.destination);
-            this.musicGain.gain.value = 0.04;
-        }
-        if (this.ctx.state === 'suspended') {
-            this.ctx.resume();
+            if (window.AudioContext) {
+                this.ctx = new AudioContext();
+                this.enabled = true;
+                this.musicGain = this.ctx.createGain();
+                this.musicGain.connect(this.ctx.destination);
+                this.musicGain.gain.value = 0.04;
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+            }
+        } catch(e) {
+            this.enabled = false;
+            console.warn("Audio Context restricted by browser.", e);
         }
     }
 
-    // Music Methods
     startMusic() {
         if (!this.enabled || this.isPlayingMusic) return;
         this.isPlayingMusic = true;
@@ -427,54 +387,41 @@ class AudioManager {
         this.musicGain.gain.setTargetAtTime(isPaused ? 0.001 : 0.04, this.ctx.currentTime, 0.1);
     }
 
-    setWaveTempo(wave) {
-        // Capped tempo increase
-        this.tempo = Math.min(200, 120 + (wave * 5)); 
-    }
+    setWaveTempo(wave) { this.tempo = Math.min(200, 120 + (wave * 5)); }
 
     scheduleMusic() {
         if (!this.isPlayingMusic) return;
-
         const secondsPerBeat = 60.0 / this.tempo;
-        const noteLength = secondsPerBeat * 0.25; // 16th notes
-        
-        // Schedule ahead
+        const noteLength = secondsPerBeat * 0.25; 
         while (this.nextNoteTime < this.ctx.currentTime + 0.1) {
             this.playMusicNote(this.nextNoteTime, noteLength);
             this.nextNoteTime += noteLength;
             this.currentNote++;
         }
-
         this.musicTimer = setTimeout(() => this.scheduleMusic(), 25);
     }
 
     playMusicNote(time, duration) {
-        // Melody blip
         let osc = this.ctx.createOscillator();
         let gain = this.ctx.createGain();
         osc.type = 'square';
         osc.frequency.value = this.melody[this.currentNote % this.melody.length];
-        
         gain.gain.setValueAtTime(0, time);
         gain.gain.linearRampToValueAtTime(0.1, time + 0.01);
         gain.gain.exponentialRampToValueAtTime(0.001, time + duration - 0.01);
-        
         osc.connect(gain);
         gain.connect(this.musicGain);
         osc.start(time);
         osc.stop(time + duration);
 
-        // Bass thump (every 4th note)
         if (this.currentNote % 4 === 0) {
             let bassOsc = this.ctx.createOscillator();
             let bassGain = this.ctx.createGain();
             bassOsc.type = 'triangle';
-            bassOsc.frequency.value = this.bass[(this.currentNote / 4) % this.bass.length];
-            
+            bassOsc.frequency.value = this.bass[Math.floor(this.currentNote / 4) % this.bass.length];
             bassGain.gain.setValueAtTime(0, time);
             bassGain.gain.linearRampToValueAtTime(0.3, time + 0.01);
             bassGain.gain.exponentialRampToValueAtTime(0.001, time + (duration*4) - 0.01);
-            
             bassOsc.connect(bassGain);
             bassGain.connect(this.musicGain);
             bassOsc.start(time);
@@ -484,51 +431,28 @@ class AudioManager {
 
     playTone(freq, type, duration, vol=0.1, slideFreq=null) {
         if (!this.enabled || !this.ctx) return;
-        
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        
         osc.type = type;
         osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        if (slideFreq) {
-            osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + duration);
-        }
-        
+        if (slideFreq) osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + duration);
         gain.gain.setValueAtTime(vol, this.ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-        
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        
         osc.start();
         osc.stop(this.ctx.currentTime + duration);
     }
 
-    playShoot() {
-        // High pitched pop for strawberry shot
-        this.playTone(600, 'sine', 0.1, 0.1, 300);
-    }
-
-    playHit() {
-        // Metallic clink for hitting Spoon Bot
-        this.playTone(800, 'square', 0.1, 0.05, 1200);
-    }
-
-    playExplosion() {
-        // Noise-like crunch for destroying enemy
-        this.playTone(150, 'sawtooth', 0.3, 0.15, 50);
-    }
-
-    playDamage() {
-        // Low scary thud for bakery taking damage
-        this.playTone(100, 'square', 0.5, 0.3, 40);
-    }
+    playShoot() { this.playTone(600, 'sine', 0.1, 0.1, 300); }
+    playHit() { this.playTone(800, 'square', 0.1, 0.05, 1200); }
+    playExplosion() { this.playTone(150, 'sawtooth', 0.3, 0.15, 50); }
+    playDamage() { this.playTone(100, 'square', 0.5, 0.3, 40); }
 
     playWaveClear() {
-        // Triumphant rising arpeggio
         if (!this.enabled) return;
         const now = this.ctx.currentTime;
-        const notes = [440, 554, 659, 880]; // A4, C#5, E5, A5
+        const notes = [440, 554, 659, 880];
         notes.forEach((freq, i) => {
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
@@ -547,699 +471,343 @@ const audio = new AudioManager();
 
 // --- UTILITIES ---
 function resizeCanvas() {
-    // Handle High-DPI displays
     const dpr = window.devicePixelRatio || 1;
     canvas.width = window.innerWidth * dpr;
     canvas.height = window.innerHeight * dpr;
-    // Normalize coordinates system so 1 unit = 1 pixel on standard displays
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 }
 window.addEventListener('resize', resizeCanvas);
-resizeCanvas(); // Initial size
+resizeCanvas();
 
-function rand(min, max) {
-    return Math.random() * (max - min) + min;
-}
+function rand(min, max) { return Math.random() * (max - min) + min; }
 
 function checkAABB(a, b) {
-    return a.x < b.x + b.width &&
-           a.x + a.width > b.x &&
-           a.y < b.y + b.height &&
-           a.y + a.height > b.y;
+    return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 }
 
 function shakeScreen(duration, intensity) {
-    screenShakeTime = duration;
-    screenShakeIntensity = intensity;
+    screenShakeTime = duration; screenShakeIntensity = intensity;
 }
 
 // --- ENTITIES ---
 
 class Particle {
     constructor(x, y, color, speedMultiplier = 1) {
-        this.x = x;
-        this.y = y;
+        this.x = x; this.y = y;
         const angle = rand(0, Math.PI * 2);
         const speed = rand(50, 200) * speedMultiplier;
-        this.vx = Math.cos(angle) * speed;
-        this.vy = Math.sin(angle) * speed;
-        this.life = 1.0; // 1 to 0
-        this.decay = rand(1.0, 2.0); // How fast life decreases per second
-        this.color = color;
-        this.size = rand(3, 8);
-        this.gravity = 400; // pulls down
+        this.vx = Math.cos(angle) * speed; this.vy = Math.sin(angle) * speed;
+        this.life = 1.0; this.decay = rand(1.0, 2.0); 
+        this.color = color; this.size = rand(3, 8); this.gravity = 400; 
     }
     update(dt) {
-        this.vy += this.gravity * dt;
-        this.x += this.vx * dt;
-        this.y += this.vy * dt;
+        this.vy += this.gravity * dt; this.x += this.vx * dt; this.y += this.vy * dt;
         this.life -= this.decay * dt;
     }
     draw(ctx) {
         ctx.globalAlpha = Math.max(0, this.life);
-        ctx.fillStyle = this.color;
-        ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+        ctx.fillStyle = this.color; ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
         ctx.globalAlpha = 1.0;
     }
 }
 
 class FloatingText {
     constructor(x, y, text, color) {
-        this.x = x;
-        this.y = y;
-        this.text = text;
-        this.color = color;
-        this.life = 1.0;
-        this.vy = -50;
+        this.x = x; this.y = y; this.text = text; this.color = color;
+        this.life = 1.5; this.vy = -50;
     }
-    update(dt) {
-        this.y += this.vy * dt;
-        this.life -= dt;
-    }
+    update(dt) { this.y += this.vy * dt; this.life -= dt; }
     draw(ctx) {
-        ctx.globalAlpha = Math.max(0, this.life);
-        ctx.fillStyle = this.color;
-        ctx.font = 'bold 20px Impact';
-        ctx.textAlign = 'center';
-        ctx.fillText(this.text, this.x, this.y);
+        ctx.globalAlpha = Math.max(0, this.life); ctx.fillStyle = this.color;
+        ctx.font = 'bold 20px Impact'; ctx.textAlign = 'center'; ctx.fillText(this.text, this.x, this.y);
         ctx.globalAlpha = 1.0;
     }
 }
 
 class Projectile {
-    constructor(x, y, type = 'player') {
-        this.width = 24;
-        this.height = 24;
-        this.x = x - this.width; // Start moving left
-        this.y = y - this.height/2;
-        this.vx = -CONFIG.projectileSpeed;
-        this.active = true;
-        this.type = type; // 'player', 'cookie', 'donut', 'pancake'
-        
-        // Visuals
-        this.rotation = 0;
-        this.rotSpeed = rand(-10, 10);
+    constructor(x, y, type = 'player', vx = null, vy = 0) {
+        this.width = 24; this.height = 24;
+        this.x = x - this.width; this.y = y - this.height/2;
+        this.vx = vx !== null ? vx : -CONFIG.projectileSpeed;
+        this.vy = vy; this.active = true; this.type = type; 
+        this.rotation = 0; this.rotSpeed = rand(-10, 10);
     }
-    
     update(dt) {
-        this.x += this.vx * dt;
-        this.rotation += this.rotSpeed * dt;
-        // Off screen left?
-        if (this.x + this.width < 0) {
-            this.active = false;
-        }
+        this.x += this.vx * dt; this.y += this.vy * dt; this.rotation += this.rotSpeed * dt;
+        if (this.x + this.width < -100 || this.x > window.innerWidth + 100 || 
+            this.y < -100 || this.y > window.innerHeight + 100) { this.active = false; }
     }
-    
     draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x + this.width/2, this.y + this.height/2);
-        ctx.rotate(this.rotation);
-        
+        ctx.save(); ctx.translate(this.x + this.width/2, this.y + this.height/2); ctx.rotate(this.rotation);
         if (this.type === 'player') {
-            // Draw Strawberry Projectile
-            ctx.fillStyle = CONFIG.colors.strawberry;
-            ctx.beginPath();
-            ctx.moveTo(0, -10);
-            ctx.quadraticCurveTo(10, -10, 10, 0);
-            ctx.quadraticCurveTo(10, 12, 0, 12);
-            ctx.quadraticCurveTo(-10, 12, -10, 0);
-            ctx.quadraticCurveTo(-10, -10, 0, -10);
-            ctx.fill();
-            
-            // Seeds
-            ctx.fillStyle = '#ffb3c6';
-            for(let i=0; i<3; i++) {
-                ctx.fillRect(rand(-6,6), rand(-6,6), 2, 2);
-            }
-            
-            // Leaves top
-            ctx.fillStyle = '#33cc33';
-            ctx.beginPath();
-            ctx.moveTo(-6, -8);
-            ctx.lineTo(0, -14);
-            ctx.lineTo(6, -8);
-            ctx.fill();
+            ctx.fillStyle = CONFIG.colors.strawberry; ctx.beginPath();
+            ctx.moveTo(0, -10); ctx.quadraticCurveTo(10, -10, 10, 0); ctx.quadraticCurveTo(10, 12, 0, 12);
+            ctx.quadraticCurveTo(-10, 12, -10, 0); ctx.quadraticCurveTo(-10, -10, 0, -10); ctx.fill();
+            ctx.fillStyle = '#ffb3c6'; for(let i=0; i<3; i++) { ctx.fillRect(rand(-6,6), rand(-6,6), 2, 2); }
+            ctx.fillStyle = '#33cc33'; ctx.beginPath(); ctx.moveTo(-6, -8); ctx.lineTo(0, -14); ctx.lineTo(6, -8); ctx.fill();
         } else if (this.type === 'cookie') {
-            // Chocolate Chip
-            ctx.fillStyle = '#4a2b16';
-            ctx.beginPath();
-            ctx.moveTo(-8, 6);
-            ctx.lineTo(8, 6);
-            ctx.lineTo(0, -8);
-            ctx.fill();
+            ctx.fillStyle = '#4a2b16'; ctx.beginPath(); ctx.moveTo(-8, 6); ctx.lineTo(8, 6); ctx.lineTo(0, -8); ctx.fill();
         } else if (this.type === 'donut') {
-            // Sprinkle
             ctx.fillStyle = ['#4ade80', '#3b82f6', '#ffeb3b'][Math.floor(rand(0,3))];
-            ctx.fillRect(-8, -3, 16, 6);
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(-8, -3, 16, 6);
+            ctx.fillRect(-8, -3, 16, 6); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.strokeRect(-8, -3, 16, 6);
         } else if (this.type === 'pancake') {
-            // Butter pad / Syrup blob
-            ctx.fillStyle = '#fff38a';
-            ctx.fillRect(-6, -6, 12, 12);
-            ctx.fillStyle = '#b36b00';
-            ctx.beginPath();
-            ctx.arc(0, 0, 8, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillStyle = '#fff38a'; ctx.fillRect(-6, -6, 12, 12);
+            ctx.fillStyle = '#b36b00'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI * 2); ctx.fill();
+        } else if (this.type === 'blackberry-sphere') {
+            ctx.fillStyle = '#4a0e4e'; ctx.beginPath();
+            ctx.arc(-3, -3, 6, 0, Math.PI*2); ctx.arc(3, -3, 6, 0, Math.PI*2);
+            ctx.arc(-3, 3, 6, 0, Math.PI*2); ctx.arc(3, 3, 6, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#8a2be2'; ctx.beginPath(); ctx.arc(-4, -4, 2, 0, Math.PI*2); ctx.fill();
         }
-        
         ctx.restore();
     }
 }
 
 class Enemy {
     constructor(waveMultiplier) {
-        this.width = 65; // Precise physical width matching visual edge
-        this.height = 24;
-        this.x = -100; // Spawn offscreen left
-        this.y = rand(50, window.innerHeight - 50);
+        this.width = 65; this.height = 24;
+        this.x = -100; this.y = rand(50, window.innerHeight - 50);
         this.vx = CONFIG.baseEnemySpeed * waveMultiplier;
-        
-        // Introduce sine wave movement occasionally
         this.moveType = Math.random() > 0.5 ? 'straight' : 'sine';
-        this.startY = this.y;
-        this.time = rand(0, 100);
-        
+        this.startY = this.y; this.time = rand(0, 100);
         this.hp = Math.floor(1 * waveMultiplier);
-        this.active = true;
-        this.flashTime = 0;
-        this.hasDamaged = false; // Prevents multiple damage instances
+        this.active = true; this.flashTime = 0; this.hasDamaged = false; 
     }
-    
     update(dt) {
         if (!this.active) return;
-
-        this.time += dt;
-        this.x += this.vx * dt;
-        
-        if (this.moveType === 'sine') {
-            this.y = this.startY + Math.sin(this.time * 3) * 40;
-        }
-        
+        this.time += dt; this.x += this.vx * dt;
+        if (this.moveType === 'sine') this.y = this.startY + Math.sin(this.time * 3) * 40;
         if (this.flashTime > 0) this.flashTime -= dt;
         
-        // Precise collision with Counter Edge
         let counterLeftEdge = window.innerWidth - CONFIG.counterWidth;
-        let spoonTipX = this.x + this.width;
-        
-        // Only trigger damage ONCE precisely when the tip touches the counter
-        if (spoonTipX >= counterLeftEdge && !this.hasDamaged) {
-            this.hasDamaged = true;
-            this.active = false; // Mark for immediate removal
-            triggerBakeryDamage(10);
+        if (this.x + this.width >= counterLeftEdge && !this.hasDamaged) {
+            this.hasDamaged = true; this.active = false; triggerBakeryDamage(10);
         }
     }
-    
     hit(damage) {
         if (!this.active) return;
-        
-        this.hp -= damage;
-        this.flashTime = 0.1;
-        audio.playHit();
-        
-        // Spawn hit particles
-        for(let i=0; i<5; i++) {
-            particles.push(new Particle(this.x + this.width, this.y + this.height/2, '#ccc'));
-        }
+        this.hp -= damage; this.flashTime = 0.1; audio.playHit();
+        for(let i=0; i<5; i++) { particles.push(new Particle(this.x + this.width, this.y + this.height/2, '#ccc')); }
         
         if (this.hp <= 0) {
-            this.active = false;
-            audio.playExplosion();
-            addScore(100);
-            shakeScreen(0.1, 5);
+            this.active = false; audio.playExplosion(); addScore(100); shakeScreen(0.1, 5);
             floatingTexts.push(new FloatingText(this.x, this.y, "100", "#fff"));
-            
-            // Explosion particles
             for(let i=0; i<15; i++) {
                 particles.push(new Particle(this.x + this.width/2, this.y + this.height/2, '#888', 2));
                 particles.push(new Particle(this.x + this.width/2, this.y + this.height/2, '#ff3333', 1.5));
             }
         }
     }
-    
     draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
+        ctx.save(); ctx.translate(this.x, this.y);
         
-        // Hit flash
-        if (this.flashTime > 0) {
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.fillStyle = '#ffffff';
-        } else {
-            ctx.fillStyle = '#b0b8c0'; // Silver metallic
-        }
+        if (this.flashTime > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffffff'; } 
+        else { ctx.fillStyle = '#b0b8c0'; }
         
-        ctx.strokeStyle = '#000'; // Clean black outline
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.beginPath();
+        let handleY = this.height/2 - 4; ctx.rect(0, handleY, 40, 8);
+        let scoopCenterX = this.width - 15; 
+        ctx.ellipse(scoopCenterX, this.height/2, 15, 12, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
         
-        // Draw Spoon Bot Structure
-        ctx.beginPath();
-        
-        // Handle (left side)
-        let handleWidth = 40;
-        let handleHeight = 8;
-        let handleY = this.height/2 - handleHeight/2;
-        ctx.rect(0, handleY, handleWidth, handleHeight);
-        
-        // Scoop (right side)
-        let scoopRadiusX = 15;
-        let scoopRadiusY = 12;
-        let scoopCenterX = this.width - scoopRadiusX; // Perfectly aligns with bounding box
-        ctx.ellipse(scoopCenterX, this.height/2, scoopRadiusX, scoopRadiusY, 0, 0, Math.PI * 2);
-        
-        ctx.fill();
-        ctx.stroke();
-        
-        // Evil glowing red eye in scoop
         if (this.flashTime <= 0) {
-            ctx.fillStyle = '#ff0000';
-            ctx.beginPath();
-            ctx.arc(scoopCenterX + 5, this.height/2, 4, 0, Math.PI*2);
-            ctx.fill();
-            
-            // Eye glow
-            ctx.shadowColor = '#ff0000';
-            ctx.shadowBlur = 10;
-            ctx.fill();
-            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#ff0000'; ctx.beginPath(); ctx.arc(scoopCenterX + 5, this.height/2, 4, 0, Math.PI*2); ctx.fill();
+            ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 10; ctx.fill(); ctx.shadowBlur = 0;
         }
-        
         ctx.restore();
     }
 }
 
-// Friendly Blub Base Class (CPU Helpers)
-class AllyBlub {
-    constructor(x, baseY, type, timeOffset) {
-        this.width = 60;
-        this.height = 80;
-        this.x = x;
-        this.baseY = baseY;
-        this.y = baseY;
-        this.type = type; // 'cookie', 'donut', 'pancake'
-        this.time = timeOffset;
-        
-        this.fireTimer = rand(0, 2);
-        this.fireRate = 1.5; // Shoot every 1.5 seconds
+class BossEnemy extends Enemy {
+    constructor(waveMultiplier) {
+        super(waveMultiplier);
+        this.width = 130; this.height = 48; this.hp = Math.floor(30 * waveMultiplier); 
+        this.vx = (CONFIG.baseEnemySpeed * 0.4) * waveMultiplier; 
+        this.moveType = 'sine'; this.y = window.innerHeight / 2;
+        this.startY = this.y; this.amplitude = window.innerHeight / 3;
     }
-    
     update(dt) {
-        this.time += dt;
-        // Hover vertically
-        this.y = this.baseY + Math.sin(this.time * 2) * 15;
-        
-        // Auto-fire if enemies exist
-        this.fireTimer -= dt;
-        if (this.fireTimer <= 0 && enemies.length > 0) {
-            this.shoot();
+        if (!this.active) return;
+        this.time += dt; this.x += this.vx * dt;
+        this.y = this.startY + Math.sin(this.time * 1.5) * this.amplitude;
+        if (this.flashTime > 0) this.flashTime -= dt;
+        let counterLeftEdge = window.innerWidth - CONFIG.counterWidth;
+        if (this.x + this.width >= counterLeftEdge && !this.hasDamaged) {
+            this.hasDamaged = true; this.active = false; triggerBakeryDamage(40); 
         }
     }
-    
+    hit(damage) {
+        if (!this.active) return;
+        this.hp -= damage; this.flashTime = 0.1; audio.playHit();
+        for(let i=0; i<8; i++) { particles.push(new Particle(this.x + this.width, this.y + this.height/2, '#f00')); }
+        if (this.hp <= 0) {
+            this.active = false; audio.playExplosion(); addScore(1000); shakeScreen(0.5, 15);
+            floatingTexts.push(new FloatingText(this.x, this.y, "BOSS DEFEATED! 1000", "#ff0"));
+            for(let i=0; i<40; i++) {
+                particles.push(new Particle(this.x + this.width/2, this.y + this.height/2, '#ff3333', 3));
+                particles.push(new Particle(this.x + this.width/2, this.y + this.height/2, '#ffaa00', 2));
+            }
+        }
+    }
+    draw(ctx) {
+        ctx.save(); ctx.translate(this.x, this.y);
+        
+        if (this.flashTime > 0) { ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = '#ffffff'; } 
+        else { ctx.fillStyle = '#660000'; }
+        
+        ctx.strokeStyle = '#ff0000'; ctx.lineWidth = 3; ctx.beginPath();
+        let handleY = this.height/2 - 8; ctx.rect(0, handleY, 80, 16);
+        let scoopCenterX = this.width - 30;
+        ctx.ellipse(scoopCenterX, this.height/2, 30, 24, 0, 0, Math.PI * 2);
+        ctx.fill(); ctx.stroke();
+        
+        if (this.flashTime <= 0) {
+            ctx.fillStyle = '#ffaa00'; ctx.beginPath(); ctx.arc(scoopCenterX + 10, this.height/2, 8, 0, Math.PI*2); ctx.fill();
+            ctx.shadowColor = '#ff0000'; ctx.shadowBlur = 15; ctx.fill(); ctx.shadowBlur = 0;
+        }
+        ctx.restore();
+    }
+}
+
+class AllyBlub {
+    constructor(x, baseY, type, timeOffset) {
+        this.width = 60; this.height = 80;
+        this.x = x; this.baseY = baseY; this.y = baseY;
+        this.type = type; this.time = timeOffset;
+        this.fireTimer = rand(0, 1.5); this.fireRate = Math.max(0.65, 1.5 - (allies.length * 0.08)); 
+        this.patrolDir = Math.random() > 0.5 ? 1 : -1; this.patrolSpeed = rand(100, 200); 
+    }
+    update(dt) {
+        this.time += dt;
+        // Helpers continuously patrol the full playfield instead of standing still.
+        this.baseY += this.patrolSpeed * this.patrolDir * dt;
+        if (this.baseY < 80) { this.baseY = 80; this.patrolDir = 1; } 
+        else if (this.baseY > window.innerHeight - 100) { this.baseY = window.innerHeight - 100; this.patrolDir = -1; }
+        
+        this.y = this.baseY + Math.sin(this.time * 3) * 15;
+        this.fireTimer -= dt;
+        if (this.fireTimer <= 0 && enemies.length > 0) { this.shoot(); }
+    }
     shoot() {
         this.fireTimer = this.fireRate;
-        // Shoot matching projectile
-        projectiles.push(new Projectile(this.x, this.y + this.height/2, this.type));
-        
-        // Shoot particle
+        if (this.type === 'blackberry') {
+            let numSpheres = 9;
+            for(let i = 0; i < numSpheres; i++) {
+                // Every berry gets its own lane and a tiny random offset, making a true spread.
+                let angle = -Math.PI/2.7 + (Math.PI/1.35) * (i / (numSpheres - 1)) + rand(-0.045, 0.045);
+                let speed = CONFIG.projectileSpeed * rand(0.72, 0.92);
+                projectiles.push(new Projectile(this.x, this.y + this.height/2, 'blackberry-sphere', -Math.cos(angle) * speed, Math.sin(angle) * speed));
+            }
+        } else { projectiles.push(new Projectile(this.x, this.y + this.height/2, this.type)); }
         particles.push(new Particle(this.x, this.y + this.height/2, '#fff', 0.5));
     }
-    
     draw(ctx) {
-        ctx.save();
-        ctx.translate(this.x, this.y);
+        ctx.save(); ctx.translate(this.x, this.y);
+        let w = this.width; let h = this.height;
         
-        let w = this.width;
-        let h = this.height;
-        
-        // 1. Outline and Clipping Path (Blub Shape)
         ctx.beginPath();
-        ctx.moveTo(10, 20);
-        ctx.quadraticCurveTo(w/2, 0, w - 10, 20); // Top
-        ctx.lineTo(w, h - 15); // Right
-        // 3 Waffle Bumps (scallops)
+        ctx.moveTo(10, 20); ctx.quadraticCurveTo(w/2, 0, w - 10, 20); ctx.lineTo(w, h - 15); 
         let bumpW = w / 3;
         ctx.quadraticCurveTo(w - bumpW/2, h + 10, w - bumpW, h - 5);
         ctx.quadraticCurveTo(w - bumpW*1.5, h + 10, bumpW, h - 5);
         ctx.quadraticCurveTo(bumpW/2, h + 10, 0, h - 15);
-        ctx.lineTo(10, 20); // Left edge
-        ctx.closePath();
+        ctx.lineTo(10, 20); ctx.closePath();
         
-        ctx.save();
-        ctx.clip(); // Clip contents to body shape
+        ctx.save(); ctx.clip(); 
         
-        // 2. Base Colors and Textures by Type
         if (this.type === 'cookie') {
-            ctx.fillStyle = '#c78a48';
-            ctx.fillRect(0, 0, w, h);
-            // Chocolate Chips
-            ctx.fillStyle = '#3b250e';
-            const chips = [[15, 25], [45, 20], [30, 15], [10, 50], [50, 45], [20, 65], [40, 60], [30, 40]];
-            chips.forEach(c => {
-                ctx.beginPath(); ctx.arc(c[0], c[1], 4, 0, Math.PI*2); ctx.fill();
-            });
-            // Crumb particles around base
-            ctx.fillStyle = '#8f5c27';
-            ctx.fillRect(5, h-10, 3, 3); ctx.fillRect(50, h-15, 2, 2);
-            
+            ctx.fillStyle = '#c78a48'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#3b250e';
+            [[15, 25], [45, 20], [30, 15], [10, 50], [50, 45], [20, 65], [40, 60], [30, 40]].forEach(c => { ctx.beginPath(); ctx.arc(c[0], c[1], 4, 0, Math.PI*2); ctx.fill(); });
         } else if (this.type === 'donut') {
-            ctx.fillStyle = '#d49b57'; // Dough
-            ctx.fillRect(0, 0, w, h);
-            
-            // Pink Frosting
-            ctx.fillStyle = '#ff85c2';
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(w, 0);
-            ctx.lineTo(w, 45);
-            ctx.quadraticCurveTo(w-10, 60, w-20, 45);
-            ctx.quadraticCurveTo(w-30, 35, w-40, 50);
-            ctx.quadraticCurveTo(w-50, 65, 0, 40);
-            ctx.fill();
-            
-            // Sprinkles
-            const drawSprinkle = (sx, sy, color, angle) => {
-                ctx.save(); ctx.translate(sx, sy); ctx.rotate(angle);
-                ctx.fillStyle = color; ctx.fillRect(-3, -1, 6, 2);
-                ctx.restore();
-            };
-            drawSprinkle(20, 20, '#4ade80', 0.5);
-            drawSprinkle(40, 15, '#3b82f6', -0.5);
-            drawSprinkle(30, 35, '#ffeb3b', 1.2);
-            drawSprinkle(15, 40, '#f87171', -0.2);
-            drawSprinkle(45, 35, '#a855f7', 0.8);
-            
+            ctx.fillStyle = '#d49b57'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#ff85c2';
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, 0); ctx.lineTo(w, 45); ctx.quadraticCurveTo(w-10, 60, w-20, 45); 
+            ctx.quadraticCurveTo(w-30, 35, w-40, 50); ctx.quadraticCurveTo(w-50, 65, 0, 40); ctx.fill();
+            const ds = (sx, sy, c, a) => { ctx.save(); ctx.translate(sx, sy); ctx.rotate(a); ctx.fillStyle = c; ctx.fillRect(-3, -1, 6, 2); ctx.restore(); };
+            ds(20, 20, '#4ade80', 0.5); ds(40, 15, '#3b82f6', -0.5); ds(30, 35, '#ffeb3b', 1.2);
         } else if (this.type === 'pancake') {
-            ctx.fillStyle = '#d6a14d'; // Base pancake color
-            ctx.fillRect(0, 0, w, h);
-            
-            // Pancake stack lines
-            ctx.strokeStyle = '#b58133';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, h-30); ctx.quadraticCurveTo(w/2, h-20, w, h-30);
-            ctx.moveTo(0, h-15); ctx.quadraticCurveTo(w/2, h-5, w, h-15);
-            ctx.stroke();
-            
-            // Syrup
-            ctx.fillStyle = '#964B00';
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(w, 0);
-            ctx.lineTo(w, 20);
-            ctx.quadraticCurveTo(w-10, 40, w-20, 15);
-            ctx.quadraticCurveTo(w-35, 45, w-45, 20);
-            ctx.quadraticCurveTo(w-55, 35, 0, 15);
-            ctx.fill();
+            ctx.fillStyle = '#d6a14d'; ctx.fillRect(0, 0, w, h); ctx.strokeStyle = '#b58133'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(0, h-30); ctx.quadraticCurveTo(w/2, h-20, w, h-30); ctx.stroke();
+            ctx.fillStyle = '#964B00'; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(w, 0); ctx.lineTo(w, 20); ctx.quadraticCurveTo(w-20, 40, w-40, 20); ctx.quadraticCurveTo(w-50, 30, 0, 15); ctx.fill();
+        } else if (this.type === 'blackberry') {
+            ctx.fillStyle = '#4a0e4e'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#2d0830';
+            for (let i = 5; i < w; i += 15) { for (let j = 5; j < h; j += 15) { ctx.beginPath(); ctx.arc(i, j, 6, 0, Math.PI*2); ctx.fill(); } }
         }
+        ctx.restore(); 
         
-        ctx.restore(); // Remove clipping mask
-        
-        // 3. Thick Black Outline
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = '#000';
-        ctx.stroke(); 
-        
-        // 4. Face (Applies to all)
-        ctx.fillStyle = '#000';
-        ctx.fillRect(w/2 - 8, 30, 3, 15); // Left eye
-        ctx.fillRect(w/2 + 5, 30, 3, 15); // Right eye
-        // Smile
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2.5;
-        ctx.beginPath();
-        ctx.moveTo(w/2 - 12, 55);
-        ctx.quadraticCurveTo(w/2, 65, w/2 + 12, 52);
-        ctx.stroke();
+        ctx.lineWidth = 4; ctx.strokeStyle = '#000'; ctx.stroke(); 
+        ctx.fillStyle = '#000'; ctx.fillRect(w/2 - 8, 30, 3, 15); ctx.fillRect(w/2 + 5, 30, 3, 15); 
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(w/2 - 12, 55); ctx.quadraticCurveTo(w/2, 65, w/2 + 12, 52); ctx.stroke();
 
-        // 5. Special unclipped top accessories
-        if (this.type === 'pancake') {
-            // Butter pad on top
-            ctx.fillStyle = '#fff38a';
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(w/2 - 12, 0);
-            ctx.lineTo(w/2 + 5, -5);
-            ctx.lineTo(w/2 + 15, 2);
-            ctx.lineTo(w/2 - 2, 7);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-        }
-        
-        // 6. Floating Hands
         let handOffset = Math.cos(this.time * 6) * 4;
-        ctx.fillStyle = (this.type === 'cookie') ? '#8f5c27' : (this.type === 'donut') ? '#d49b57' : '#d6a14d';
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 2;
-        const drawHand = (hx, hy) => {
-            ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI*2); 
-            ctx.fill(); ctx.stroke();
-        }
-        drawHand(-10, h/2 + handOffset);
-        drawHand(w + 10, h/2 - handOffset);
-        
+        ctx.fillStyle = (this.type === 'cookie') ? '#8f5c27' : (this.type === 'donut') ? '#d49b57' : (this.type === 'blackberry') ? '#4a0e4e' : '#d6a14d';
+        const drawHand = (hx, hy) => { ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI*2); ctx.fill(); ctx.stroke(); }
+        drawHand(-10, h/2 + handOffset); drawHand(w + 10, h/2 - handOffset);
         ctx.restore();
     }
 }
 
 class Player {
     constructor() {
-        this.width = 80;
-        this.height = 110;
-        // Position immediately left of the bakery counter
+        this.width = 80; this.height = 110;
         this.x = window.innerWidth - CONFIG.counterWidth - this.width - 20;
         this.y = window.innerHeight / 2 - this.height / 2;
-        this.fireTimer = 0;
-        
-        // Animation states
-        this.time = 0;
-        this.shootRecoil = 0;
+        this.fireTimer = 0; this.time = 0; this.shootRecoil = 0;
     }
-    
     update(dt) {
         this.time += dt;
-        
-        // Maintain fixed X based on resize
         this.x = window.innerWidth - CONFIG.counterWidth - this.width - 20;
-        
-        // Movement Input
-        let moving = false;
-        if (keys.w || keys.ArrowUp || mobileMoveDir === -1) {
-            this.y -= CONFIG.playerSpeed * dt;
-            moving = true;
-        }
-        if (keys.s || keys.ArrowDown || mobileMoveDir === 1) {
-            this.y += CONFIG.playerSpeed * dt;
-            moving = true;
-        }
-        
-        // Boundaries
+        if (keys.w || keys.ArrowUp || mobileMoveDir === -1) this.y -= CONFIG.playerSpeed * dt;
+        if (keys.s || keys.ArrowDown || mobileMoveDir === 1) this.y += CONFIG.playerSpeed * dt;
         if (this.y < 0) this.y = 0;
         if (this.y + this.height > window.innerHeight) this.y = window.innerHeight - this.height;
         
-        // Shooting
-        if (this.fireTimer > 0) {
-            this.fireTimer -= dt;
-        }
-        
-        if ((keys[' '] || isShootingMobile) && this.fireTimer <= 0) {
-            this.shoot();
-        }
-        
-        // Recoil recovery
-        if (this.shootRecoil > 0) {
-            this.shootRecoil -= dt * 10;
-        } else {
-            this.shootRecoil = 0;
-        }
+        if (this.fireTimer > 0) this.fireTimer -= dt;
+        if ((keys[' '] || keys.Space || isShootingMobile) && this.fireTimer <= 0) this.shoot();
+        if (this.shootRecoil > 0) this.shootRecoil -= dt * 10; else this.shootRecoil = 0;
     }
-    
     shoot() {
-        this.fireTimer = CONFIG.playerFireRate;
-        this.shootRecoil = 15; // pixels of kickback
-        audio.playShoot();
-        
-        // Spawn projectile from center-left of player (type 'player')
+        this.fireTimer = CONFIG.playerFireRate; this.shootRecoil = 15; audio.playShoot();
         projectiles.push(new Projectile(this.x, this.y + this.height/2, 'player'));
-        
-        // Shoot particle effect
-        for(let i=0; i<3; i++) {
-            particles.push(new Particle(this.x, this.y + this.height/2, '#fff', 0.5));
-        }
+        for(let i=0; i<3; i++) { particles.push(new Particle(this.x, this.y + this.height/2, '#fff', 0.5)); }
     }
-    
     draw(ctx) {
         ctx.save();
-        let bobY = Math.sin(this.time * 5) * 5;
-        // Translate to top-left of the player's bounding box
-        ctx.translate(this.x + this.shootRecoil, this.y + bobY);
+        let bobY = Math.sin(this.time * 5) * 5; ctx.translate(this.x + this.shootRecoil, this.y + bobY);
+        let w = this.width; let h = this.height;
         
-        let w = this.width;
-        let h = this.height;
+        ctx.beginPath(); ctx.moveTo(10, 30); ctx.quadraticCurveTo(w/2, 10, w - 10, 30); ctx.lineTo(w, h - 20); 
+        let bumpW = w / 3; ctx.quadraticCurveTo(w - bumpW/2, h + 10, w - bumpW, h - 5);
+        ctx.quadraticCurveTo(w - bumpW*1.5, h + 10, bumpW, h - 5); ctx.quadraticCurveTo(bumpW/2, h + 10, 0, h - 20); ctx.lineTo(10, 30); ctx.closePath();
         
-        // --- DRAW KING CHEESECAKE (Polished Version) ---
+        ctx.save(); ctx.clip();
+        ctx.fillStyle = '#fef1cc'; ctx.fillRect(0, 0, w, h); ctx.fillStyle = '#e8a54d'; ctx.fillRect(0, h - 35, w, 35);
+        ctx.strokeStyle = '#c47d21'; ctx.lineWidth = 2; ctx.beginPath();
+        for(let i = 5; i < w; i += 12) { ctx.moveTo(i, h-35); ctx.lineTo(i, h); } 
+        for(let j = h-30; j < h; j += 10) { ctx.moveTo(0, j); ctx.lineTo(w, j); } ctx.stroke();
+        ctx.fillStyle = '#a6172a'; ctx.beginPath(); ctx.moveTo(w/2 - 10, h - 35); ctx.quadraticCurveTo(w/2 + 10, h - 60, w, h - 45); ctx.lineTo(w, h - 35); ctx.fill();
+        ctx.fillStyle = '#4ade80'; ctx.fillRect(w - 20, h - 45, 4, 4);
         
-        // 1. Define Main Silhouette Path (Used for clipping internal textures and outlines)
-        ctx.beginPath();
-        ctx.moveTo(10, 30);
-        ctx.quadraticCurveTo(w/2, 10, w - 10, 30); // Top rounded head
-        ctx.lineTo(w, h - 20); // Right edge
-        
-        // Bottom 3 Waffle Bumps (scallops)
-        let bumpW = w / 3;
-        ctx.quadraticCurveTo(w - bumpW/2, h + 10, w - bumpW, h - 5);
-        ctx.quadraticCurveTo(w - bumpW*1.5, h + 10, bumpW, h - 5);
-        ctx.quadraticCurveTo(bumpW/2, h + 10, 0, h - 20);
-        
-        ctx.lineTo(10, 30); // Left edge
-        ctx.closePath();
-        
-        // Save state to clip toppings so they don't bleed outside the body
-        ctx.save();
-        ctx.clip();
-        
-        // 2. Base Cream Color
-        ctx.fillStyle = '#fef1cc';
-        ctx.fillRect(0, 0, w, h);
-        
-        // 3. Waffle Cone Texture (Bottom)
-        ctx.fillStyle = '#e8a54d';
-        ctx.fillRect(0, h - 35, w, 35);
-        ctx.strokeStyle = '#c47d21';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        for(let i = 5; i < w; i += 12) { ctx.moveTo(i, h-35); ctx.lineTo(i, h); } // Vertical grid
-        for(let j = h-30; j < h; j += 10) { ctx.moveTo(0, j); ctx.lineTo(w, j); } // Horizontal grid
-        ctx.stroke();
-
-        // 4. Strawberry Jam Section
-        ctx.fillStyle = '#a6172a';
-        ctx.beginPath();
-        ctx.moveTo(w/2 - 10, h - 35);
-        ctx.quadraticCurveTo(w/2 + 10, h - 60, w, h - 45);
-        ctx.lineTo(w, h - 35);
-        ctx.fill();
-        // Colorful Sprinkles on Jam
-        ctx.fillStyle = '#4ade80'; // Green
-        ctx.fillRect(w - 20, h - 45, 4, 4);
-        ctx.fillStyle = '#ff7eb3'; // Pink
-        ctx.fillRect(w - 12, h - 50, 4, 4);
-        ctx.fillRect(w - 30, h - 40, 4, 4);
-
-        // 5. Caramel/Peanut Butter Drizzles
-        ctx.strokeStyle = '#d69e49';
-        ctx.lineWidth = 4;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(-10, 40); ctx.quadraticCurveTo(w/2, 60, w+10, 30);
-        ctx.moveTo(-10, 80); ctx.quadraticCurveTo(w/3, 90, w/2, 60);
-        ctx.stroke();
-
-        // 6. White Cream Swirl Details
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(10, 50); ctx.quadraticCurveTo(30, 40, 40, 55);
-        ctx.moveTo(15, 55); ctx.quadraticCurveTo(25, 65, 50, 60);
-        ctx.stroke();
-
-        // 7. Chocolate Chips
         ctx.fillStyle = '#3e2723';
-        const drawChip = (cx, cy) => {
-            ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI*2); ctx.fill();
-        };
+        const drawChip = (cx, cy) => { ctx.beginPath(); ctx.arc(cx, cy, 2.5, 0, Math.PI*2); ctx.fill(); };
         drawChip(20, 35); drawChip(70, 40); drawChip(15, 75); drawChip(60, 65); drawChip(10, 60);
-
-        // Restore context to draw outlines and non-clipped accessories
         ctx.restore(); 
 
-        // 8. Thick Black Outline around main body (Applies to the path drawn in step 1)
-        ctx.lineWidth = 4;
-        ctx.strokeStyle = '#000';
-        ctx.stroke(); 
+        ctx.lineWidth = 4; ctx.strokeStyle = '#000'; ctx.stroke(); 
+        ctx.fillStyle = '#000'; ctx.fillRect(w/2 - 12, 45, 4, 18); ctx.fillRect(w/2 + 8, 45, 4, 18);  
+        ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(w/2 - 18, 75); ctx.quadraticCurveTo(w/2, 88, w/2 + 18, 70); ctx.stroke();
 
-        // 9. Face (Vertical simple lines)
-        ctx.fillStyle = '#000';
-        ctx.fillRect(w/2 - 12, 45, 4, 18); // Left eye
-        ctx.fillRect(w/2 + 8, 45, 4, 18);  // Right eye
-        // Smile
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(w/2 - 18, 75);
-        ctx.quadraticCurveTo(w/2, 88, w/2 + 18, 70);
-        ctx.stroke();
+        ctx.fillStyle = '#ffffff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.beginPath();
+        ctx.moveTo(w/2 - 15, 15); ctx.quadraticCurveTo(w/2 - 20, 0, w/2, -10); 
+        ctx.quadraticCurveTo(w/2 + 20, 0, w/2 + 15, 15); ctx.quadraticCurveTo(w/2 + 25, 25, w/2, 28);
+        ctx.quadraticCurveTo(w/2 - 25, 25, w/2 - 15, 15); ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(w/2 - 5, 2); ctx.quadraticCurveTo(w/2 + 5, 8, w/2, 18); ctx.stroke();
 
-        // 10. Top Whipped Cream (Outlined)
-        ctx.fillStyle = '#ffffff';
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.moveTo(w/2 - 15, 15);
-        ctx.quadraticCurveTo(w/2 - 20, 0, w/2, -10); // Center point up
-        ctx.quadraticCurveTo(w/2 + 20, 0, w/2 + 15, 15);
-        ctx.quadraticCurveTo(w/2 + 25, 25, w/2, 28);
-        ctx.quadraticCurveTo(w/2 - 25, 25, w/2 - 15, 15);
-        ctx.fill();
-        ctx.stroke();
-        // Inner swirl curve
-        ctx.beginPath();
-        ctx.moveTo(w/2 - 5, 2);
-        ctx.quadraticCurveTo(w/2 + 5, 8, w/2, 18);
-        ctx.stroke();
-
-        // 11. The Crown
-        ctx.fillStyle = '#ffcc00'; // Bright Gold
-        ctx.strokeStyle = '#000';
-        ctx.lineWidth = 3;
-        ctx.lineJoin = 'round';
-        ctx.beginPath();
-        ctx.moveTo(0, 15); // Left base
-        ctx.lineTo(-5, -20); // Point 1 (far left)
-        ctx.lineTo(w/4, -5); // Valley 1
-        ctx.lineTo(w/2, -30); // Point 2 (center)
-        ctx.lineTo(w*0.75, -5); // Valley 2
-        ctx.lineTo(w + 5, -20); // Point 3 (far right)
-        ctx.lineTo(w, 15); // Right base
-        ctx.quadraticCurveTo(w/2, 25, 0, 15); // Base curve matching head
-        ctx.fill();
-        ctx.stroke();
-        
-        // Crown Jewels
-        const drawJewel = (jx, jy, jc) => {
-            ctx.fillStyle = jc;
-            ctx.beginPath(); ctx.arc(jx, jy, 4, 0, Math.PI*2); 
-            ctx.fill(); ctx.stroke();
-        };
-        drawJewel(w/4 - 10, -5, '#ef4444'); // Red
-        drawJewel(w/2, -15, '#3b82f6'); // Blue
-        drawJewel(w*0.75 + 10, -5, '#22c55e'); // Green
-
-        // 12. Floating Hands (Berry clusters)
         let handOffset = Math.cos(this.time * 6) * 6;
         const drawHand = (hx, hy) => {
-            ctx.lineWidth = 2.5;
-            
-            // Blue berry
-            ctx.fillStyle = '#3b82f6';
-            ctx.beginPath(); ctx.arc(hx - 5, hy - 3, 7, 0, Math.PI*2); 
-            ctx.fill(); ctx.stroke();
-            
-            // Red berry
-            ctx.fillStyle = '#ef4444';
-            ctx.beginPath(); ctx.arc(hx + 5, hy + 4, 7, 0, Math.PI*2); 
-            ctx.fill(); ctx.stroke();
-            
-            // Yellow crumb
-            ctx.fillStyle = '#eab308';
-            ctx.fillRect(hx + 8, hy - 6, 4, 4);
-            ctx.strokeRect(hx + 8, hy - 6, 4, 4);
+            ctx.lineWidth = 2.5; ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(hx - 5, hy - 3, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(hx + 5, hy + 4, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
         }
-        drawHand(-20, h/2 + handOffset); // Left hand
-        drawHand(w + 20, h/2 - handOffset); // Right hand
-
+        drawHand(-20, h/2 + handOffset); drawHand(w + 20, h/2 - handOffset);
         ctx.restore();
     }
 }
@@ -1248,376 +816,231 @@ class Player {
 
 let player;
 let waveManager = {
-    active: false,
-    timer: 0,
-    spawnTimer: 0,
-    enemiesSpawned: 0,
-    enemiesToSpawn: 0,
+    active: false, timer: 0, spawnTimer: 0, enemiesSpawned: 0, enemiesToSpawn: 0, isBossWave: false,
     
     startWave: function() {
-        this.active = true;
-        this.enemiesSpawned = 0;
-        this.enemiesToSpawn = Math.floor(CONFIG.enemiesPerWave * Math.pow(1.2, wave - 1));
+        this.active = true; this.enemiesSpawned = 0; this.isBossWave = (wave % 5 === 0);
+        this.enemiesToSpawn = this.isBossWave ? 1 : Math.floor(CONFIG.enemiesPerWave * Math.pow(1.2, wave - 1));
         this.spawnTimer = 1.0;
         
-        // Spawn CPU Helpers starting at Wave 5
-        if (wave >= 5 && allies.length === 0) {
-            let allyX = window.innerWidth - CONFIG.counterWidth - 40;
-            // Spread them vertically across the screen height
-            let h = window.innerHeight;
-            allies.push(new AllyBlub(allyX, h * 0.25, 'cookie', 0));
-            allies.push(new AllyBlub(allyX, h * 0.50, 'donut', 1.5));
-            allies.push(new AllyBlub(allyX, h * 0.75, 'pancake', 3.0));
+        if (wave > 1 && wave % 5 === 0) {
+            let helperTypes = ['blackberry', 'cookie', 'donut', 'pancake'];
+            let hType = helperTypes[((wave / 5) - 1) % helperTypes.length];
+            let allyX = window.innerWidth - CONFIG.counterWidth - 40 - (allies.length * 15);
+            allies.push(new AllyBlub(allyX, window.innerHeight / 2, hType, allies.length * 1.5));
+            CONFIG.projectileSpeed += CONFIG.helperProjectileSpeedBonus; 
+            floatingTexts.push(new FloatingText(window.innerWidth/2, window.innerHeight/2, "NEW HELPER & PROJECTILE SPEED UP!", "#ffeb3b"));
         }
         
-        waveAnnounce.innerText = `WAVE ${wave}`;
+        waveAnnounce.innerText = this.isBossWave ? `BOSS WAVE ${wave}` : `WAVE ${wave}`;
+        waveAnnounce.style.color = this.isBossWave ? 'var(--danger)' : 'var(--primary)';
         waveAnnounce.classList.add('show');
         setTimeout(() => waveAnnounce.classList.remove('show'), 2000);
     },
     
     update: function(dt) {
         if (!this.active) return;
-        
         this.spawnTimer -= dt;
         if (this.spawnTimer <= 0 && this.enemiesSpawned < this.enemiesToSpawn) {
             let mult = Math.pow(CONFIG.waveDifficultyMultiplier, wave - 1);
-            enemies.push(new Enemy(mult));
+            if (this.isBossWave) {
+                enemies.push(new BossEnemy(mult)); this.spawnTimer = 9999; 
+            } else {
+                enemies.push(new Enemy(mult));
+                this.spawnTimer = Math.max(0.4, CONFIG.baseSpawnRate - (wave * 0.15)) + rand(-0.2, 0.2);
+            }
             this.enemiesSpawned++;
-            
-            // Calculate next spawn time, gets faster each wave
-            let baseRate = Math.max(0.4, CONFIG.baseSpawnRate - (wave * 0.15));
-            this.spawnTimer = baseRate + rand(-0.2, 0.2);
         }
-        
-        // Wave complete condition: all spawned and all dead
         if (this.enemiesSpawned >= this.enemiesToSpawn && enemies.length === 0) {
-            this.active = false;
-            waveComplete();
+            this.active = false; waveComplete();
         }
     }
 };
 
 function initGame() {
-    audio.init();
-    player = new Player();
-    projectiles = [];
-    enemies = [];
-    particles = [];
-    floatingTexts = [];
-    allies = []; // Reset allies
-    score = 0;
-    wave = 1;
-    bakeryHealth = CONFIG.maxBakeryHealth;
-    updateHUD();
+    audio.init(); 
+    player = new Player(); projectiles = []; enemies = []; particles = []; floatingTexts = []; allies = []; 
+    score = 0; wave = 1; bakeryHealth = CONFIG.maxBakeryHealth; CONFIG.projectileSpeed = 800; 
     
+    updateHUD();
     uiHud.classList.remove('hidden');
     screenTitle.classList.add('hidden');
     screenPause.classList.add('hidden');
     screenGameOver.classList.add('hidden');
     
-    // Check if mobile controls should show
-    if (window.innerWidth <= 768 || ('ontouchstart' in window)) {
-        uiMobileControls.classList.remove('hidden');
-    }
+    if (window.innerWidth <= 768 || ('ontouchstart' in window)) { uiMobileControls.classList.remove('hidden'); }
     
     GAME_STATE = 'PLAYING';
     lastTime = performance.now();
     waveManager.startWave();
     
-    audio.setWaveTempo(wave);
-    audio.startMusic();
-    audio.setMusicPaused(false);
-    
+    audio.setWaveTempo(wave); audio.startMusic(); audio.setMusicPaused(false);
     requestAnimationFrame(gameLoop);
 }
 
 function triggerBakeryDamage(amount) {
-    bakeryHealth -= amount;
-    audio.playDamage();
-    shakeScreen(0.3, 15);
-    updateHUD();
-    
-    // Counter damage particles
+    bakeryHealth -= amount; audio.playDamage(); shakeScreen(0.3, 15); updateHUD();
     let cx = window.innerWidth - CONFIG.counterWidth;
-    let cy = rand(0, window.innerHeight);
-    for(let i=0; i<20; i++) {
-        particles.push(new Particle(cx, cy, '#8b5a2b', 2)); // Wood splinters
-    }
-    
-    if (bakeryHealth <= 0) {
-        gameOver();
-    }
+    for(let i=0; i<20; i++) { particles.push(new Particle(cx, rand(0, window.innerHeight), '#8b5a2b', 2)); }
+    if (bakeryHealth <= 0) gameOver();
 }
 
 function addScore(pts) {
     score += pts;
-    if (score > highScore) {
-        highScore = score;
-        localStorage.setItem('blubclub_highscore', highScore);
+    if (score > highScore) { 
+        highScore = score; 
+        try { localStorage.setItem('blubclub_highscore', highScore); } catch(e) {}
     }
     updateHUD();
 }
 
 function updateHUD() {
-    dispScore.innerText = score;
-    dispHiScore.innerText = highScore;
-    dispWave.innerText = wave;
-    
-    // Update health bar width & color
+    dispScore.innerText = score; dispHiScore.innerText = highScore; dispWave.innerText = wave;
     let hpPercent = Math.max(0, (bakeryHealth / CONFIG.maxBakeryHealth) * 100);
     healthBar.style.width = hpPercent + '%';
-    if (hpPercent > 60) healthBar.style.background = 'linear-gradient(90deg, #2ecc71, #27ae60)';
-    else if (hpPercent > 30) healthBar.style.background = 'linear-gradient(90deg, #f1c40f, #f39c12)';
-    else healthBar.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)';
+    healthBar.style.background = hpPercent > 60 ? 'linear-gradient(90deg, #2ecc71, #27ae60)' : hpPercent > 30 ? 'linear-gradient(90deg, #f1c40f, #f39c12)' : 'linear-gradient(90deg, #e74c3c, #c0392b)';
 }
 
 function waveComplete() {
-    GAME_STATE = 'WAVE_TRANSITION';
-    audio.playWaveClear();
-    
-    // Heal bakery slightly
-    bakeryHealth = Math.min(CONFIG.maxBakeryHealth, bakeryHealth + 20);
-    updateHUD();
-    
+    GAME_STATE = 'WAVE_TRANSITION'; audio.playWaveClear();
+    bakeryHealth = Math.min(CONFIG.maxBakeryHealth, bakeryHealth + 20); updateHUD();
     setTimeout(() => {
         if(GAME_STATE !== 'GAMEOVER') {
-            wave++;
-            updateHUD();
-            audio.setWaveTempo(wave);
-            waveManager.startWave();
-            GAME_STATE = 'PLAYING';
+            wave++; updateHUD(); audio.setWaveTempo(wave); waveManager.startWave(); GAME_STATE = 'PLAYING';
         }
     }, 3000);
 }
 
 function gameOver() {
-    GAME_STATE = 'GAMEOVER';
-    audio.stopMusic();
-    uiHud.classList.add('hidden');
-    uiMobileControls.classList.add('hidden');
-    screenGameOver.classList.remove('hidden');
-    document.getElementById('final-score').innerText = score;
-    document.getElementById('final-wave').innerText = wave;
+    GAME_STATE = 'GAMEOVER'; audio.stopMusic();
+    uiHud.classList.add('hidden'); uiMobileControls.classList.add('hidden'); screenGameOver.classList.remove('hidden');
+    document.getElementById('final-score').innerText = score; document.getElementById('final-wave').innerText = wave;
 }
-
-// --- PAUSE LOGIC ---
 
 function togglePause() {
     if (GAME_STATE === 'PLAYING' || GAME_STATE === 'WAVE_TRANSITION') {
-        GAME_STATE = 'PAUSED';
-        screenPause.classList.remove('hidden');
-        audio.setMusicPaused(true);
+        GAME_STATE = 'PAUSED'; screenPause.classList.remove('hidden'); audio.setMusicPaused(true);
     } else if (GAME_STATE === 'PAUSED') {
-        GAME_STATE = 'PLAYING';
-        lastTime = performance.now(); // Prevent large dt jump on resume
-        screenPause.classList.add('hidden');
-        audio.setMusicPaused(false);
+        GAME_STATE = 'PLAYING'; lastTime = performance.now(); screenPause.classList.add('hidden'); audio.setMusicPaused(false);
     }
 }
 
 // --- RENDERING ---
-
 function drawBackground(ctx, w, h) {
-    // Floor
-    ctx.fillStyle = CONFIG.colors.bg;
-    ctx.fillRect(0, 0, w, h);
-    
-    // Bakery Floor pattern (Perspective lines)
-    ctx.strokeStyle = CONFIG.colors.floorLine;
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    // Horizontal planks
-    for(let i=0; i<h; i+=40) {
-        ctx.moveTo(0, i);
-        ctx.lineTo(w - CONFIG.counterWidth, i);
-    }
+    ctx.fillStyle = CONFIG.colors.bg; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = CONFIG.colors.floorLine; ctx.lineWidth = 2; ctx.beginPath();
+    for (let i = 0; i < h; i += 40) { ctx.moveTo(0, i); ctx.lineTo(w - CONFIG.counterWidth, i); }
     ctx.stroke();
 
-    // Bakery Counter (Extreme Right)
-    let cw = CONFIG.counterWidth;
-    let cx = w - cw;
-    
-    // Main Counter Face
-    ctx.fillStyle = CONFIG.colors.counterSide;
-    ctx.fillRect(cx, 0, cw, h);
-    
-    // Counter Top edge (depth)
-    ctx.fillStyle = CONFIG.colors.counterTop;
-    ctx.fillRect(cx, 0, 15, h);
-    
-    // Wood grain detail on counter
-    ctx.strokeStyle = '#4a2b16';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for(let i=10; i<h; i+=30) {
-        ctx.moveTo(cx + 20, i);
-        ctx.bezierCurveTo(cx + 40, i+10, cx + 60, i-10, cx + 80, i);
+    const cw = CONFIG.counterWidth, cx = w - cw;
+    ctx.fillStyle = CONFIG.colors.counterSide; ctx.fillRect(cx, 0, cw, h);
+    ctx.fillStyle = CONFIG.colors.counterTop; ctx.fillRect(cx, 0, 15, h);
+    ctx.strokeStyle = '#4a2b16'; ctx.lineWidth = 1; ctx.beginPath();
+    for (let i = 10; i < h; i += 30) {
+        ctx.moveTo(cx + 20, i); ctx.bezierCurveTo(cx + 40, i + 10, cx + 60, i - 10, cx + 80, i);
     }
     ctx.stroke();
-    
-    // "THE BAKERY" vertical sign
+    ctx.save(); ctx.translate(cx + cw / 2 + 5, h / 2); ctx.rotate(Math.PI / 2);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 30px Impact'; ctx.textAlign = 'center';
+    ctx.fillText('BAKERY', 0, 10); ctx.restore();
+}
+
+function rectFor(entity) {
+    return { x: entity.x, y: entity.y, width: entity.width, height: entity.height };
+}
+
+function handleCollisions() {
+    for (const projectile of projectiles) {
+        if (!projectile.active || projectile.type === 'enemy') continue;
+        for (const enemy of enemies) {
+            if (enemy.active && checkAABB(rectFor(projectile), rectFor(enemy))) {
+                projectile.active = false;
+                const damage = projectile.type === 'blackberry-sphere' ? 2 : 1;
+                enemy.hit(damage);
+                break;
+            }
+        }
+    }
+}
+
+function updateGame(dt) {
+    if (GAME_STATE !== 'PLAYING') return;
+    player.update(dt);
+    waveManager.update(dt);
+    allies.forEach(a => a.update(dt));
+    enemies.forEach(e => e.update(dt));
+    projectiles.forEach(p => p.update(dt));
+    particles.forEach(p => p.update(dt));
+    floatingTexts.forEach(t => t.update(dt));
+    handleCollisions();
+    projectiles = projectiles.filter(p => p.active);
+    enemies = enemies.filter(e => e.active);
+    particles = particles.filter(p => p.life > 0);
+    floatingTexts = floatingTexts.filter(t => t.life > 0);
+    if (screenShakeTime > 0) screenShakeTime -= dt;
+}
+
+function renderGame() {
+    const w = window.innerWidth, h = window.innerHeight;
+    ctx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
+    ctx.clearRect(0, 0, w, h);
     ctx.save();
-    ctx.translate(cx + cw/2 + 5, h/2);
-    ctx.rotate(Math.PI / 2);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 30px Impact';
-    ctx.textAlign = 'center';
-    ctx.globalAlpha = 0.3;
-    ctx.fillText("THE BAKERY", 0, 0);
+    if (screenShakeTime > 0) ctx.translate(rand(-screenShakeIntensity, screenShakeIntensity), rand(-screenShakeIntensity, screenShakeIntensity));
+    drawBackground(ctx, w, h);
+    projectiles.forEach(p => p.draw(ctx));
+    enemies.forEach(e => e.draw(ctx));
+    allies.forEach(a => a.draw(ctx));
+    if (player) player.draw(ctx);
+    particles.forEach(p => p.draw(ctx));
+    floatingTexts.forEach(t => t.draw(ctx));
     ctx.restore();
 }
 
 function gameLoop(timestamp) {
-    if (GAME_STATE === 'TITLE' || GAME_STATE === 'GAMEOVER') return; // Handled by DOM UI
-    
-    let dt = (timestamp - lastTime) / 1000;
-    // Cap dt to prevent massive jumps if tab is inactive
-    if (dt > 0.1) dt = 0.1; 
+    if (GAME_STATE === 'GAMEOVER' || GAME_STATE === 'TITLE') return;
+    const dt = Math.min(0.05, Math.max(0, (timestamp - lastTime) / 1000));
     lastTime = timestamp;
-
-    // --- UPDATE ---
-    if (GAME_STATE === 'PLAYING' || GAME_STATE === 'WAVE_TRANSITION') {
-        player.update(dt);
-        waveManager.update(dt);
-        allies.forEach(a => a.update(dt));
-        
-        projectiles.forEach(p => p.update(dt));
-        enemies.forEach(e => e.update(dt));
-        particles.forEach(p => p.update(dt));
-        floatingTexts.forEach(f => f.update(dt));
-        
-        // Collisions: Projectile vs Enemy
-        for (let i = projectiles.length - 1; i >= 0; i--) {
-            let p = projectiles[i];
-            for (let j = enemies.length - 1; j >= 0; j--) {
-                let e = enemies[j];
-                if (p.active && e.active && e.flashTime <= 0) { // Don't hit if flashing (invuln frames)
-                    if (checkAABB(p, e)) {
-                        e.hit(1);
-                        p.active = false;
-                        // Projectile hit particles
-                        for(let k=0; k<5; k++) {
-                            particles.push(new Particle(p.x, p.y + p.height/2, CONFIG.colors.strawberry));
-                        }
-                        break;
-                    }
-                }
-            }
-        }
-        
-        // Cleanup inactive entities
-        projectiles = projectiles.filter(p => p.active);
-        enemies = enemies.filter(e => e.active);
-        particles = particles.filter(p => p.life > 0);
-        floatingTexts = floatingTexts.filter(f => f.life > 0);
-        
-        // Screen Shake update
-        if (screenShakeTime > 0) {
-            screenShakeTime -= dt;
-        }
-    }
-
-    // --- DRAW ---
-    // Reset transform
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    
-    // Handle device pixel ratio scaling
-    const dpr = window.devicePixelRatio || 1;
-    ctx.scale(dpr, dpr);
-    
-    let w = canvas.width / dpr;
-    let h = canvas.height / dpr;
-    
-    ctx.clearRect(0, 0, w, h);
-    
-    // Apply Screen Shake
-    if (screenShakeTime > 0) {
-        let sx = rand(-screenShakeIntensity, screenShakeIntensity);
-        let sy = rand(-screenShakeIntensity, screenShakeIntensity);
-        ctx.translate(sx, sy);
-    }
-    
-    drawBackground(ctx, w, h);
-    
-    allies.forEach(a => a.draw(ctx));
-    particles.forEach(p => p.draw(ctx));
-    projectiles.forEach(p => p.draw(ctx));
-    enemies.forEach(e => e.draw(ctx));
-    player.draw(ctx);
-    floatingTexts.forEach(f => f.draw(ctx));
-    
+    updateGame(dt);
+    renderGame();
     requestAnimationFrame(gameLoop);
 }
 
-// --- INPUT HANDLING ---
-
-window.addEventListener('keydown', (e) => {
-    if (keys.hasOwnProperty(e.key)) {
-        keys[e.key] = true;
-    }
-    // Handle specific keys
-    if (e.key === ' ' && GAME_STATE === 'TITLE') {
-        initGame();
-    }
-    if ((e.key.toLowerCase() === 'p' || e.key === 'Escape') && 
-        (GAME_STATE === 'PLAYING' || GAME_STATE === 'PAUSED' || GAME_STATE === 'WAVE_TRANSITION')) {
-        togglePause();
-    }
-});
-
-window.addEventListener('keyup', (e) => {
-    if (keys.hasOwnProperty(e.key)) {
-        keys[e.key] = false;
-    }
-});
-
-// UI Buttons
-document.getElementById('start-btn').addEventListener('click', () => {
-    audio.init();
-    initGame();
-});
-
-document.getElementById('restart-btn').addEventListener('click', () => {
-    initGame();
-});
-
-document.getElementById('resume-btn').addEventListener('click', () => {
-    togglePause();
-});
-
-// Mobile / On-screen controls
-const btnUp = document.getElementById('btn-up');
-const btnDown = document.getElementById('btn-down');
-const btnShoot = document.getElementById('btn-shoot');
-
-// Helper to handle both touch and mouse on mobile buttons
-function attachButtonEvents(btn, downCb, upCb) {
-    btn.addEventListener('touchstart', (e) => { e.preventDefault(); downCb(); });
-    btn.addEventListener('touchend', (e) => { e.preventDefault(); upCb(); });
-    btn.addEventListener('mousedown', downCb);
-    btn.addEventListener('mouseup', upCb);
-    btn.addEventListener('mouseleave', upCb);
+function setKey(key, value) {
+    if (key === ' ' || key === 'Spacebar' || key === 'Space') keys[' '] = value;
+    else if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'w' || key === 's') keys[key] = value;
 }
 
-attachButtonEvents(btnUp, 
-    () => { mobileMoveDir = -1; }, 
-    () => { if(mobileMoveDir === -1) mobileMoveDir = 0; }
-);
+document.addEventListener('keydown', e => {
+    if (['ArrowUp', 'ArrowDown', ' ', 'Space'].includes(e.key) || e.code === 'Space') e.preventDefault();
+    if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') { togglePause(); return; }
+    // Use both key and code: browsers can report Space as either " " or "Space".
+    setKey(e.key, true);
+    if (e.code === 'Space') keys.Space = true;
+});
+document.addEventListener('keyup', e => {
+    setKey(e.key, false);
+    if (e.code === 'Space') keys.Space = false;
+});
+window.addEventListener('blur', () => {
+    keys.w = keys.s = keys.ArrowUp = keys.ArrowDown = keys[' '] = keys.Space = false;
+    isShootingMobile = false;
+    mobileMoveDir = 0;
+});
 
-attachButtonEvents(btnDown, 
-    () => { mobileMoveDir = 1; }, 
-    () => { if(mobileMoveDir === 1) mobileMoveDir = 0; }
-);
+function bindHoldButton(id, onDown, onUp) {
+    const el = document.getElementById(id);
+    ['pointerdown', 'touchstart'].forEach(evt => el.addEventListener(evt, e => { e.preventDefault(); onDown(); }, { passive: false }));
+    ['pointerup', 'pointercancel', 'pointerleave', 'touchend'].forEach(evt => el.addEventListener(evt, e => { e.preventDefault(); onUp(); }, { passive: false }));
+}
+bindHoldButton('btn-up', () => mobileMoveDir = -1, () => { if (mobileMoveDir === -1) mobileMoveDir = 0; });
+bindHoldButton('btn-down', () => mobileMoveDir = 1, () => { if (mobileMoveDir === 1) mobileMoveDir = 0; });
+bindHoldButton('btn-shoot', () => isShootingMobile = true, () => isShootingMobile = false);
 
-attachButtonEvents(btnShoot, 
-    () => { isShootingMobile = true; audio.init(); }, 
-    () => { isShootingMobile = false; }
-);
+document.getElementById('start-btn').addEventListener('click', initGame);
+document.getElementById('restart-btn').addEventListener('click', initGame);
+document.getElementById('resume-btn').addEventListener('click', togglePause);
 
-// Initial Canvas setup
-ctx.fillStyle = '#000';
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+renderGame();
 </script>
 </body>
 </html>
