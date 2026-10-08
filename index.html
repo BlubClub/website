@@ -1208,47 +1208,37 @@ document
 ========================================== */
 
 async function loadStaff() {
+    const grid = document.getElementById("staff-grid");
 
-    const staffGrid =
-        document.getElementById(
-            "staff-grid"
-        );
-
-
-    if (!staffGrid) {
+    if (!grid) {
+        console.error("STAFF GRID NOT FOUND");
         return;
     }
 
+    grid.innerHTML = `
+        <div class="staff-card">
+            <h4>Loading BLUB STAFF...</h4>
+        </div>
+    `;
 
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-            .from("staff")
-            .select(
-                "id, name, role, description, display_order"
-            )
-            .order(
-                "display_order",
-                {
-                    ascending: true
-                }
-            );
-
+    const { data: staff, error } = await supabaseClient
+        .from("staff")
+        .select("id, name, role, description, display_order")
+        .order("display_order", { ascending: true });
 
     if (error) {
+        console.error("🔥 BLUB DATABASE ERROR:", error);
+        console.error("Message:", error.message);
+        console.error("Details:", error.details);
+        console.error("Hint:", error.hint);
+        console.error("Code:", error.code);
 
-        console.error(
-            "Could not load BLUB staff:",
-            error
-        );
-
-        staffGrid.innerHTML = `
-            <div class="staff-card fade-in visible">
+        grid.innerHTML = `
+            <div class="staff-card">
                 <h4>STAFF UNAVAILABLE</h4>
-                <p class="role">
-                    BLUB DATABASE ERROR
+                <p class="role">BLUB DATABASE ERROR</p>
+                <p class="muted-subtext">
+                    Check the browser console for the exact Supabase error.
                 </p>
             </div>
         `;
@@ -1256,109 +1246,36 @@ async function loadStaff() {
         return;
     }
 
+    grid.innerHTML = "";
 
-    if (!data || data.length === 0) {
+    staff.forEach((member, index) => {
+        const card = document.createElement("div");
+        card.className = "staff-card fade-in";
+        card.style.transitionDelay = `${Math.min(index * 0.1, 0.5)}s`;
 
-        staffGrid.innerHTML = `
-            <div class="staff-card fade-in visible">
-                <h4>NO STAFF</h4>
-                <p class="role">
-                    The BLUB CLUB staff roster is empty.
-                </p>
-            </div>
-        `;
+        const name = document.createElement("h4");
+        name.textContent = member.name;
 
-        return;
-    }
+        const role = document.createElement("p");
+        role.className = "role";
+        role.textContent = member.role || "Member";
 
+        card.appendChild(name);
+        card.appendChild(role);
 
-    staffGrid.innerHTML = "";
-
-
-    data.forEach(
-        (member, index) => {
-
-            const card =
-                document.createElement(
-                    "div"
-                );
-
-            card.className =
-                "staff-card fade-in";
-
-
-            if (index > 0) {
-
-                card.style.transitionDelay =
-                    `${Math.min(index * 0.1, 0.5)}s`;
-
-            }
-
-
-            const name =
-                document.createElement(
-                    "h4"
-                );
-
-            name.textContent =
-                member.name;
-
-
-            const role =
-                document.createElement(
-                    "p"
-                );
-
-            role.className =
-                "role";
-
-            role.textContent =
-                member.role;
-
-
-            card.appendChild(name);
-            card.appendChild(role);
-
-
-            if (member.description) {
-
-                const description =
-                    document.createElement(
-                        "p"
-                    );
-
-                description.className =
-                    "muted-subtext";
-
-                description.textContent =
-                    member.description;
-
-                card.appendChild(
-                    description
-                );
-
-            }
-
-
-            staffGrid.appendChild(
-                card
-            );
-
-
-            /*
-             * The cards are dynamically
-             * created after the original
-             * IntersectionObserver ran,
-             * so manually observe them.
-             */
-
-            revealObserver.observe(
-                card
-            );
-
+        if (member.description) {
+            const description = document.createElement("p");
+            description.className = "muted-subtext";
+            description.textContent = member.description;
+            card.appendChild(description);
         }
-    );
 
+        grid.appendChild(card);
+
+        if (typeof revealObserver !== "undefined") {
+            revealObserver.observe(card);
+        }
+    });
 }
 
 
