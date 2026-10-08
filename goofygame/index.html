@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BLUB CLUB: DEFEND THE BAKERY</title>
+    <style>
+        :root {
+            --primary: #FFd700;
+            --bg-color: #2a2015;
+            --counter-color: #5c3a21;
+            --text-light: #fefefe;
+            --danger: #ff4747;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            overflow: hidden;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            touch-action: none; /* Prevent scroll on touch */
+            user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* UI Overlays */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Let clicks pass through to game/buttons */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* HUD */
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            color: var(--text-light);
+            text-shadow: 2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            z-index: 10;
+        }
+
+        .hud-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #health-bar-container {
+            width: 200px;
+            height: 25px;
+            background-color: #333;
+            border: 3px solid #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 5px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.5);
+        }
+
+        #health-bar {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #00ff00);
+            transition: width 0.2s ease-out;
+        }
+
+        /* Screens (Title, Game Over) */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-light);
+            z-index: 20;
+            pointer-events: auto;
+            text-align: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        h1 {
+            font-size: 5rem;
+            color: var(--primary);
+            text-shadow: 4px 4px 0 #000, 0 0 20px rgba(255, 215, 0, 0.5);
+            margin-bottom: 10px;
+            line-height: 1.1;
+        }
+        
+        .subtitle {
+            font-size: 2rem;
+            color: #fff;
+            margin-bottom: 40px;
+            letter-spacing: 5px;
+        }
+
+        button {
+            padding: 15px 40px;
+            font-size: 2rem;
+            font-family: 'Impact', sans-serif;
+            background-color: var(--primary);
+            color: #000;
+            border: 4px solid #000;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #ccaa00, 0 10px 10px rgba(0,0,0,0.5);
+            transition: transform 0.1s, box-shadow 0.1s;
+            text-transform: uppercase;
+        }
+
+        button:hover {
+            transform: translateY(2px);
+            box-shadow: 0 4px 0 #ccaa00, 0 8px 8px rgba(0,0,0,0.5);
+        }
+
+        button:active {
+            transform: translateY(6px);
+            box-shadow: 0 0 0 #ccaa00, 0 2px 2px rgba(0,0,0,0.5);
+        }
+
+        .stats-display {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .highlight {
+            color: var(--primary);
+        }
+
+        /* Mobile Controls */
+        #mobile-controls {
+            display: none;
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            justify-content: space-between;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        @media (max-width: 768px) {
+            #mobile-controls {
+                display: flex;
+            }
+            h1 { font-size: 3rem; }
+            .subtitle { font-size: 1.2rem; }
+            #hud { font-size: 1rem; padding: 10px; }
+            #health-bar-container { width: 120px; height: 15px; }
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            backdrop-filter: blur(5px);
+            padding: 0;
+        }
+        
+        #move-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Wave Announcement */
+        #wave-announcement {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-size: 6rem;
+            color: var(--primary);
+            text-shadow: 4px 4px 0 #000;
+            pointer-events: none;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 15;
+            opacity: 0;
+        }
+
+        #wave-announcement.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        /* Pause Screen */
+        #pause-screen {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="game-canvas"></canvas>
+    
+    <div id="ui-layer">
+        <div id="hud" class="hidden">
+            <div class="hud-section" style="align-items: flex-start;">
+                <div>SCORE: <span id="score-display">0</span></div>
+                <div style="font-size: 1rem; color:#aaa;">HI: <span id="hi-score-display">0</span></div>
+            </div>
+            <div class="hud-section">
+                <div>WAVE <span id="wave-display">1</span></div>
+            </div>
+            <div class="hud-section" style="align-items: flex-end;">
+                <div>BAKERY DEFENSE</div>
+                <div id="health-bar-container">
+                    <div id="health-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="wave-announcement">WAVE 1</div>
+
+        <div id="mobile-controls" class="hidden">
+            <div id="move-controls">
+                <button class="control-btn" id="btn-up">▲</button>
+                <button class="control-btn" id="btn-down">▼</button>
+            </div>
+            <div>
+                <button class="control-btn" id="btn-shoot" style="width: 80px; height: 80px;">FIRE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Title Screen -->
+    <div id="title-screen" class="screen">
+        <h1>BLUB CLUB</h1>
+        <div class="subtitle">DEFEND THE BAKERY</div>
+        <p style="margin-bottom: 30px; max-width: 600px; line-height: 1.6; color: #ddd;">
+            Control King Cheesecake! Use W/S or Up/Down to move.<br>
+            Press SPACE to shoot incoming Spoon Bots.<br>
+            Don't let them touch the bakery counter on the right!<br>
+            Press P or ESC to Pause.
+        </p>
+        <button id="start-btn">PLAY NOW</button>
+    </div>
+
+    <!-- Pause Screen -->
+    <div id="pause-screen" class="screen hidden">
+        <h1>PAUSED</h1>
+        <div class="subtitle">TAKE A BREATHER</div>
+        <button id="resume-btn">RESUME</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen" class="screen hidden">
+        <h1 style="color: var(--danger);">THE BAKERY FELL!</h1>
+        <div class="stats-display">
+            <div>FINAL SCORE: <span id="final-score" class="highlight">0</span></div>
+            <div>WAVES SURVIVED: <span id="final-wave" class="highlight">1</span></div>
+        </div>
+        <button id="restart-btn">PLAY AGAIN</button>
+    </div>
+</div>
+
+<script>
+/**
+ * BLUB CLUB: DEFEND THE BAKERY
+ * Core Game Engine and Logic
+ */
+
+// --- CONFIGURATION ---
+const CONFIG = {
+    // Player
+    playerSpeed: 400, // pixels per second
+    playerFireRate: 0.25, // seconds between shots
+    playerSize: 80, // Base scale for drawing
+    
+    // Bakery
+    maxBakeryHealth: 100,
+    counterWidth: 80, // Width of the bakery counter on the right
+    
+    // Projectiles
+    projectileSpeed: 800, // Moves left (negative X)
+    
+    // Enemies
+    baseEnemySpeed: 150, // Moves right (positive X)
+    baseSpawnRate: 2.0, // Seconds between spawns
+    waveDifficultyMultiplier: 1.15, // Speed/Spawn rate increase per wave
+    enemiesPerWave: 10,
+    
+    // Visuals
+    colors: {
+        bg: '#2a2015',
+        floorLine: '#3a2d1d',
+        counterTop: '#8b5a2b',
+        counterSide: '#5c3a21',
+        cheesecakeBody: '#fceabb',
+        cheesecakeCrust: '#e59a42',
+        strawberry: '#ff3366',
+        spoonBot: '#a0aab5'
+    }
+};
+
+// --- GLOBALS & STATE ---
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d', { alpha: false }); // Optimize for no transparency on base canvas
+
+let GAME_STATE = 'TITLE'; // TITLE, PLAYING, GAMEOVER, WAVE_TRANSITION
+let lastTime = 0;
+let score = 0;
+let highScore = localStorage.getItem('blubclub_highscore') || 0;
+let wave = 1;
+let bakeryHealth = CONFIG.maxBakeryHealth;
+let screenShakeTime = 0;
+let screenShakeIntensity = 0;
+
+// Game Entities Arrays
+let projectiles = [];
+let enemies = [];
+let particles = [];
+let floatingTexts = [];
+let allies = []; // Array for CPU helper bots
+
+// Input State
+const keys = {
+    w: false, s: false, ArrowUp: false, ArrowDown: false, ' ': false
+};
+let isShootingMobile = false;
+let mobileMoveDir = 0; // -1 up, 1 down, 0 none
+
+// DOM Elements
+const uiHud = document.getElementById('hud');
+const uiMobileControls = document.getElementById('mobile-controls');
+const screenTitle = document.getElementById('title-screen');
+const screenPause = document.getElementById('pause-screen');
+const screenGameOver = document.getElementById('game-over-screen');
+const dispScore = document.getElementById('score-display');
+const dispHiScore = document.getElementById('hi-score-display');
+const dispWave = document.getElementById('wave-display');
+const healthBar = document.getElementById('health-bar');
+const waveAnnounce = document.getElementById('wave-announcement');
+
+dispHiScore.innerText = highScore;
+
+// --- AUDIO SYSTEM (Web Audio API) ---
+class AudioManager {
+    constructor() {
+        this.ctx = null;
+        this.enabled = false;
+        
+        // Music Sequencer State
+        this.musicGain = null;
+        this.isPlayingMusic = false;
+        this.currentNote = 0;
+        this.nextNoteTime = 0;
+        this.tempo = 120; 
+        this.melody = [261.63, 293.66, 329.63, 392.00, 440.00, 392.00, 329.63, 293.66]; // Pentatonic
+        this.bass = [130.81, 130.81, 98.00, 110.00]; 
+        this.musicTimer = null;
+    }
+
+    init() {
+        if (!this.ctx) {
+            window.AudioContext = window.AudioContext || window.webkitAudioContext;
+            this.ctx = new AudioContext();
+            this.enabled = true;
+            
+            this.musicGain = this.ctx.createGain();
+            this.musicGain.connect(this.ctx.destination);
+            this.musicGain.gain.value = 0.04;
+        }
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    }
+
+    // Music Methods
+    startMusic() {
+        if (!this.enabled || this.isPlayingMusic) return;
+        this.isPlayingMusic = true;
+        this.currentNote = 0;
+        this.nextNoteTime = this.ctx.currentTime + 0.1;
+        this.scheduleMusic();
+    }
+
+    stopMusic() {
+        this.isPlayingMusic = false;
+        clearTimeout(this.musicTimer);
+    }
+
+    setMusicPaused(isPaused) {
+        if (!this.enabled || !this.musicGain) return;
+        this.musicGain.gain.setTargetAtTime(isPaused ? 0.001 : 0.04, this.ctx.currentTime, 0.1);
+    }
+
+    setWaveTempo(wave) {
+        // Capped tempo increase
+        this.tempo = Math.min(200, 120 + (wave * 5)); 
+    }
+
+    scheduleMusic() {
+        if (!this.isPlayingMusic) return;
+
+        const secondsPerBeat = 60.0 / this.tempo;
+        const noteLength = secondsPerBeat * 0.25; // 16th notes
+        
+        // Schedule ahead
+        while (this.nextNoteTime < this.ctx.currentTime + 0.1) {
+            this.playMusicNote(this.nextNoteTime, noteLength);
+            this.nextNoteTime += noteLength;
+            this.currentNote++;
+        }
+
+        this.musicTimer = setTimeout(() => this.scheduleMusic(), 25);
+    }
+
+    playMusicNote(time, duration) {
+        // Melody blip
+        let osc = this.ctx.createOscillator();
+        let gain = this.ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = this.melody[this.currentNote % this.melody.length];
+        
+        gain.gain.setValueAtTime(0, time);
+        gain.gain.linearRampToValueAtTime(0.1, time + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.001, time + duration - 0.01);
+        
+        osc.connect(gain);
+        gain.connect(this.musicGain);
+        osc.start(time);
+        osc.stop(time + duration);
+
+        // Bass thump (every 4th note)
+        if (this.currentNote % 4 === 0) {
+            let bassOsc = this.ctx.createOscillator();
+            let bassGain = this.ctx.createGain();
+            bassOsc.type = 'triangle';
+            bassOsc.frequency.value = this.bass[(this.currentNote / 4) % this.bass.length];
+            
+            bassGain.gain.setValueAtTime(0, time);
+            bassGain.gain.linearRampToValueAtTime(0.3, time + 0.01);
+            bassGain.gain.exponentialRampToValueAtTime(0.001, time + (duration*4) - 0.01);
+            
+            bassOsc.connect(bassGain);
+            bassGain.connect(this.musicGain);
+            bassOsc.start(time);
+            bassOsc.stop(time + duration * 4);
+        }
+    }
+
+    playTone(freq, type, duration, vol=0.1, slideFreq=null) {
+        if (!this.enabled || !this.ctx) return;
+        
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        if (slideFreq) {
+            osc.frequency.exponentialRampToValueAtTime(slideFreq, this.ctx.currentTime + duration);
+        }
+        
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+        
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+    }
+
+    playShoot() {
+        // High pitched pop for strawberry shot
+        this.playTone(600, 'sine', 0.1, 0.1, 300);
+    }
+
+    playHit() {
+        // Metallic clink for hitting Spoon Bot
+        this.playTone(800, 'square', 0.1, 0.05, 1200);
+    }
+
+    playExplosion() {
+        // Noise-like crunch for destroying enemy
+        this.playTone(150, 'sawtooth', 0.3, 0.15, 50);
+    }
+
+    playDamage() {
+        // Low scary thud for bakery taking damage
+        this.playTone(100, 'square', 0.5, 0.3, 40);
+    }
+
+    playWaveClear() {
+        // Triumphant rising arpeggio
+        if (!this.enabled) return;
+        const now = this.ctx.currentTime;
+        const notes = [440, 554, 659, 880]; // A4, C#5, E5, A5
+        notes.forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.1, now + i*0.15);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + i*0.15 + 0.3);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + i*0.15);
+            osc.stop(now + i*0.15 + 0.3);
+        });
+    }
+}
+const audio = new AudioManager();
+
+// --- UTILITIES ---
+function resizeCanvas() {
+    // Handle High-DPI displays
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = window.innerWidth * dpr;
+    canvas.height = window.innerHeight * dpr;
+    // Normalize coordinates system so 1 unit = 1 pixel on standard displays
+    ctx.scale(dpr, dpr);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas(); // Initial size
+
+function rand(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+function checkAABB(a, b) {
+    return a.x < b.x + b.width &&
+           a.x + a.width > b.x &&
+           a.y < b.y + b.height &&
+           a.y + a.height > b.y;
+}
+
+function shakeScreen(duration, intensity) {
+    screenShakeTime = duration;
+    screenShakeIntensity = intensity;
+}
+
+// --- ENTITIES ---
+
+class Particle {
+    constructor(x, y, color, speedMultiplier = 1) {
+        this.x = x;
+        this.y = y;
+        const angle = rand(0, Math.PI * 2);
+        const speed = rand(50, 200) * speedMultiplier;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.life = 1.0; // 1 to 0
+        this.decay = rand(1.0, 2.0); // How fast life decreases per second
+        this.color = color;
+        this.size = rand(3, 8);
+        this.gravity = 400; // pulls down
+    }
+    update(dt) {
+        this.vy += this.gravity * dt;
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.life -= this.decay * dt;
+    }
+    draw(ctx) {
+        ctx.globalAlpha = Math.max(0, this.life);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x - this.size/2, this.y - this.size/2, this.size, this.size);
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+class FloatingText {
+    constructor(x, y, text, color) {
+        this.x = x;
+        this.y = y;
+        this.text = text;
+        this.color = color;
+        this.life = 1.0;
+        this.vy = -50;
+    }
+    update(dt) {
+        this.y += this.vy * dt;
+        this.life -= dt;
+    }
+    draw(ctx) {
+        ctx.globalAlpha = Math.max(0, this.life);
+        ctx.fillStyle = this.color;
+        ctx.font = 'bold 20px Impact';
+        ctx.textAlign = 'center';
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.globalAlpha = 1.0;
+    }
+}
+
+class Projectile {
+    constructor(x, y, type = 'player') {
+        this.width = 24;
+        this.height = 24;
+        this.x = x - this.width; // Start moving left
+        this.y = y - this.height/2;
+        this.vx = -CONFIG.projectileSpeed;
+        this.vy = 0;
+        this.active = true;
+        this.type = type; // 'player', 'cookie', 'donut', 'pancake', 'blackberry', 'blackberry_pod'
+        
+        // Visuals
+        this.rotation = 0;
+        this.rotSpeed = rand(-10, 10);
+    }
+    
+    update(dt) {
+        this.x += this.vx * dt;
+        this.y += this.vy * dt;
+        this.rotation += this.rotSpeed * dt;
+        // Off screen check
+        if (this.x + this.width < 0 || this.x > window.innerWidth + 100 || this.y < -100 || this.y > window.innerHeight + 100) {
+            this.active = false;
+        }
+    }
+    
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x + this.width/2, this.y + this.height/2);
+        ctx.rotate(this.rotation);
+        
+        if (this.type === 'player') {
+            // Draw Strawberry Projectile
+            ctx.fillStyle = CONFIG.colors.strawberry;
+            ctx.beginPath();
+            ctx.moveTo(0, -10);
+            ctx.quadraticCurveTo(10, -10, 10, 0);
+            ctx.quadraticCurveTo(10, 12, 0, 12);
+            ctx.quadraticCurveTo(-10, 12, -10, 0);
+            ctx.quadraticCurveTo(-10, -10, 0, -10);
+            ctx.fill();
+            
+            // Seeds
+            ctx.fillStyle = '#ffb3c6';
+            for(let i=0; i<3; i++) {
+                ctx.fillRect(rand(-6,6), rand(-6,6), 2, 2);
+            }
+            
+            // Leaves top
+            ctx.fillStyle = '#33cc33';
+            ctx.beginPath();
+            ctx.moveTo(-6, -8);
+            ctx.lineTo(0, -14);
+            ctx.lineTo(6, -8);
+            ctx.fill();
+        } else if (this.type === 'blackberry') {
+            // Blackberry cluster
+            const pods = [
+                {x: 0, y: 0, r: 6},
+                {x: -5, y: -4, r: 5},
+                {x: 5, y: -4, r: 5},
+                {x: -6, y: 3, r: 5},
+                {x: 6, y: 3, r: 5},
+                {x: 0, y: -7, r: 5},
+                {x: 0, y: 7, r: 5}
+            ];
+            pods.forEach(p => {
+                ctx.fillStyle = '#240038';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#9333ea';
+                ctx.beginPath();
+                ctx.arc(p.x - p.r/3, p.y - p.r/3, p.r/3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            // Green stem
+            ctx.fillStyle = '#22c55e';
+            ctx.beginPath();
+            ctx.moveTo(-4, -8);
+            ctx.lineTo(0, -13);
+            ctx.lineTo(4, -8);
+            ctx.fill();
+        } else if (this.type === 'blackberry_pod') {
+            // Single scattered blackberry pod
+            ctx.fillStyle = '#240038';
+            ctx.beginPath();
+            ctx.arc(0, 0, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#a855f7';
+            ctx.beginPath();
+            ctx.arc(-2, -2, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+        } else if (this.type === 'cookie') {
+            // Chocolate Chip
+            ctx.fillStyle = '#4a2b16';
+            ctx.beginPath();
+            ctx.moveTo(-8, 6);
+            ctx.lineTo(8, 6);
+            ctx.lineTo(0, -8);
+            ctx.fill();
+        } else if (this.type === 'donut') {
+            // Sprinkle
+            ctx.fillStyle = ['#4ade80', '#3b82f6', '#ffeb3b'][Math.floor(rand(0,3))];
+            ctx.fillRect(-8, -3, 16, 6);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(-8, -3, 16, 6);
+        } else if (this.type === 'pancake') {
+            // Butter pad / Syrup blob
+            ctx.fillStyle = '#fff38a';
+            ctx.fillRect(-6, -6, 12, 12);
+            ctx.fillStyle = '#b36b00';
+            ctx.beginPath();
+            ctx.arc(0, 0, 8, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        ctx.restore();
+    }
+}
+
+class Enemy {
+    constructor(waveMultiplier) {
+        this.width = 65; // Precise physical width matching visual edge
+        this.height = 24;
+        this.x = -100; // Spawn offscreen left
+        this.y = rand(50, window.innerHeight - 50);
+        this.vx = CONFIG.baseEnemySpeed * waveMultiplier;
+        
+        // Introduce sine wave movement occasionally
+        this.moveType = Math.random() > 0.5 ? 'straight' : 'sine';
+        this.startY = this.y;
+        this.time = rand(0, 100);
+        
+        this.hp = Math.floor(1 * waveMultiplier);
+        this.active = true;
+        this.flashTime = 0;
+        this.hasDamaged = false; // Prevents multiple damage instances
+    }
+    
+    update(dt) {
+        if (!this.active) return;
+
+        this.time += dt;
+        this.x += this.vx * dt;
+        
+        if (this.moveType === 'sine') {
+            this.y = this.startY + Math.sin(this.time * 3) * 40;
+        }
+        
+        if (this.flashTime > 0) this.flashTime -= dt;
+        
+        // Precise collision with Counter Edge
+        let counterLeftEdge = window.innerWidth - CONFIG.counterWidth;
+        let spoonTipX = this.x + this.width;
+        
+        // Only trigger damage ONCE precisely when the tip touches the counter
+        if (spoonTipX >= counterLeftEdge && !this.hasDamaged) {
+            this.hasDamaged = true;
+            this.active = false; // Mark for immediate removal
+            triggerBakeryDamage(10);
+        }
+    }
+    
+    hit(damage) {
+        if (!this.active) return;
+        
+        this.hp -= damage;
+        this.flashTime = 0.1;
+        audio.playHit();
+        
+        // Spawn hit particles
+        for(let i=0; i<5; i++) {
+            particles.push(new Particle(this.x + this.width, this.y + this.height/2, '#ccc'));
+        }
+        
+        if (this.hp <= 0) {
+            this.active = false;
+            audio.playExplosion();
+            addScore(100);
+            shakeScreen(0.1, 5);
+            floatingTexts.push(new FloatingText(this.x, this.y, "100", "#fff"));
+            
+            // Explosion particles
+            for(let i=0; i<15; i++) {
+                particles.push(new Particle(this.x + this.width/2, this.y + this.height/2, '#888', 2));
+                particles.push(new Particle(this.x + this.width/2, this.y + this.height/2, '#ff3333', 1.5));
+            }
+        }
+    }
+    
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        // Hit flash
+        if (this.flashTime > 0) {
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.fillStyle = '#ffffff';
+        } else {
+            ctx.fillStyle = '#b0b8c0'; // Silver metallic
+        }
+        
+        ctx.strokeStyle = '#000'; // Clean black outline
+        ctx.lineWidth = 2;
+        
+        // Draw Spoon Bot Structure
+        ctx.beginPath();
+        
+        // Handle (left side)
+        let handleWidth = 40;
+        let handleHeight = 8;
+        let handleY = this.height/2 - handleHeight/2;
+        ctx.rect(0, handleY, handleWidth, handleHeight);
+        
+        // Scoop (right side)
+        let scoopRadiusX = 15;
+        let scoopRadiusY = 12;
+        let scoopCenterX = this.width - scoopRadiusX; // Perfectly aligns with bounding box
+        ctx.ellipse(scoopCenterX, this.height/2, scoopRadiusX, scoopRadiusY, 0, 0, Math.PI * 2);
+        
+        ctx.fill();
+        ctx.stroke();
+        
+        // Evil glowing red eye in scoop
+        if (this.flashTime <= 0) {
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(scoopCenterX + 5, this.height/2, 4, 0, Math.PI*2);
+            ctx.fill();
+            
+            // Eye glow
+            ctx.shadowColor = '#ff0000';
+            ctx.shadowBlur = 10;
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        }
+        
+        ctx.restore();
+    }
+}
+
+// Friendly Blub Base Class (CPU Helpers)
+class AllyBlub {
+    constructor(x, baseY, type, timeOffset) {
+        this.width = 60;
+        this.height = 80;
+        this.x = x;
+        this.baseY = baseY;
+        this.y = baseY;
+        this.type = type; // 'cookie', 'donut', 'pancake'
+        this.time = timeOffset;
+        
+        this.fireTimer = rand(0, 2);
+        this.fireRate = 1.5; // Shoot every 1.5 seconds
+    }
+    
+    update(dt) {
+        this.time += dt;
+        
+        // Move towards nearest spoon bot if enemies exist
+        let target = null;
+        let minDist = Infinity;
+        for (let e of enemies) {
+            if (e.active) {
+                let dist = Math.hypot(e.x - this.x, e.y - this.y);
+                if (dist < minDist) {
+                    minDist = dist;
+                    target = e;
+                }
+            }
+        }
+        
+        if (target) {
+            let dx = target.x - this.x;
+            let dy = target.y - this.y;
+            let dist = Math.hypot(dx, dy);
+            if (dist > 10) {
+                let speed = 200;
+                this.x += (dx / dist) * speed * dt;
+                this.y += (dy / dist) * speed * dt;
+            }
+        } else {
+            // Hover vertically at base position if no enemies
+            this.y = this.baseY + Math.sin(this.time * 2) * 15;
+        }
+        
+        // Auto-fire if enemies exist
+        this.fireTimer -= dt;
+        if (this.fireTimer <= 0 && enemies.length > 0) {
+            this.shoot();
+        }
+    }
+    
+    shoot() {
+        this.fireTimer = this.fireRate;
+        // Shoot matching projectile
+        projectiles.push(new Projectile(this.x, this.y + this.height/2, this.type));
+        
+        // Shoot particle
+        particles.push(new Particle(this.x, this.y + this.height/2, '#fff', 0.5));
+    }
+    
+    draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        
+        let w = this.width;
+        let h = this.height;
+        
+        // 1. Outline and Clipping Path (Blub Shape)
+        ctx.beginPath();
+        ctx.moveTo(10, 20);
+        ctx.quadraticCurveTo(w/2, 0, w - 10, 20); // Top
+        ctx.lineTo(w, h - 15); // Right
+        // 3 Waffle Bumps (scallops)
+        let bumpW = w / 3;
+        ctx.quadraticCurveTo(w - bumpW/2, h + 10, w - bumpW, h - 5);
+        ctx.quadraticCurveTo(w - bumpW*1.5, h + 10, bumpW, h - 5);
+        ctx.quadraticCurveTo(bumpW/2, h + 10, 0, h - 15);
+        ctx.lineTo(10, 20); // Left edge
+        ctx.closePath();
+        
+        ctx.save();
+        ctx.clip(); // Clip contents to body shape
+        
+        // 2. Base Colors and Textures by Type
+        if (this.type === 'cookie') {
+            ctx.fillStyle = '#c78a48';
+            ctx.fillRect(0, 0, w, h);
+            // Chocolate Chips
+            ctx.fillStyle = '#3b250e';
+            const chips = [[15, 25], [45, 20], [30, 15], [10, 50], [50, 45], [20, 65], [40, 60], [30, 40]];
+            chips.forEach(c => {
+                ctx.beginPath(); ctx.arc(c[0], c[1], 4, 0, Math.PI*2); ctx.fill();
+            });
+            // Crumb particles around base
+            ctx.fillStyle = '#8f5c27';
+            ctx.fillRect(5, h-10, 3, 3); ctx.fillRect(50, h-15, 2, 2);
+            
+        } else if (this.type === 'donut') {
+            ctx.fillStyle = '#d49b57'; // Dough
+            ctx.fillRect(0, 0, w, h);
+            
+            // Pink Frosting
+            ctx.fillStyle = '#ff85c2';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(w, 0);
+            ctx.lineTo(w, 45);
+            ctx.quadraticCurveTo(w-10, 60, w-20, 45);
+            ctx.quadraticCurveTo(w-30, 35, w-40, 50);
+            ctx.quadraticCurveTo(w-50, 65, 0, 40);
+            ctx.fill();
+            
+            // Sprinkles
+            const drawSprinkle = (sx, sy, color, angle) => {
+                ctx.save(); ctx.translate(sx, sy); ctx.rotate(angle);
+                ctx.fillStyle = color; ctx.fillRect(-3, -1, 6, 2);
+                ctx.restore();
+            };
+            drawSprinkle(20, 20, '#4ade80', 0.5);
+            drawSprinkle(40, 15, '#3b82f6', -0.5);
+            drawSprinkle(30, 35, '#ffeb3b', 1.2);
+            drawSprinkle(15, 40, '#f87171', -0.2);
+            drawSprinkle(45, 35, '#a855f7', 0.8);
+            
+        } else if (this.type === 'pancake') {
+            ctx.fillStyle = '#d6a14d'; // Base pancake color
+            ctx.fillRect(0, 0, w, h);
+            
+            // Pancake stack lines
+            ctx.strokeStyle = '#b58133';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, h-30); ctx.quadraticCurveTo(w/2, h-20, w, h-30);
+            ctx.moveTo(0, h-15); ctx.quadraticCurveTo(w/2, h-5, w, h-15);
+            ctx.stroke();
+            
+            // Syrup
+            ctx.fillStyle = '#964B00';
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(w, 0);
+            ctx.lineTo(w, 20);
+            ctx.quadraticCurveTo(w-10, 40, w-20, 15);
+            ctx.quadraticCurveTo(w-35, 45, w-45, 20);
+            ctx.quadraticCurveTo(w-55, 35, 0, 15);
+            ctx.fill();
+        }
+        
+        ctx.restore(); // Remove clipping mask
+        
+        // 3. Thick Black Outline
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#000';
+        ctx.stroke(); 
+        
+        // 4. Face (Applies to all)
+        ctx.fillStyle = '#000';
+        ctx.fillRect(w/2 - 8, 30, 3, 15); // Left eye
+        ctx.fillRect(w/2 + 5, 30, 3, 15); // Right eye
+        // Smile
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(w/2 - 12, 55);
+        ctx.quadraticCurveTo(w/2, 65, w/2 + 12, 52);
+        ctx.stroke();
+
+        // 5. Special unclipped top accessories
+        if (this.type === 'pancake') {
+            // Butter pad on top
+            ctx.fillStyle = '#fff38a';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(w/2 - 12, 0);
+            ctx.lineTo(w/2 + 5, -5);
+            ctx.lineTo(w/2 + 15, 2);
+            ctx.lineTo(w/2 - 2, 7);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+        
+        // 6. Floating Hands
+        let handOffset = Math.cos(this.time * 6) * 4;
+        ctx.fillStyle = (this.type === 'cookie') ? '#8f5c27' : (this.type === 'donut') ? '#d49b57' : '#d6a14d';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        const drawHand = (hx, hy) => {
+            ctx.beginPath(); ctx.arc(hx, hy, 5, 0, Math.PI*2); 
+            ctx.fill(); ctx.stroke();
+        }
+        drawHand(-10, h/2 + handOffset);
+        drawHand(w + 10, h/2 - handOffset);
+        
+        ctx.restore();
+    }
+}
+
+class Player {
+    constructor() {
+        this.width = 80;
+        this.height = 110;
+        // Position immediately left of the bakery counter
+        this.x = window.innerWidth - CONFIG.counterWidth - this.width - 20;
+        this.y = window.innerHeight / 2 - this.height / 2;
+        this.fireTimer = 0;
+        
+        // Animation states
+        this.time = 0;
+        this.shootRecoil = 0;
+    }
+    
+    update(dt) {
+        this.time += dt;
+        
+        // Maintain fixed X based on resize
+        this.x = window.innerWidth - CONFIG.counterWidth - this.width - 20;
+        
+        // Movement Input
+        let moving = false;
+        if (keys.w || keys.ArrowUp || mobileMoveDir === -1) {
+            this.y -= CONFIG.playerSpeed * dt;
+            moving = true;
+        }
+        if (keys.s || keys.ArrowDown || mobileMoveDir === 1) {
+            this.y += CONFIG.playerSpeed * dt;
+            moving = true;
+        }
+        
+        // Boundaries
+        if (this.y < 0) this.y = 0;
+        if (this.y + this.height > window.innerHeight) this.y = window.innerHeight - this.height;
+        
+        // Shooting
+        if (this.fireTimer > 0) {
+            this.fireTimer -= dt;
+        }
+        
+        if ((keys[' '] || isShootingMobile) && this.fireTimer <= 0) {
+            this.shoot();
+        }
+        
+        // Recoil recovery
+        if (this.shootRecoil > 0) {
+            this.shootRecoil -= dt * 10;
+        } else {
+            this.shootRecoil = 0;
+        }
+    }
+    
+    shoot() {
+        this.fireTimer = CONFIG.playerFireRate;
+        this.shootRecoil = 15; // pixels of kickback
+        audio.playShoot();
+        
+        if (wave > 5) {
+            // Shotgun mode after level 5: fires 5 spread blackberry projectiles moving left
+            const angles = [-0.3, -0.15, 0, 0.15, 0.3];
+            angles.forEach(angle => {
+                let p = new Projectile(this.x, this.y + this.height/2, 'blackberry');
+                p.vx = -CONFIG.projectileSpeed * Math.cos(angle);
+                p.vy = CONFIG.projectileSpeed * Math.sin(angle);
+                projectiles.push(p);
+            });
+            for(let i=0; i<5; i++) {
+                particles.push(new Particle(this.x, this.y + this.height/2, '#9333ea', 0.5));
+            }
+        } else {
+            // Standard strawberry projectile
+            projectiles.push(new Projectile(this.x, this.y + this.height/2, 'player'));
+            for(let i=0; i<3; i++) {
+                particles.push(new Particle(this.x, this.y + this.height/2, '#fff', 0.5));
+            }
+        }
+    }
+    
+    draw(ctx) {
+        ctx.save();
+        let bobY = Math.sin(this.time * 5) * 5;
+        // Translate to top-left of the player's bounding box
+        ctx.translate(this.x + this.shootRecoil, this.y + bobY);
+        
+        let w = this.width;
+        let h = this.height;
+        
+        // --- DRAW KING CHEESECAKE (Polished Version) ---
+        
+        // 1. Define Main Silhouette Path (Used for clipping internal textures and outlines)
+        ctx.beginPath();
+        ctx.moveTo(10, 30);
+        ctx.quadraticCurveTo(w/2, 10, w - 10, 30); // Top rounded head
+        ctx.lineTo(w, h - 20); // Right edge
+        
+        // Bottom 3 Waffle Bumps (scallops)
+        let bumpW = w / 3;
+        ctx.quadraticCurveTo(w - bumpW/2, h + 10, w - bumpW, h - 5);
+        ctx.quadraticCurveTo(w - bumpW*1.5, h + 10, bumpW, h - 5);
+        ctx.quadraticCurveTo(bumpW/2, h + 10, 0, h - 20);
+        
+        ctx.lineTo(10, 30); // Left edge
+        ctx.closePath();
+        
+        // Save state to clip toppings so they don't bleed outside the body
+        ctx.save();
+        ctx.clip();
+        
+        // 2. Base Cream Color
+        ctx.fillStyle = '#fef1cc';
+        ctx.fillRect(0, 0, w, h);
+        
+        // 3. Waffle Cone Texture (Bottom)
+        ctx.fillStyle = '#e8a54d';
+        ctx.fillRect(0, h - 35, w, 35);
+        ctx.strokeStyle = '#c47d21';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for(let i = 5; i < w; i += 12) { ctx.moveTo(i, h-35); ctx.lineTo(i, h); } // Vertical grid
+        for(let j = h-30; j < h; j += 10) { ctx.moveTo(0, j); ctx.lineTo(w, j); } // Horizontal grid
+        ctx.stroke();
+
+        // 4. Strawberry Jam Section
+        ctx.fillStyle = '#a6172a';
+        ctx.beginPath();
+        ctx.moveTo(w/2 - 10, h - 35);
+        ctx.quadraticCurveTo(w/2 + 10, h - 60, w, h - 45);
+        ctx.lineTo(w, h - 35);
+        ctx.fill();
+        // Colorful Sprinkles on Jam
+        ctx.fillStyle = '#4ade80'; // Green
+        ctx.fillRect(w - 20, h - 45, 4, 4);
+        ctx.fillStyle = '#ff7eb3'; // Pink
+        ctx.fillRect(w - 12, h - 50, 4, 4);
+        ctx.fillRect(w - 30, h - 40, 4, 4);
+
+        // 5. Caramel/Peanut Butter Drizzles
+        ctx.strokeStyle = '#d69e49';
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(-10, 40); ctx.quadraticCurveTo(w/2, 60, w+10, 40);
+        ctx.stroke();
+        ctx.restore();
+        // Crown
+        ctx.fillStyle = '#ffd700';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(15, 25); ctx.lineTo(22, 5); ctx.lineTo(38, 18);
+        ctx.lineTo(50, 2); ctx.lineTo(62, 18); ctx.lineTo(72, 8);
+        ctx.lineTo(75, 30); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        // Face
+        ctx.fillStyle = '#000';
+        ctx.fillRect(w/2 - 18, 45, 5, 18);
+        ctx.fillRect(w/2 + 13, 45, 5, 18);
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(w/2, 68, 14, 0.15, Math.PI - 0.15);
+        ctx.stroke();
+        ctx.restore();
+    }
+}
+
+let player = new Player();
+let spawnTimer = 0;
+let enemiesSpawnedThisWave = 0;
+let waveTransitionTimer = 0;
+
+function resetGame() {
+    score = 0;
+    wave = 1;
+    bakeryHealth = CONFIG.maxBakeryHealth;
+    projectiles = [];
+    enemies = [];
+    particles = [];
+    floatingTexts = [];
+    allies = [];
+    player = new Player();
+    spawnTimer = 0;
+    enemiesSpawnedThisWave = 0;
+    waveTransitionTimer = 0;
+    updateHud();
+}
+
+function startGame() {
+    resetGame();
+    GAME_STATE = 'PLAYING';
+    screenTitle.classList.add('hidden');
+    screenGameOver.classList.add('hidden');
+    screenPause.classList.add('hidden');
+    uiHud.classList.remove('hidden');
+    uiMobileControls.classList.remove('hidden');
+    audio.init();
+    audio.startMusic();
+    beginWave();
+}
+
+function beginWave() {
+    GAME_STATE = 'PLAYING';
+    enemiesSpawnedThisWave = 0;
+    spawnTimer = 0;
+    dispWave.textContent = wave;
+    waveAnnounce.textContent = `WAVE ${wave}`;
+    waveAnnounce.classList.add('show');
+    setTimeout(() => waveAnnounce.classList.remove('show'), 900);
+    audio.setWaveTempo(wave);
+    // Wave 9 adds exactly seven helper blubs in a vertical wall.
+    if (wave === 9) {
+        allies = [];
+        const wallX = Math.max(90, window.innerWidth - CONFIG.counterWidth - 230);
+        const spacing = Math.max(75, Math.min(105, (window.innerHeight - 100) / 6));
+        const startY = Math.max(10, (window.innerHeight - (spacing * 6 + 80)) / 2);
+        const types = ['cookie', 'donut', 'pancake', 'cookie', 'donut', 'pancake', 'cookie'];
+        for (let i = 0; i < 7; i++) {
+            allies.push(new AllyBlub(wallX, startY + i * spacing, types[i], i * 0.35));
+        }
+    }
+}
+
+function updateHud() {
+    dispScore.textContent = score;
+    dispWave.textContent = wave;
+    healthBar.style.width = `${Math.max(0, bakeryHealth)}%`;
+}
+
+function addScore(points) {
+    score += points;
+    if (score > highScore) {
+        highScore = score;
+        localStorage.setItem('blubclub_highscore', highScore);
+        dispHiScore.textContent = highScore;
+    }
+    updateHud();
+}
+
+function triggerBakeryDamage(amount) {
+    bakeryHealth = Math.max(0, bakeryHealth - amount);
+    audio.playDamage();
+    shakeScreen(0.25, 10);
+    updateHud();
+    if (bakeryHealth <= 0) endGame();
+}
+
+function spawnEnemy() {
+    const multiplier = Math.pow(CONFIG.waveDifficultyMultiplier, wave - 1);
+    enemies.push(new Enemy(multiplier));
+    enemiesSpawnedThisWave++;
+}
+
+function handleCollisions() {
+    for (const projectile of projectiles) {
+        if (!projectile.active) continue;
+        for (const enemy of enemies) {
+            if (enemy.active && checkAABB(projectile, enemy)) {
+                projectile.active = false;
+                enemy.hit(projectile.type === 'blackberry' ? 2 : 1);
+                break;
+            }
+        }
+    }
+}
+
+function update(dt) {
+    if (GAME_STATE !== 'PLAYING') return;
+    player.update(dt);
+    for (const ally of allies) ally.update(dt);
+    for (const projectile of projectiles) projectile.update(dt);
+    for (const enemy of enemies) enemy.update(dt);
+    for (const particle of particles) particle.update(dt);
+    for (const text of floatingTexts) text.update(dt);
+    handleCollisions();
+    projectiles = projectiles.filter(p => p.active);
+    enemies = enemies.filter(e => e.active);
+    particles = particles.filter(p => p.life > 0);
+    floatingTexts = floatingTexts.filter(t => t.life > 0);
+
+    const spawnRate = Math.max(0.35, CONFIG.baseSpawnRate / Math.pow(CONFIG.waveDifficultyMultiplier, wave - 1));
+    spawnTimer -= dt;
+    if (enemiesSpawnedThisWave < CONFIG.enemiesPerWave && spawnTimer <= 0) {
+        spawnEnemy();
+        spawnTimer = spawnRate;
+    }
+    if (enemiesSpawnedThisWave >= CONFIG.enemiesPerWave && enemies.length === 0) {
+        GAME_STATE = 'WAVE_TRANSITION';
+        waveTransitionTimer = 1.5;
+        audio.playWaveClear();
+    }
+}
+
+function draw() {
+    ctx.save();
+    if (screenShakeTime > 0) {
+        ctx.translate(rand(-screenShakeIntensity, screenShakeIntensity), rand(-screenShakeIntensity, screenShakeIntensity));
+        screenShakeTime -= 1 / 60;
+    }
+    ctx.fillStyle = CONFIG.colors.bg;
+    ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+    ctx.fillStyle = CONFIG.colors.floorLine;
+    ctx.fillRect(0, window.innerHeight - 35, window.innerWidth, 35);
+    // Bakery counter
+    ctx.fillStyle = CONFIG.colors.counterSide;
+    ctx.fillRect(window.innerWidth - CONFIG.counterWidth, 0, CONFIG.counterWidth, window.innerHeight);
+    ctx.fillStyle = CONFIG.colors.counterTop;
+    ctx.fillRect(window.innerWidth - CONFIG.counterWidth - 8, 0, 8, window.innerHeight);
+    player.draw(ctx);
+    for (const ally of allies) ally.draw(ctx);
+    for (const projectile of projectiles) projectile.draw(ctx);
+    for (const enemy of enemies) enemy.draw(ctx);
+    for (const particle of particles) particle.draw(ctx);
+    for (const text of floatingTexts) text.draw(ctx);
+    ctx.restore();
+}
+
+function gameLoop(timestamp) {
+    const dt = Math.min(0.05, (timestamp - lastTime) / 1000 || 0);
+    lastTime = timestamp;
+    if (GAME_STATE === 'WAVE_TRANSITION') {
+        waveTransitionTimer -= dt;
+        if (waveTransitionTimer <= 0) {
+            wave++;
+            beginWave();
+        }
+    }
+    update(dt);
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+function endGame() {
+    GAME_STATE = 'GAMEOVER';
+    audio.stopMusic();
+    document.getElementById('final-score').textContent = score;
+    document.getElementById('final-wave').textContent = wave;
+    screenGameOver.classList.remove('hidden');
+    uiHud.classList.add('hidden');
+    uiMobileControls.classList.add('hidden');
+}
+
+function togglePause() {
+    if (GAME_STATE === 'PLAYING') {
+        GAME_STATE = 'PAUSED';
+        screenPause.classList.remove('hidden');
+        audio.setMusicPaused(true);
+    } else if (GAME_STATE === 'PAUSED') {
+        GAME_STATE = 'PLAYING';
+        screenPause.classList.add('hidden');
+        audio.setMusicPaused(false);
+    }
+}
+
+window.addEventListener('keydown', (event) => {
+    if (event.key in keys) keys[event.key] = true;
+    if (event.key === 'p' || event.key === 'P' || event.key === 'Escape') togglePause();
+});
+window.addEventListener('keyup', (event) => {
+    if (event.key in keys) keys[event.key] = false;
+});
+
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('restart-btn').addEventListener('click', startGame);
+document.getElementById('resume-btn').addEventListener('click', togglePause);
+const bindHold = (id, down, up) => {
+    const button = document.getElementById(id);
+    button.addEventListener('pointerdown', (e) => { e.preventDefault(); down(); });
+    button.addEventListener('pointerup', (e) => { e.preventDefault(); up(); });
+    button.addEventListener('pointercancel', up);
+    button.addEventListener('pointerleave', up);
+};
+bindHold('btn-up', () => mobileMoveDir = -1, () => { if (mobileMoveDir === -1) mobileMoveDir = 0; });
+bindHold('btn-down', () => mobileMoveDir = 1, () => { if (mobileMoveDir === 1) mobileMoveDir = 0; });
+bindHold('btn-shoot', () => isShootingMobile = true, () => isShootingMobile = false);
+
+updateHud();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
