@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-       <link rel="icon" type="image/jpeg" href="images/logo.jpg">
+    <link rel="icon" type="image/jpeg" href="images/logo.jpg">
     <title>BLUB CLUB</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@200;300;400;600;800&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         :root {
             --bg-color: #030303;
@@ -38,7 +42,6 @@
             line-height: 1.6;
         }
 
-        /* --- MURAL BACKGROUND --- */
         #mural {
             position: fixed;
             top: 0;
@@ -59,14 +62,54 @@
             mix-blend-mode: screen;
         }
 
-        .m1 { top: -5%; left: -5%; width: 40vw; transform: rotate(-15deg); opacity: 0.30; }
-        .m2 { bottom: 10%; right: -10%; width: 45vw; transform: rotate(10deg); opacity: 0.30; }
-        .m3 { top: 40%; left: 30%; width: 30vw; opacity: 0.20; filter: blur(2px); }
-        .m4 { top: 20%; right: 10%; width: 25vw; transform: rotate(25deg); opacity: 0.28; }
-        .m5 { bottom: -5%; left: 15%; width: 35vw; transform: rotate(-5deg); opacity: 0.30; }
-        .m6 { top: 60%; right: 25%; width: 28vw; transform: rotate(-12deg); opacity: 0.22; }
+        .m1 {
+            top: -5%;
+            left: -5%;
+            width: 40vw;
+            transform: rotate(-15deg);
+            opacity: 0.30;
+        }
 
-        /* --- NAVIGATION --- */
+        .m2 {
+            bottom: 10%;
+            right: -10%;
+            width: 45vw;
+            transform: rotate(10deg);
+            opacity: 0.30;
+        }
+
+        .m3 {
+            top: 40%;
+            left: 30%;
+            width: 30vw;
+            opacity: 0.20;
+            filter: blur(2px);
+        }
+
+        .m4 {
+            top: 20%;
+            right: 10%;
+            width: 25vw;
+            transform: rotate(25deg);
+            opacity: 0.28;
+        }
+
+        .m5 {
+            bottom: -5%;
+            left: 15%;
+            width: 35vw;
+            transform: rotate(-5deg);
+            opacity: 0.30;
+        }
+
+        .m6 {
+            top: 60%;
+            right: 25%;
+            width: 28vw;
+            transform: rotate(-12deg);
+            opacity: 0.22;
+        }
+
         nav {
             position: fixed;
             top: 0;
@@ -77,7 +120,10 @@
             align-items: center;
             padding: 0 5%;
             z-index: 100;
-            transition: background 0.4s ease, backdrop-filter 0.4s ease, border-bottom 0.4s ease;
+            transition:
+                background 0.4s ease,
+                backdrop-filter 0.4s ease,
+                border-bottom 0.4s ease;
             border-bottom: 1px solid transparent;
         }
 
@@ -113,7 +159,6 @@
             color: var(--text-muted);
         }
 
-        /* --- HERO SECTION --- */
         .hero {
             min-height: 100vh;
             display: flex;
@@ -161,7 +206,12 @@
             filter: drop-shadow(0 20px 40px rgba(0,0,0,0.8));
             opacity: 0;
             transform: scale(0.85) translateY(20px);
-            animation: heroImageReveal 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s forwards;
+            animation:
+                heroImageReveal
+                2.5s
+                cubic-bezier(0.2, 0.8, 0.2, 1)
+                0.5s
+                forwards;
         }
 
         .hero-label {
@@ -171,14 +221,12 @@
             color: var(--gold);
         }
 
-        /* --- ABOUT & STAFF SECTION --- */
         .about-wrapper {
             position: relative;
             width: 100%;
         }
 
         .scroll-track {
-            /* Gives plenty of height for the user to scroll through while the text writes itself */
             height: 400vh;
             position: relative;
         }
@@ -191,7 +239,7 @@
             align-items: center;
             justify-content: center;
             padding: calc(var(--nav-height) + 2rem) 5% 4rem 5%;
-            overflow: visible; /* Guarantees text will never clip */
+            overflow: visible;
         }
 
         .text-container {
@@ -201,7 +249,6 @@
         }
 
         .scroll-text {
-            /* Huge but fully responsive typography */
             font-size: clamp(1.6rem, 4.5vw, 4rem);
             line-height: 1.4;
             font-weight: 300;
@@ -238,19 +285,27 @@
         }
 
         .staff-card {
-            background: linear-gradient(145deg, rgba(25, 25, 25, 0.6) 0%, rgba(10, 10, 10, 0.8) 100%);
+            background: linear-gradient(
+                145deg,
+                rgba(25, 25, 25, 0.6) 0%,
+                rgba(10, 10, 10, 0.8) 100%
+            );
             border: 1px solid var(--glass-border);
             border-radius: 20px;
             padding: 3.5rem 2rem;
             flex: 1 1 300px;
             max-width: 400px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.5s ease;
+            transition:
+                transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 0.5s ease;
         }
 
         .staff-card:hover {
             transform: translateY(-8px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.7), 0 0 20px rgba(255,255,255,0.03);
+            box-shadow:
+                0 15px 40px rgba(0,0,0,0.7),
+                0 0 20px rgba(255,255,255,0.03);
             border-color: rgba(255, 255, 255, 0.1);
         }
 
@@ -276,14 +331,13 @@
             font-style: italic;
         }
 
-        /* --- BLUB COLLECTION SECTION --- */
         .collection {
             padding: 8rem 5%;
             max-width: 1600px;
             margin: 0 auto;
             position: relative;
             z-index: 2;
-            background: var(--bg-color); /* Prevents scroll overlap visuals */
+            background: var(--bg-color);
         }
 
         .section-title {
@@ -296,7 +350,10 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(320px, 1fr)
+            );
             gap: 2.5rem;
         }
 
@@ -307,9 +364,10 @@
             padding: 3rem 2rem;
             text-align: center;
             backdrop-filter: blur(10px);
-            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), 
-                        box-shadow 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
-                        background 0.5s ease;
+            transition:
+                transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+                box-shadow 0.5s cubic-bezier(0.2, 0.8, 0.2, 1),
+                background 0.5s ease;
             position: relative;
             overflow: hidden;
             display: flex;
@@ -320,8 +378,16 @@
         .card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at center, var(--glass-glow) 0%, transparent 70%);
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(
+                    circle at center,
+                    var(--glass-glow) 0%,
+                    transparent 70%
+                );
             opacity: 0;
             transition: opacity 0.5s ease;
             z-index: 0;
@@ -329,7 +395,9 @@
 
         .card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 40px rgba(255,255,255,0.03);
+            box-shadow:
+                0 30px 60px rgba(0,0,0,0.6),
+                0 0 40px rgba(255,255,255,0.03);
             background: rgba(35, 35, 35, 0.5);
             border-color: rgba(255, 255, 255, 0.1);
         }
@@ -358,9 +426,10 @@
             max-height: 100%;
             width: auto;
             height: auto;
-            object-fit: contain; 
+            object-fit: contain;
             filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
-            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition:
+                transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .card:hover img {
@@ -380,7 +449,6 @@
             font-weight: 300;
         }
 
-        /* --- THE KING SECTION --- */
         .the-king {
             min-height: 100vh;
             display: flex;
@@ -390,7 +458,12 @@
             text-align: center;
             padding: 8rem 5%;
             position: relative;
-            background: radial-gradient(circle at center, rgba(212, 175, 55, 0.03) 0%, transparent 60%);
+            background:
+                radial-gradient(
+                    circle at center,
+                    rgba(212, 175, 55, 0.03) 0%,
+                    transparent 60%
+                );
         }
 
         .king-top-label {
@@ -426,7 +499,12 @@
             width: auto;
             height: auto;
             object-fit: contain;
-            filter: drop-shadow(0 30px 60px rgba(0,0,0,0.9)) drop-shadow(0 0 40px rgba(212, 175, 55, 0.1));
+            filter:
+                drop-shadow(0 30px 60px rgba(0,0,0,0.9))
+                drop-shadow(
+                    0 0 40px
+                    rgba(212, 175, 55, 0.1)
+                );
             transition: transform 0.8s ease;
         }
 
@@ -435,12 +513,16 @@
             font-weight: 800;
             letter-spacing: 0.1em;
             line-height: 1.2;
-            background: linear-gradient(to bottom, #ffffff 0%, #888888 100%);
+            background:
+                linear-gradient(
+                    to bottom,
+                    #ffffff 0%,
+                    #888888 100%
+                );
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
-        /* --- FOOTER --- */
         footer {
             padding: 6rem 5% 3rem;
             text-align: center;
@@ -471,12 +553,12 @@
             margin-bottom: 0;
         }
 
-        /* --- ANIMATIONS & UTILITIES --- */
         .fade-in {
             opacity: 0;
             transform: translateY(30px);
-            transition: opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1), 
-                        transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition:
+                opacity 1s cubic-bezier(0.2, 0.8, 0.2, 1),
+                transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .fade-in.visible {
@@ -491,357 +573,526 @@
             }
         }
 
-        /* Responsive adjustments */
         @media (max-width: 768px) {
-            .nav-links { display: none; }
-            .hero-img-container { height: 35vh; }
-            .king-img-container { height: 40vh; }
-            .card-img-wrapper { height: 200px; }
-            .card { padding: 2rem 1.5rem; }
-            .staff-card { padding: 2.5rem 1.5rem; }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hero-img-container {
+                height: 35vh;
+            }
+
+            .king-img-container {
+                height: 40vh;
+            }
+
+            .card-img-wrapper {
+                height: 200px;
+            }
+
+            .card {
+                padding: 2rem 1.5rem;
+            }
+
+            .staff-card {
+                padding: 2.5rem 1.5rem;
+            }
         }
 
-        /* Accessibility: Respect prefers-reduced-motion */
         @media (prefers-reduced-motion: reduce) {
-            *, *::before, *::after {
+
+            *,
+            *::before,
+            *::after {
                 animation-duration: 0.01ms !important;
                 animation-iteration-count: 1 !important;
                 transition-duration: 0.01ms !important;
                 scroll-behavior: auto !important;
             }
-            .hero-img, .fade-in { opacity: 1; transform: none; }
-            .scroll-track { height: auto !important; padding: 10vh 0; }
-            .sticky-content { position: relative !important; height: auto !important; min-height: auto; }
-            .word { opacity: 1 !important; transform: none !important; }
+
+            .hero-img,
+            .fade-in {
+                opacity: 1;
+                transform: none;
+            }
+
+            .scroll-track {
+                height: auto !important;
+                padding: 10vh 0;
+            }
+
+            .sticky-content {
+                position: relative !important;
+                height: auto !important;
+                min-height: auto;
+            }
+
+            .word {
+                opacity: 1 !important;
+                transform: none !important;
+            }
         }
     </style>
 </head>
+
 <body>
 
-    <!-- MURAL BACKGROUND -->
-    <div id="mural">
-        <img src="images/Gemini_Generated_Image_fjjc9yfjjc9yfjjc.jpeg" class="mural-img m1" alt="">
-        <img src="images/Blub.png" class="mural-img m2" alt="">
-        <img src="images/Gemini_Generated_Image_ppp6x0ppp6x0ppp6.jpeg" class="mural-img m3" alt="">
-        <img src="images/Gemini_Generated_Image_3ry3w73ry3w73ry3.jpeg" class="mural-img m4" alt="">
-        <img src="images/Gemini_Generated_Image_upqumcupqumcupqu.jpeg" class="mural-img m5" alt="">
-        <img src="images/volcano-blub.png" class="mural-img m6" alt="">
-    </div>
+<div id="mural">
 
-    <!-- NAVIGATION -->
-    <nav id="navbar">
-        <a href="#home" class="nav-logo">BLUB CLUB</a>
-        <div class="nav-links">
-            <a href="#home">HOME</a>
-            <a href="#about">ABOUT</a>
-            <a href="#blubs">BLUBS</a>
-            <a href="#the-king">THE KING</a>
-            <a href="admin/">ADMIN</a>
-        </div>
-    </nav>
+    <img
+        src="images/Gemini_Generated_Image_fjjc9yfjjc9yfjjc.jpeg"
+        class="mural-img m1"
+        alt=""
+    >
 
-    <!-- HERO SECTION -->
-    <header id="home" class="hero">
-        <h1 class="fade-in">BLUB CLUB</h1>
-        <p class="hero-subtitle fade-in" style="transition-delay: 0.1s;">THE HOME OF THE BLUBS</p>
-        
-        <div class="hero-img-container">
-            <img src="images/Gemini_Generated_Image_fjjc9yfjjc9yfjjc.jpeg" alt="King Cheesecake Blub" class="hero-img">
-        </div>
-        
-        <p class="hero-label fade-in" style="transition-delay: 0.8s;">KING CHEESECAKE BLUB</p>
-    </header>
+    <img
+        src="images/Blub.png"
+        class="mural-img m2"
+        alt=""
+    >
 
-    <!-- ABOUT & STAFF SECTION -->
-    <section id="about" class="about-wrapper">
-        <!-- Cinematic Scroll-Written Text Reveal -->
-        <div class="scroll-track">
-            <div class="sticky-content">
-                <div class="text-container">
-                    <h2 id="animated-text" class="scroll-text">
-                        <!-- Content dynamically injected to preserve screen reader access and spacing -->
-                    </h2>
-                </div>
-            </div>
-        </div>
+    <img
+        src="images/Gemini_Generated_Image_ppp6x0ppp6x0ppp6.jpeg"
+        class="mural-img m3"
+        alt=""
+    >
 
+    <img
+        src="images/Gemini_Generated_Image_3ry3w73ry3w73ry3.jpeg"
+        class="mural-img m4"
+        alt=""
+    >
 
-<!-- The Staff Section -->
-<div class="staff-section">
-    <h3 class="staff-title fade-in">THE BLUB CLUB STAFF</h3>
-    
-    <div class="staff-grid">
-        <div class="staff-card fade-in">
-            <h4>Pravith</h4>
-            <p class="role">Manager</p>
-        </div>
+    <img
+        src="images/Gemini_Generated_Image_upqumcupqumcupqu.jpeg"
+        class="mural-img m5"
+        alt=""
+    >
 
-        <div class="staff-card fade-in" style="transition-delay: 0.1s;">
-            <h4>Ayansh</h4>
-            <p class="role">CEO</p>
-        </div>
+    <img
+        src="images/volcano-blub.png"
+        class="mural-img m6"
+        alt=""
+    >
 
-        <div class="staff-card fade-in" style="transition-delay: 0.2s;">
-            <h4>William</h4>
-            <p class="role">President</p>
-        </div>
-
-        <div class="staff-card fade-in" style="transition-delay: 0.3s;">
-            <h4>Adam</h4>
-        </div>
-    </div>
 </div>
+
+
+<nav id="navbar">
+
+    <a href="#home" class="nav-logo">
+        BLUB CLUB
+    </a>
+
+    <div class="nav-links">
+
+        <a href="#home">HOME</a>
+        <a href="#about">ABOUT</a>
+        <a href="#blubs">BLUBS</a>
+        <a href="#the-king">THE KING</a>
+        <a href="admin/">ADMIN</a>
+
+    </div>
+
+</nav>
+
+
+<header id="home" class="hero">
+
+    <h1 class="fade-in">
+        BLUB CLUB
+    </h1>
+
+    <p
+        class="hero-subtitle fade-in"
+        style="transition-delay: 0.1s;"
+    >
+        THE HOME OF THE BLUBS
+    </p>
+
+    <div class="hero-img-container">
+
+        <img
+            src="images/Gemini_Generated_Image_fjjc9yfjjc9yfjjc.jpeg"
+            alt="King Cheesecake Blub"
+            class="hero-img"
+        >
+
+    </div>
+
+    <p
+        class="hero-label fade-in"
+        style="transition-delay: 0.8s;"
+    >
+        KING CHEESECAKE BLUB
+    </p>
+
+</header>
+
+
+<section
+    id="about"
+    class="about-wrapper"
+>
+
+    <div class="scroll-track">
+
+        <div class="sticky-content">
+
+            <div class="text-container">
+
+                <h2
+                    id="animated-text"
+                    class="scroll-text"
+                ></h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="staff-section">
+
+        <h3
+            class="staff-title fade-in"
+        >
+            THE BLUB CLUB STAFF
+        </h3>
+
+        <!-- SUPABASE STAFF GOES HERE -->
+        <div
+            id="staff-grid"
+            class="staff-grid"
+        >
+
+            <div
+                class="staff-card fade-in"
+            >
+                <h4>LOADING...</h4>
+
+                <p class="role">
+                    BLUB STAFF
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
 </section>
 
-    <!-- BLUB COLLECTION -->
-    <section id="blubs" class="collection">
-        <h2 class="section-title fade-in">MEET THE BLUBS</h2>
-        
-        <div class="grid">
-            
-            <div class="card fade-in">
-                <div class="card-img-wrapper">
-                    <img src="images/Blub.png" alt="OG Blub" loading="lazy">
-                </div>
-                <div>
-                    <h3>OG BLUB</h3>
-                    <p>The original Blub.</p>
-                </div>
+
+<section
+    id="blubs"
+    class="collection"
+>
+
+    <h2 class="section-title fade-in">
+        MEET THE BLUBS
+    </h2>
+
+    <div class="grid">
+
+        <div class="card fade-in">
+
+            <div class="card-img-wrapper">
+                <img
+                    src="images/Blub.png"
+                    alt="OG Blub"
+                    loading="lazy"
+                >
             </div>
 
-            <div class="card fade-in" style="transition-delay: 0.1s;">
-                <div class="card-img-wrapper">
-                    <img src="images/Gemini_Generated_Image_upqumcupqumcupqu.jpeg" alt="Pancake Blub" loading="lazy">
-                </div>
-                <div>
-                    <h3>PANCAKE BLUB</h3>
-                    <p>Breakfast has entered the Blub universe.</p>
-                </div>
-            </div>
-
-            <div class="card fade-in" style="transition-delay: 0.2s;">
-                <div class="card-img-wrapper">
-                    <img src="images/Gemini_Generated_Image_3ry3w73ry3w73ry3.jpeg" alt="Pizza Blub" loading="lazy">
-                </div>
-                <div>
-                    <h3>PIZZA BLUB</h3>
-                    <p>Pizza-powered Blub.</p>
-                </div>
-            </div>
-
-            <div class="card fade-in">
-                <div class="card-img-wrapper">
-                    <img src="images/Gemini_Generated_Image_dwmzi8dwmzi8dwmz.jpeg" alt="Strawberry Blub" loading="lazy">
-                </div>
-                <div>
-                    <h3>STRAWBERRY BLUB</h3>
-                    <p>A strawberry-themed Blub.</p>
-                </div>
-            </div>
-
-            <div class="card fade-in" style="transition-delay: 0.1s;">
-                <div class="card-img-wrapper">
-                    <img src="images/Gemini_Generated_Image_s8dh79s8dh79s8dh.jpeg" alt="Watermelon Blub" loading="lazy">
-                </div>
-                <div>
-                    <h3>WATERMELON BLUB</h3>
-                    <p>Fresh watermelon energy.</p>
-                </div>
-            </div>
-
-            <div class="card fade-in" style="transition-delay: 0.2s;">
-                <div class="card-img-wrapper">
-                    <img src="images/Gemini_Generated_Image_cs84a7cs84a7cs84.jpeg" alt="Cookie Blub" loading="lazy">
-                </div>
-                <div>
-                    <h3>COOKIE BLUB</h3>
-                    <p>A cookie-themed Blub.</p>
-                </div>
-            </div>
-
-            <div class="card fade-in">
-                <div class="card-img-wrapper">
-                    <img src="images/Gemini_Generated_Image_ppp6x0ppp6x0ppp6.jpeg" alt="Donut Blub" loading="lazy">
-                </div>
-                <div>
-                    <h3>DONUT BLUB</h3>
-                    <p>A donut-themed Blub.</p>
-                </div>
-            </div>
-
-            <div class="card fade-in" style="transition-delay: 0.1s;">
-                <div class="card-img-wrapper">
-                    <img src="images/ice-cream-blub.png" alt="Ice Cream Blub" loading="lazy">
-                </div>
-                <div>
-                    <h3>ICE CREAM BLUB</h3>
-                    <p>Chilled to perfection with extra sprinkles.</p>
-                </div>
-            </div>
-
-            <div class="card fade-in" style="transition-delay: 0.2s;">
-                <div class="card-img-wrapper">
-                    <img src="images/volcano-blub.png" alt="Volcano Blub" loading="lazy">
-                </div>
-                <div>
-                    <h3>VOLCANO BLUB</h3>
-                    <p>Erupting with pure Blub energy.</p>
-                </div>
-            </div>
-
-            <div class="card fade-in">
-                <div class="card-img-wrapper">
-                    <img src="images/burger-blub.png" alt="Burger Blub" loading="lazy">
-                </div>
-                <div>
-                    <h3>BURGER BLUB</h3>
-                    <p>A multi-layered savory masterpiece.</p>
-                </div>
-            </div>
-
-            <div class="card fade-in" style="transition-delay: 0.1s;">
-                <div class="card-img-wrapper">
-                    <img src="images/taco-blub.png.png" alt="Taco Blub" loading="lazy">
-                </div>
-                <div>
-                    <h3>TACO BLUB</h3>
-                    <p>Seasoned, folded, and unconditionally iconic.</p>
-                </div>
+            <div>
+                <h3>OG BLUB</h3>
+                <p>The original Blub.</p>
             </div>
 
         </div>
-    </section>
 
-    <!-- THE KING SECTION -->
-    <section id="the-king" class="the-king">
-        <p class="king-top-label fade-in">THE KING</p>
-        <h2 class="king-name fade-in" style="transition-delay: 0.1s;">KING CHEESECAKE BLUB</h2>
-        
-        <div class="king-img-container fade-in" style="transition-delay: 0.2s;">
-            <img src="images/Gemini_Generated_Image_fjjc9yfjjc9yfjjc.jpeg" alt="King Cheesecake Blub" class="king-img" loading="lazy">
+
+        <div
+            class="card fade-in"
+            style="transition-delay: 0.1s;"
+        >
+
+            <div class="card-img-wrapper">
+                <img
+                    src="images/Gemini_Generated_Image_upqumcupqumcupqu.jpeg"
+                    alt="Pancake Blub"
+                    loading="lazy"
+                >
+            </div>
+
+            <div>
+                <h3>PANCAKE BLUB</h3>
+                <p>
+                    Breakfast has entered the Blub universe.
+                </p>
+            </div>
+
         </div>
-        
-        <h1 class="king-statement fade-in" style="transition-delay: 0.3s;">CHEESECAKE.<br>KING.<br>BLUB.</h1>
-    </section>
 
-    <!-- FOOTER -->
-    <footer>
-        <h2 class="fade-in">BLUB CLUB</h2>
-        <p class="fade-in">Made with Microsoft Paint and an unreasonable number of Blubs.</p>
-        <p class="copyright fade-in">&copy; 2026 BLUB CLUB</p>
-    </footer>
 
-    <!-- SCRIPTS -->
-    <script>
-        // --- NAV LOGIC ---
-        const navbar = document.getElementById('navbar');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
+        <div
+            class="card fade-in"
+            style="transition-delay: 0.2s;"
+        >
 
-        // --- MURAL PARALLAX ---
-        const mural = document.getElementById('mural');
-        window.addEventListener('scroll', () => {
-            const scrollPos = window.scrollY;
-            mural.style.transform = `translateY(${scrollPos * 0.12}px)`;
-        });
+            <div class="card-img-wrapper">
+                <img
+                    src="images/Gemini_Generated_Image_3ry3w73ry3w73ry3.jpeg"
+                    alt="Pizza Blub"
+                    loading="lazy"
+                >
+            </div>
 
-        // --- INTERSECTION OBSERVER FOR FADE-INS ---
-        const revealElements = document.querySelectorAll('.fade-in');
-        const revealObserver = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (!entry.isIntersecting) return;
-                entry.target.classList.add('visible');
-                observer.unobserve(entry.target);
-            });
-        }, {
-            threshold: 0.1,
-            rootMargin: "0px 0px -40px 0px"
-        });
-        revealElements.forEach(el => revealObserver.observe(el));
+            <div>
+                <h3>PIZZA BLUB</h3>
+                <p>Pizza-powered Blub.</p>
+            </div>
 
-        // --- CINEMATIC SCROLL REVEAL (ABOUT SECTION) ---
-        const scrollTextEl = document.getElementById('animated-text');
-        const exactText = "Welcome to BLUB CLUB. A place where Blubs come together, themes get ridiculous, and there is always another Blub waiting around the corner. From the original Blub to the King, every Blub has a story. This is BLUB CLUB.";
-        
-        // 1. Setup element for screen readers and split into visual words
-        scrollTextEl.setAttribute('aria-label', exactText);
-        const wordsArray = exactText.split(' ');
-        const wordElements = [];
+        </div>
 
-        wordsArray.forEach(word => {
-            // Span for the actual word animation
-            const span = document.createElement('span');
-            span.className = 'word';
-            span.textContent = word;
-            span.setAttribute('aria-hidden', 'true');
-            
-            scrollTextEl.appendChild(span);
-            
-            // Append an actual text-node space to ensure completely native text-wrapping
-            scrollTextEl.appendChild(document.createTextNode(' '));
-            wordElements.push(span);
-        });
 
-        // 2. Setup Scroll Animation Engine (Ignore if user prefers reduced motion)
-        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        
-        if (!prefersReducedMotion) {
-            const scrollTrack = document.querySelector('.scroll-track');
-            
-            // Set initial state via script instead of CSS to prevent flash-of-invisible-text
-            wordElements.forEach(word => {
-                word.style.opacity = '0';
-                word.style.transform = 'translateY(-40px)';
-            });
+        <div class="card fade-in">
 
-            const updateTextScroll = () => {
-                const rect = scrollTrack.getBoundingClientRect();
-                
-                // Track start is when the top of the track hits the top of the viewport
-                const trackTop = rect.top; 
-                // The total "scrollable" height while sticky
-                const totalScrollDistance = rect.height - window.innerHeight; 
-                
-                // Calculate raw progress (0.0 to 1.0)
-                let progress = -trackTop / totalScrollDistance;
-                progress = Math.max(0, Math.min(1, progress));
+            <div class="card-img-wrapper">
+                <img
+                    src="images/Gemini_Generated_Image_dwmzi8dwmzi8dwmz.jpeg"
+                    alt="Strawberry Blub"
+                    loading="lazy"
+                >
+            </div>
 
-                const totalWords = wordElements.length;
+            <div>
+                <h3>STRAWBERRY BLUB</h3>
+                <p>A strawberry-themed Blub.</p>
+            </div>
 
-                wordElements.forEach((word, index) => {
-                    // Stagger word starting points. Complete the animation roughly 60% through the sticky scroll
-                    // so the user has plenty of static reading time before the section scrolls away.
-                    const animationStart = (index / totalWords) * 0.45; 
-                    const animationEnd = animationStart + 0.15; 
-                    
-                    let p = (progress - animationStart) / (animationEnd - animationStart);
-                    p = Math.max(0, Math.min(1, p));
-                    
-                    // Word drops smoothly into place from above and fades in
-                    const yOffset = -40 * (1 - p); 
-                    
-                    word.style.transform = `translateY(${yOffset}px)`;
-                    word.style.opacity = p;
-                });
-            };
+        </div>
 
-            // Bind to passive scroll listener for high performance
-            window.addEventListener('scroll', updateTextScroll, { passive: true });
-            
-            // Execute once immediately to catch users reloading halfway down the page
-            updateTextScroll();
-        }
-    </script>
-    
-<!-- BLUB CLUB EMAIL AUTH + VISITOR NAMING SYSTEM -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+        <div
+            class="card fade-in"
+            style="transition-delay: 0.1s;"
+        >
+
+            <div class="card-img-wrapper">
+                <img
+                    src="images/Gemini_Generated_Image_s8dh79s8dh79s8dh.jpeg"
+                    alt="Watermelon Blub"
+                    loading="lazy"
+                >
+            </div>
+
+            <div>
+                <h3>WATERMELON BLUB</h3>
+                <p>Fresh watermelon energy.</p>
+            </div>
+
+        </div>
+
+
+        <div
+            class="card fade-in"
+            style="transition-delay: 0.2s;"
+        >
+
+            <div class="card-img-wrapper">
+                <img
+                    src="images/Gemini_Generated_Image_cs84a7cs84a7cs84.jpeg"
+                    alt="Cookie Blub"
+                    loading="lazy"
+                >
+            </div>
+
+            <div>
+                <h3>COOKIE BLUB</h3>
+                <p>A cookie-themed Blub.</p>
+            </div>
+
+        </div>
+
+
+        <div class="card fade-in">
+
+            <div class="card-img-wrapper">
+                <img
+                    src="images/Gemini_Generated_Image_ppp6x0ppp6x0ppp6.jpeg"
+                    alt="Donut Blub"
+                    loading="lazy"
+                >
+            </div>
+
+            <div>
+                <h3>DONUT BLUB</h3>
+                <p>A donut-themed Blub.</p>
+            </div>
+
+        </div>
+
+
+        <div
+            class="card fade-in"
+            style="transition-delay: 0.1s;"
+        >
+
+            <div class="card-img-wrapper">
+                <img
+                    src="images/ice-cream-blub.png"
+                    alt="Ice Cream Blub"
+                    loading="lazy"
+                >
+            </div>
+
+            <div>
+                <h3>ICE CREAM BLUB</h3>
+                <p>
+                    Chilled to perfection with extra sprinkles.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div
+            class="card fade-in"
+            style="transition-delay: 0.2s;"
+        >
+
+            <div class="card-img-wrapper">
+                <img
+                    src="images/volcano-blub.png"
+                    alt="Volcano Blub"
+                    loading="lazy"
+                >
+            </div>
+
+            <div>
+                <h3>VOLCANO BLUB</h3>
+                <p>
+                    Erupting with pure Blub energy.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div class="card fade-in">
+
+            <div class="card-img-wrapper">
+                <img
+                    src="images/burger-blub.png"
+                    alt="Burger Blub"
+                    loading="lazy"
+                >
+            </div>
+
+            <div>
+                <h3>BURGER BLUB</h3>
+                <p>
+                    A multi-layered savory masterpiece.
+                </p>
+            </div>
+
+        </div>
+
+
+        <div
+            class="card fade-in"
+            style="transition-delay: 0.1s;"
+        >
+
+            <div class="card-img-wrapper">
+                <img
+                    src="images/taco-blub.png.png"
+                    alt="Taco Blub"
+                    loading="lazy"
+                >
+            </div>
+
+            <div>
+                <h3>TACO BLUB</h3>
+                <p>
+                    Seasoned, folded, and unconditionally iconic.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<section
+    id="the-king"
+    class="the-king"
+>
+
+    <p class="king-top-label fade-in">
+        THE KING
+    </p>
+
+    <h2
+        class="king-name fade-in"
+        style="transition-delay: 0.1s;"
+    >
+        KING CHEESECAKE BLUB
+    </h2>
+
+    <div
+        class="king-img-container fade-in"
+        style="transition-delay: 0.2s;"
+    >
+
+        <img
+            src="images/Gemini_Generated_Image_fjjc9yfjjc9yfjjc.jpeg"
+            alt="King Cheesecake Blub"
+            class="king-img"
+            loading="lazy"
+        >
+
+    </div>
+
+    <h1
+        class="king-statement fade-in"
+        style="transition-delay: 0.3s;"
+    >
+        CHEESECAKE.<br>
+        KING.<br>
+        BLUB.
+    </h1>
+
+</section>
+
+
+<footer>
+
+    <h2 class="fade-in">
+        BLUB CLUB
+    </h2>
+
+    <p class="fade-in">
+        Made with Microsoft Paint and an unreasonable number of Blubs.
+    </p>
+
+    <p class="copyright fade-in">
+        &copy; 2026 BLUB CLUB
+    </p>
+
+</footer>
+
 
 <script>
+
+/* ==========================================
+   SUPABASE
+========================================== */
 
 const SUPABASE_URL =
     "https://mkygrpgdsncnenyywtyy.supabase.co";
@@ -860,23 +1111,479 @@ const BLUB_SITE_URL =
 
 
 /* ==========================================
-   BLUB AUTH INITIALIZATION
+   NAV
+========================================== */
+
+const navbar =
+    document.getElementById("navbar");
+
+window.addEventListener(
+    "scroll",
+    () => {
+
+        if (window.scrollY > 50) {
+
+            navbar.classList.add(
+                "scrolled"
+            );
+
+        } else {
+
+            navbar.classList.remove(
+                "scrolled"
+            );
+
+        }
+
+    }
+);
+
+
+/* ==========================================
+   MURAL PARALLAX
+========================================== */
+
+const mural =
+    document.getElementById("mural");
+
+window.addEventListener(
+    "scroll",
+    () => {
+
+        const scrollPos =
+            window.scrollY;
+
+        mural.style.transform =
+            `translateY(${scrollPos * 0.12}px)`;
+
+    }
+);
+
+
+/* ==========================================
+   FADE-IN OBSERVER
+========================================== */
+
+const revealObserver =
+    new IntersectionObserver(
+        (entries, observer) => {
+
+            entries.forEach(
+                entry => {
+
+                    if (!entry.isIntersecting) {
+                        return;
+                    }
+
+                    entry.target.classList.add(
+                        "visible"
+                    );
+
+                    observer.unobserve(
+                        entry.target
+                    );
+
+                }
+            );
+
+        },
+        {
+            threshold: 0.1,
+            rootMargin:
+                "0px 0px -40px 0px"
+        }
+    );
+
+
+document
+    .querySelectorAll(".fade-in")
+    .forEach(
+        element =>
+            revealObserver.observe(element)
+    );
+
+
+/* ==========================================
+   LOAD STAFF FROM SUPABASE
+========================================== */
+
+async function loadStaff() {
+
+    const staffGrid =
+        document.getElementById(
+            "staff-grid"
+        );
+
+
+    if (!staffGrid) {
+        return;
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("staff")
+            .select(
+                "id, name, role, description, display_order"
+            )
+            .order(
+                "display_order",
+                {
+                    ascending: true
+                }
+            );
+
+
+    if (error) {
+
+        console.error(
+            "Could not load BLUB staff:",
+            error
+        );
+
+        staffGrid.innerHTML = `
+            <div class="staff-card fade-in visible">
+                <h4>STAFF UNAVAILABLE</h4>
+                <p class="role">
+                    BLUB DATABASE ERROR
+                </p>
+            </div>
+        `;
+
+        return;
+    }
+
+
+    if (!data || data.length === 0) {
+
+        staffGrid.innerHTML = `
+            <div class="staff-card fade-in visible">
+                <h4>NO STAFF</h4>
+                <p class="role">
+                    The BLUB CLUB staff roster is empty.
+                </p>
+            </div>
+        `;
+
+        return;
+    }
+
+
+    staffGrid.innerHTML = "";
+
+
+    data.forEach(
+        (member, index) => {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+            card.className =
+                "staff-card fade-in";
+
+
+            if (index > 0) {
+
+                card.style.transitionDelay =
+                    `${Math.min(index * 0.1, 0.5)}s`;
+
+            }
+
+
+            const name =
+                document.createElement(
+                    "h4"
+                );
+
+            name.textContent =
+                member.name;
+
+
+            const role =
+                document.createElement(
+                    "p"
+                );
+
+            role.className =
+                "role";
+
+            role.textContent =
+                member.role;
+
+
+            card.appendChild(name);
+            card.appendChild(role);
+
+
+            if (member.description) {
+
+                const description =
+                    document.createElement(
+                        "p"
+                    );
+
+                description.className =
+                    "muted-subtext";
+
+                description.textContent =
+                    member.description;
+
+                card.appendChild(
+                    description
+                );
+
+            }
+
+
+            staffGrid.appendChild(
+                card
+            );
+
+
+            /*
+             * The cards are dynamically
+             * created after the original
+             * IntersectionObserver ran,
+             * so manually observe them.
+             */
+
+            revealObserver.observe(
+                card
+            );
+
+        }
+    );
+
+}
+
+
+/* ==========================================
+   CINEMATIC ABOUT TEXT
+========================================== */
+
+const scrollTextEl =
+    document.getElementById(
+        "animated-text"
+    );
+
+const exactText =
+    "Welcome to BLUB CLUB. A place where Blubs come together, themes get ridiculous, and there is always another Blub waiting around the corner. From the original Blub to the King, every Blub has a story. This is BLUB CLUB.";
+
+
+scrollTextEl.setAttribute(
+    "aria-label",
+    exactText
+);
+
+
+const wordsArray =
+    exactText.split(" ");
+
+const wordElements = [];
+
+
+wordsArray.forEach(
+    word => {
+
+        const span =
+            document.createElement(
+                "span"
+            );
+
+        span.className =
+            "word";
+
+        span.textContent =
+            word;
+
+        span.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+
+        scrollTextEl.appendChild(
+            span
+        );
+
+        scrollTextEl.appendChild(
+            document.createTextNode(" ")
+        );
+
+
+        wordElements.push(
+            span
+        );
+
+    }
+);
+
+
+const prefersReducedMotion =
+    window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+    ).matches;
+
+
+if (!prefersReducedMotion) {
+
+    const scrollTrack =
+        document.querySelector(
+            ".scroll-track"
+        );
+
+
+    wordElements.forEach(
+        word => {
+
+            word.style.opacity =
+                "0";
+
+            word.style.transform =
+                "translateY(-40px)";
+
+        }
+    );
+
+
+    const updateTextScroll =
+        () => {
+
+            const rect =
+                scrollTrack.getBoundingClientRect();
+
+
+            const trackTop =
+                rect.top;
+
+
+            const totalScrollDistance =
+                rect.height -
+                window.innerHeight;
+
+
+            let progress =
+                -trackTop /
+                totalScrollDistance;
+
+
+            progress =
+                Math.max(
+                    0,
+                    Math.min(
+                        1,
+                        progress
+                    )
+                );
+
+
+            const totalWords =
+                wordElements.length;
+
+
+            wordElements.forEach(
+                (word, index) => {
+
+                    const animationStart =
+                        (index / totalWords) *
+                        0.45;
+
+
+                    const animationEnd =
+                        animationStart +
+                        0.15;
+
+
+                    let p =
+                        (
+                            progress -
+                            animationStart
+                        ) /
+                        (
+                            animationEnd -
+                            animationStart
+                        );
+
+
+                    p =
+                        Math.max(
+                            0,
+                            Math.min(
+                                1,
+                                p
+                            )
+                        );
+
+
+                    const yOffset =
+                        -40 *
+                        (1 - p);
+
+
+                    word.style.transform =
+                        `translateY(${yOffset}px)`;
+
+
+                    word.style.opacity =
+                        p;
+
+                }
+            );
+
+        };
+
+
+    window.addEventListener(
+        "scroll",
+        updateTextScroll,
+        {
+            passive: true
+        }
+    );
+
+
+    updateTextScroll();
+
+}
+
+
+/* ==========================================
+   HTML ESCAPE
+========================================== */
+
+function escapeHtml(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+/* ==========================================
+   AUTH INITIALIZATION
 ========================================== */
 
 async function initializeBlubVisitor() {
 
     try {
 
-        /*
-         * Supabase automatically processes the
-         * email-confirmation redirect when the
-         * page loads.
-         */
-
         const {
-            data: { session },
+            data: {
+                session
+            },
             error: sessionError
-        } = await supabaseClient.auth.getSession();
+        } =
+            await supabaseClient.auth
+                .getSession();
 
 
         if (sessionError) {
@@ -884,16 +1591,12 @@ async function initializeBlubVisitor() {
         }
 
 
-        /*
-         * No authenticated session:
-         * show login/signup screen.
-         */
-
         if (!session) {
 
             showBlubAuthScreen();
 
             return;
+
         }
 
 
@@ -901,29 +1604,20 @@ async function initializeBlubVisitor() {
             session.user.id;
 
 
-        console.log(
-            "BLUB USER ID:",
-            visitorId
-        );
-
-
-        /*
-         * Find the visitor profile.
-         */
-
         const {
             data: visitor,
             error: lookupError
-        } = await supabaseClient
-            .from("visitors")
-            .select(
-                "id, display_name, banned"
-            )
-            .eq(
-                "id",
-                visitorId
-            )
-            .maybeSingle();
+        } =
+            await supabaseClient
+                .from("visitors")
+                .select(
+                    "id, display_name, banned"
+                )
+                .eq(
+                    "id",
+                    visitorId
+                )
+                .maybeSingle();
 
 
         if (lookupError) {
@@ -931,20 +1625,16 @@ async function initializeBlubVisitor() {
         }
 
 
-        /*
-         * First verified login.
-         * Create their BLUB profile.
-         */
-
         if (!visitor) {
 
             const {
                 error: insertError
-            } = await supabaseClient
-                .from("visitors")
-                .insert({
-                    id: visitorId
-                });
+            } =
+                await supabaseClient
+                    .from("visitors")
+                    .insert({
+                        id: visitorId
+                    });
 
 
             if (insertError) {
@@ -957,13 +1647,9 @@ async function initializeBlubVisitor() {
             );
 
             return;
+
         }
 
-
-        /*
-         * Check whether the visitor
-         * has been banned.
-         */
 
         if (visitor.banned) {
 
@@ -972,12 +1658,9 @@ async function initializeBlubVisitor() {
             );
 
             return;
+
         }
 
-
-        /*
-         * Verified account but no BLUB name yet.
-         */
 
         if (!visitor.display_name) {
 
@@ -986,6 +1669,7 @@ async function initializeBlubVisitor() {
             );
 
             return;
+
         }
 
 
@@ -1028,42 +1712,26 @@ function showBlubAuthScreen() {
 
             html,
             body {
-
                 margin: 0;
-
                 width: 100%;
                 min-height: 100%;
-
                 background: #050505;
                 color: white;
-
-                font-family:
-                    Arial,
-                    Helvetica,
-                    sans-serif;
-
+                font-family: Arial, Helvetica, sans-serif;
             }
 
             body {
                 overflow: hidden;
             }
 
-
             .blub-auth-page {
-
                 min-height: 100vh;
-
                 display: flex;
-
                 align-items: center;
                 justify-content: center;
-
                 padding: 25px;
-
                 position: relative;
-
                 overflow: hidden;
-
                 background:
                     radial-gradient(
                         circle at center,
@@ -1071,344 +1739,152 @@ function showBlubAuthScreen() {
                         #0b0b0b 35%,
                         #050505 75%
                     );
-
             }
 
-
             .blub-auth-page::before {
-
                 content: "";
-
                 position: absolute;
-
                 width: 650px;
                 height: 650px;
-
                 border:
                     1px solid
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.12
-                    );
-
+                    rgba(212,175,55,0.12);
                 border-radius: 50%;
-
                 animation:
                     authRing 4s
                     infinite
                     ease-in-out;
-
             }
-
 
             .blub-auth-card {
-
                 width: 100%;
                 max-width: 520px;
-
                 position: relative;
                 z-index: 2;
-
                 padding: 45px 35px;
-
                 text-align: center;
-
                 border:
                     1px solid
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.35
-                    );
-
+                    rgba(212,175,55,0.35);
                 border-radius: 24px;
-
                 background:
-                    rgba(
-                        10,
-                        10,
-                        10,
-                        0.95
-                    );
-
+                    rgba(10,10,10,0.95);
                 box-shadow:
                     0 0 60px
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.08
-                    );
-
-                backdrop-filter:
-                    blur(15px);
-
+                    rgba(212,175,55,0.08);
+                backdrop-filter: blur(15px);
             }
 
-
             .blub-auth-logo {
-
                 font-size: 65px;
-
                 margin-bottom: 15px;
-
                 animation:
                     authBob 2.5s
                     infinite
                     ease-in-out;
-
             }
-
 
             .blub-auth-label {
-
                 font-size: 11px;
-
                 letter-spacing: 4px;
-
                 color: #d4af37;
-
                 font-weight: bold;
-
             }
-
 
             .blub-auth-title {
-
-                margin:
-                    10px 0 0;
-
-                font-size:
-                    clamp(
-                        34px,
-                        8vw,
-                        55px
-                    );
-
+                margin: 10px 0 0;
+                font-size: clamp(34px,8vw,55px);
                 font-weight: 900;
-
                 letter-spacing: 2px;
-
             }
-
 
             .blub-auth-subtitle {
-
                 margin-top: 15px;
-
                 color: #999;
-
                 font-size: 14px;
-
                 line-height: 1.6;
-
             }
-
 
             .blub-auth-form {
-
                 margin-top: 28px;
-
             }
-
 
             .blub-auth-input {
-
                 width: 100%;
-
                 padding: 15px 17px;
-
                 margin-bottom: 12px;
-
                 border-radius: 12px;
-
                 border:
                     1px solid
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.3
-                    );
-
+                    rgba(212,175,55,0.3);
                 background: #111;
-
                 color: white;
-
                 font-size: 15px;
-
                 outline: none;
-
             }
-
 
             .blub-auth-input:focus {
-
-                border-color:
-                    #d4af37;
-
+                border-color: #d4af37;
                 box-shadow:
                     0 0 20px
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.12
-                    );
-
+                    rgba(212,175,55,0.12);
             }
-
 
             .blub-auth-button {
-
                 width: 100%;
-
                 padding: 15px;
-
                 border: none;
-
                 border-radius: 12px;
-
-                background:
-                    #d4af37;
-
+                background: #d4af37;
                 color: #050505;
-
                 font-size: 13px;
-
                 font-weight: 900;
-
                 letter-spacing: 2px;
-
                 cursor: pointer;
-
-                transition:
-                    transform 0.2s ease,
-                    box-shadow 0.2s ease;
-
             }
-
-
-            .blub-auth-button:hover {
-
-                transform:
-                    translateY(-2px);
-
-                box-shadow:
-                    0 8px 25px
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.2
-                    );
-
-            }
-
 
             .blub-auth-switch {
-
                 margin-top: 20px;
-
                 color: #777;
-
                 font-size: 12px;
-
             }
-
 
             .blub-auth-switch button {
-
                 border: none;
-
                 background: none;
-
                 color: #d4af37;
-
                 font-weight: bold;
-
                 cursor: pointer;
-
             }
-
 
             .blub-auth-error {
-
                 min-height: 20px;
-
                 margin-top: 12px;
-
                 color: #ff7070;
-
                 font-size: 12px;
-
                 line-height: 1.5;
-
             }
-
 
             @keyframes authRing {
-
-                0%,
-                100% {
-
-                    transform:
-                        scale(0.8);
-
+                0%,100% {
+                    transform: scale(0.8);
                     opacity: 0.2;
-
                 }
 
                 50% {
-
-                    transform:
-                        scale(1.15);
-
+                    transform: scale(1.15);
                     opacity: 0.6;
-
                 }
-
             }
-
 
             @keyframes authBob {
-
-                0%,
-                100% {
-
-                    transform:
-                        translateY(0);
-
+                0%,100% {
+                    transform: translateY(0);
                 }
 
                 50% {
-
-                    transform:
-                        translateY(-10px);
-
+                    transform: translateY(-10px);
                 }
-
-            }
-
-
-            @media (max-width: 600px) {
-
-                .blub-auth-card {
-
-                    padding:
-                        40px 22px;
-
-                }
-
-                .blub-auth-logo {
-
-                    font-size: 52px;
-
-                }
-
             }
 
         </style>
@@ -1442,7 +1918,6 @@ function showBlubAuthScreen() {
                     before entering.
                 </p>
 
-
                 <form
                     class="blub-auth-form"
                     id="blub-auth-form"
@@ -1457,7 +1932,6 @@ function showBlubAuthScreen() {
                         required
                     >
 
-
                     <input
                         id="blub-password"
                         class="blub-auth-input"
@@ -1468,7 +1942,6 @@ function showBlubAuthScreen() {
                         required
                     >
 
-
                     <button
                         class="blub-auth-button"
                         id="blub-auth-submit"
@@ -1477,7 +1950,6 @@ function showBlubAuthScreen() {
                         CREATE BLUB ACCOUNT
                     </button>
 
-
                     <div
                         id="blub-auth-error"
                         class="blub-auth-error"
@@ -1485,7 +1957,6 @@ function showBlubAuthScreen() {
                     ></div>
 
                 </form>
-
 
                 <div
                     class="blub-auth-switch"
@@ -1562,8 +2033,8 @@ function showBlubAuthScreen() {
             loginMode =
                 !loginMode;
 
-
-            error.textContent = "";
+            error.textContent =
+                "";
 
 
             if (loginMode) {
@@ -1583,9 +2054,7 @@ function showBlubAuthScreen() {
                 switchButton.textContent =
                     "CREATE ACCOUNT";
 
-            }
-
-            else {
+            } else {
 
                 title.textContent =
                     "JOIN THE BLUBS";
@@ -1645,7 +2114,6 @@ function showBlubAuthScreen() {
                             .signInWithPassword({
                                 email:
                                     userEmail,
-
                                 password:
                                     userPassword
                             });
@@ -1666,6 +2134,7 @@ function showBlubAuthScreen() {
                     window.location.reload();
 
                     return;
+
                 }
 
 
@@ -1679,20 +2148,14 @@ function showBlubAuthScreen() {
                 } =
                     await supabaseClient.auth
                         .signUp({
-
                             email:
                                 userEmail,
-
                             password:
                                 userPassword,
-
                             options: {
-
                                 emailRedirectTo:
                                     BLUB_SITE_URL
-
                             }
-
                         });
 
 
@@ -1701,11 +2164,6 @@ function showBlubAuthScreen() {
                 }
 
 
-                /*
-                 * With Confirm Email enabled,
-                 * session should be null here.
-                 */
-
                 if (!data.session) {
 
                     showBlubVerifyScreen(
@@ -1713,13 +2171,9 @@ function showBlubAuthScreen() {
                     );
 
                     return;
+
                 }
 
-
-                /*
-                 * Fallback in case email
-                 * confirmation is disabled.
-                 */
 
                 window.location.reload();
 
@@ -1731,7 +2185,6 @@ function showBlubAuthScreen() {
                     "BLUB AUTH ERROR:",
                     authError
                 );
-
 
                 error.textContent =
                     authError.message ||
@@ -1760,7 +2213,7 @@ function showBlubAuthScreen() {
 
 
 /* ==========================================
-   EMAIL VERIFICATION SCREEN
+   VERIFY SCREEN
 ========================================== */
 
 function showBlubVerifyScreen(
@@ -1769,234 +2222,87 @@ function showBlubVerifyScreen(
 
     document.body.innerHTML = `
 
-        <style>
-
-            * {
-                box-sizing: border-box;
-            }
-
-            html,
-            body {
-
-                margin: 0;
-
-                width: 100%;
-                min-height: 100%;
-
-                background: #050505;
-                color: white;
-
-                font-family:
-                    Arial,
-                    Helvetica,
-                    sans-serif;
-
-            }
-
-            body {
-                overflow: hidden;
-            }
-
-
-            .blub-verify-page {
-
-                min-height: 100vh;
-
-                display: flex;
-
-                align-items: center;
-                justify-content: center;
-
-                padding: 25px;
-
-                background:
-                    radial-gradient(
-                        circle at center,
-                        #211b0d 0%,
-                        #0b0b0b 35%,
-                        #050505 75%
-                    );
-
-            }
-
-
-            .blub-verify-card {
-
-                width: 100%;
-                max-width: 560px;
-
-                text-align: center;
-
-                padding: 50px 35px;
-
-                border:
-                    1px solid
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.35
-                    );
-
-                border-radius: 24px;
-
-                background:
-                    rgba(
-                        10,
-                        10,
-                        10,
-                        0.94
-                    );
-
-                box-shadow:
-                    0 0 60px
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.08
-                    );
-
-            }
-
-
-            .verify-icon {
-
-                font-size: 70px;
-
-                margin-bottom: 20px;
-
-            }
-
-
-            .verify-label {
-
-                color: #d4af37;
-
-                font-size: 11px;
-
-                font-weight: bold;
-
-                letter-spacing: 4px;
-
-            }
-
-
-            .verify-title {
-
-                margin:
-                    12px 0 15px;
-
-                font-size:
-                    clamp(
-                        36px,
-                        8vw,
-                        58px
-                    );
-
-                font-weight: 900;
-
-            }
-
-
-            .verify-email {
-
-                color: #d4af37;
-
-                word-break: break-word;
-
-                margin-top: 15px;
-
-            }
-
-
-            .verify-text {
-
-                color: #999;
-
-                line-height: 1.7;
-
-                font-size: 14px;
-
-            }
-
-
-            .verify-button {
-
-                margin-top: 25px;
-
-                padding:
-                    14px 25px;
-
-                border: none;
-
-                border-radius: 12px;
-
-                background: #151515;
-
-                border:
-                    1px solid
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.3
-                    );
-
-                color: #d4af37;
-
-                cursor: pointer;
-
-                font-weight: bold;
-
-                letter-spacing: 1px;
-
-            }
-
-        </style>
-
-
-        <div class="blub-verify-page">
-
-            <div class="blub-verify-card">
-
-                <div class="verify-icon">
+        <div style="
+            min-height:100vh;
+            background:#050505;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:25px;
+            font-family:Arial,Helvetica,sans-serif;
+        ">
+
+            <div style="
+                width:100%;
+                max-width:560px;
+                text-align:center;
+                padding:50px 35px;
+                border:1px solid rgba(212,175,55,.35);
+                border-radius:24px;
+                background:rgba(10,10,10,.94);
+                box-shadow:0 0 60px rgba(212,175,55,.08);
+            ">
+
+                <div style="
+                    font-size:70px;
+                    margin-bottom:20px;
+                ">
                     📧
                 </div>
 
-                <div class="verify-label">
+                <div style="
+                    color:#d4af37;
+                    font-size:11px;
+                    font-weight:bold;
+                    letter-spacing:4px;
+                ">
                     BLUB CLUB SECURITY
                 </div>
 
-                <h1 class="verify-title">
+                <h1 style="
+                    font-size:clamp(36px,8vw,58px);
+                    margin:12px 0 15px;
+                ">
                     CHECK YOUR EMAIL
                 </h1>
 
-                <p class="verify-text">
-
+                <p style="
+                    color:#999;
+                    line-height:1.7;
+                ">
                     We sent a verification link to:
-
                 </p>
 
-                <div class="verify-email">
+                <div style="
+                    color:#d4af37;
+                    word-break:break-word;
+                    margin:15px 0;
+                ">
                     ${escapeHtml(emailAddress)}
                 </div>
 
-                <p class="verify-text">
-
-                    Click the link in that email
-                    to activate your BLUB CLUB account.
-
-                    <br><br>
-
-                    Once verified, return here and
-                    BLUB CLUB will let you in.
-
+                <p style="
+                    color:#999;
+                    line-height:1.7;
+                ">
+                    Click the link in that email to
+                    activate your BLUB CLUB account.
                 </p>
 
                 <button
-                    class="verify-button"
                     id="blub-back-login"
+                    style="
+                        margin-top:25px;
+                        padding:14px 25px;
+                        border:none;
+                        border-radius:12px;
+                        background:#151515;
+                        border:1px solid rgba(212,175,55,.3);
+                        color:#d4af37;
+                        cursor:pointer;
+                        font-weight:bold;
+                    "
                 >
                     BACK TO LOGIN
                 </button>
@@ -2013,18 +2319,14 @@ function showBlubVerifyScreen(
         )
         .addEventListener(
             "click",
-            () => {
-
-                showBlubAuthScreen();
-
-            }
+            showBlubAuthScreen
         );
 
 }
 
 
 /* ==========================================
-   BLUB NAME SCREEN
+   NAME SCREEN
 ========================================== */
 
 function showBlubNameScreen(
@@ -2033,408 +2335,113 @@ function showBlubNameScreen(
 
     document.body.innerHTML = `
 
-        <style>
-
-            * {
-                box-sizing: border-box;
-            }
-
-            html,
-            body {
-
-                margin: 0;
-
-                width: 100%;
-                min-height: 100%;
-
-                background: #050505;
-                color: white;
-
-                font-family:
-                    Arial,
-                    Helvetica,
-                    sans-serif;
-
-            }
-
-            body {
-                overflow: hidden;
-            }
-
-
-            .blub-name-page {
-
-                min-height: 100vh;
-
-                display: flex;
-
-                align-items: center;
-                justify-content: center;
-
-                position: relative;
-
-                overflow: hidden;
-
-                padding: 25px;
-
-                background:
-                    radial-gradient(
-                        circle at center,
-                        #211b0d 0%,
-                        #0b0b0b 35%,
-                        #050505 75%
-                    );
-
-            }
-
-
-            .blub-name-page::before {
-
-                content: "";
-
-                position: absolute;
-
-                width: 600px;
-                height: 600px;
-
-                border:
-                    1px solid
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.12
-                    );
-
-                border-radius: 50%;
-
-                animation:
-                    nameRing 4s
-                    infinite
-                    ease-in-out;
-
-            }
-
-
-            .blub-name-card {
-
-                width: 100%;
-                max-width: 520px;
-
-                position: relative;
-                z-index: 2;
-
-                text-align: center;
-
-                padding: 50px 35px;
-
-                border:
-                    1px solid
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.35
-                    );
-
-                border-radius: 24px;
-
-                background:
-                    rgba(
-                        10,
-                        10,
-                        10,
-                        0.94
-                    );
-
-                box-shadow:
-                    0 0 60px
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.08
-                    );
-
-                backdrop-filter:
-                    blur(15px);
-
-            }
-
-
-            .blub-logo {
-
-                font-size: 70px;
-
-                margin-bottom: 18px;
-
-                animation:
-                    blubBob 2.5s
-                    infinite
-                    ease-in-out;
-
-            }
-
-
-            .name-label {
-
-                font-size: 11px;
-
-                letter-spacing: 4px;
-
-                color: #d4af37;
-
-                font-weight: bold;
-
-                margin-bottom: 12px;
-
-            }
-
-
-            .name-title {
-
-                margin: 0;
-
-                font-size:
-                    clamp(
-                        38px,
-                        8vw,
-                        58px
-                    );
-
-                font-weight: 900;
-
-                letter-spacing: 2px;
-
-            }
-
-
-            .name-subtitle {
-
-                margin-top: 16px;
-
-                color: #999;
-
-                font-size: 15px;
-
-                line-height: 1.6;
-
-            }
-
-
-            .blub-name-form {
-
-                margin-top: 30px;
-
-            }
-
-
-            .blub-name-input {
-
-                width: 100%;
-
-                padding: 16px 18px;
-
-                border-radius: 12px;
-
-                border:
-                    1px solid
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.35
-                    );
-
-                background: #111;
-
-                color: white;
-
-                font-size: 16px;
-
-                outline: none;
-
-                text-align: center;
-
-            }
-
-
-            .blub-name-input:focus {
-
-                border-color:
-                    #d4af37;
-
-                box-shadow:
-                    0 0 20px
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.12
-                    );
-
-            }
-
-
-            .blub-enter-button {
-
-                width: 100%;
-
-                margin-top: 14px;
-
-                padding: 15px;
-
-                border: none;
-
-                border-radius: 12px;
-
-                background: #d4af37;
-
-                color: #050505;
-
-                font-size: 13px;
-
-                font-weight: 900;
-
-                letter-spacing: 2px;
-
-                cursor: pointer;
-
-            }
-
-
-            .name-error {
-
-                min-height: 20px;
-
-                margin-top: 12px;
-
-                color: #ff7070;
-
-                font-size: 12px;
-
-            }
-
-
-            .name-footer {
-
-                margin-top: 25px;
-
-                color: #444;
-
-                font-size: 10px;
-
-                letter-spacing: 2px;
-
-                text-transform: uppercase;
-
-            }
-
-
-            @keyframes nameRing {
-
-                0%,
-                100% {
-
-                    transform:
-                        scale(0.8);
-
-                    opacity: 0.2;
-
-                }
-
-                50% {
-
-                    transform:
-                        scale(1.15);
-
-                    opacity: 0.6;
-
-                }
-
-            }
-
-
-            @keyframes blubBob {
-
-                0%,
-                100% {
-
-                    transform:
-                        translateY(0);
-
-                }
-
-                50% {
-
-                    transform:
-                        translateY(-10px);
-
-                }
-
-            }
-
-        </style>
-
-
-        <div class="blub-name-page">
-
-            <div class="blub-name-card">
-
-                <div class="blub-logo">
+        <div style="
+            min-height:100vh;
+            background:#050505;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:25px;
+            font-family:Arial,Helvetica,sans-serif;
+        ">
+
+            <div style="
+                width:100%;
+                max-width:520px;
+                text-align:center;
+                padding:50px 35px;
+                border:1px solid rgba(212,175,55,.35);
+                border-radius:24px;
+                background:rgba(10,10,10,.94);
+                box-shadow:0 0 60px rgba(212,175,55,.08);
+            ">
+
+                <div style="
+                    font-size:70px;
+                    margin-bottom:18px;
+                ">
                     🫧
                 </div>
 
-                <div class="name-label">
+                <div style="
+                    font-size:11px;
+                    letter-spacing:4px;
+                    color:#d4af37;
+                    font-weight:bold;
+                ">
                     BLUB CLUB
                 </div>
 
-                <h1 class="name-title">
+                <h1 style="
+                    margin:12px 0;
+                    font-size:clamp(38px,8vw,58px);
+                ">
                     WELCOME, BLUB
                 </h1>
 
-                <p class="name-subtitle">
+                <p style="
+                    color:#999;
+                    line-height:1.6;
+                ">
                     Your email is verified.
                     Now choose your BLUB name.
                 </p>
 
-
                 <form
-                    class="blub-name-form"
                     id="blub-name-form"
+                    style="margin-top:30px;"
                 >
 
                     <input
                         id="blub-name-input"
-                        class="blub-name-input"
                         type="text"
                         maxlength="32"
                         autocomplete="off"
                         placeholder="Enter your BLUB name..."
                         required
+                        style="
+                            width:100%;
+                            padding:16px 18px;
+                            border-radius:12px;
+                            border:1px solid rgba(212,175,55,.35);
+                            background:#111;
+                            color:white;
+                            font-size:16px;
+                            outline:none;
+                            text-align:center;
+                        "
                     >
 
-
                     <button
-                        class="blub-enter-button"
                         type="submit"
+                        style="
+                            width:100%;
+                            margin-top:14px;
+                            padding:15px;
+                            border:none;
+                            border-radius:12px;
+                            background:#d4af37;
+                            color:#050505;
+                            font-weight:900;
+                            letter-spacing:2px;
+                            cursor:pointer;
+                        "
                     >
                         ENTER THE BLUB CLUB
                     </button>
 
-
                     <div
                         id="blub-name-error"
-                        class="name-error"
-                        aria-live="polite"
+                        style="
+                            min-height:20px;
+                            margin-top:12px;
+                            color:#ff7070;
+                            font-size:12px;
+                        "
                     ></div>
 
                 </form>
-
-
-                <div class="name-footer">
-                    BLUB CLUB • MEMBER REGISTRATION
-                </div>
 
             </div>
 
@@ -2482,16 +2489,6 @@ function showBlubNameScreen(
             }
 
 
-            if (displayName.length > 32) {
-
-                error.textContent =
-                    "That BLUB name is too long.";
-
-                return;
-
-            }
-
-
             error.textContent =
                 "Registering your BLUB...";
 
@@ -2518,17 +2515,11 @@ function showBlubNameScreen(
                 );
 
                 error.textContent =
-                    "BLUB registration failed. Check your database policies.";
+                    "BLUB registration failed.";
 
                 return;
 
             }
-
-
-            console.log(
-                "BLUB NAME:",
-                displayName
-            );
 
 
             window.location.reload();
@@ -2549,328 +2540,107 @@ function showBlubBanScreen(
 
     document.body.innerHTML = `
 
-        <style>
-
-            * {
-                box-sizing: border-box;
-            }
-
-            html,
-            body {
-
-                margin: 0;
-
-                width: 100%;
-                min-height: 100%;
-
-                background: #050505;
-                color: white;
-
-                font-family:
-                    Arial,
-                    Helvetica,
-                    sans-serif;
-
-            }
-
-            body {
-                overflow: hidden;
-            }
-
-
-            .blub-ban-page {
-
-                min-height: 100vh;
-
-                display: flex;
-
-                align-items: center;
-                justify-content: center;
-
-                padding: 25px;
-
-                background:
-                    radial-gradient(
-                        circle at center,
-                        #211b0d 0%,
-                        #0b0b0b 35%,
-                        #050505 75%
-                    );
-
-            }
-
-
-            .ban-card {
-
-                width: 100%;
-                max-width: 560px;
-
-                text-align: center;
-
-                padding: 50px 35px;
-
-                border:
-                    1px solid
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.35
-                    );
-
-                border-radius: 24px;
-
-                background:
-                    rgba(
-                        10,
-                        10,
-                        10,
-                        0.92
-                    );
-
-                box-shadow:
-                    0 0 60px
-                    rgba(
-                        212,
-                        175,
-                        55,
-                        0.08
-                    );
-
-            }
-
-
-            .security-icon {
-
-                width: 105px;
-                height: 105px;
-
-                margin:
-                    0 auto 25px;
-
-                border-radius: 50%;
-
-                display: flex;
-
-                align-items: center;
-                justify-content: center;
-
-                font-size: 48px;
-
-                border:
-                    2px solid
-                    #d4af37;
-
-                background: #111;
-
-            }
-
-
-            .security-label {
-
-                font-size: 11px;
-
-                letter-spacing: 4px;
-
-                color: #d4af37;
-
-                font-weight: bold;
-
-                margin-bottom: 12px;
-
-            }
-
-
-            .ban-title {
-
-                margin: 0;
-
-                font-size:
-                    clamp(
-                        42px,
-                        9vw,
-                        72px
-                    );
-
-                letter-spacing: 3px;
-
-                font-weight: 900;
-
-                line-height: 0.95;
-
-            }
-
-
-            .divider {
-
-                width: 70px;
-                height: 2px;
-
-                background:
-                    #d4af37;
-
-                margin:
-                    28px auto;
-
-            }
-
-
-            .status-box {
-
-                display: inline-flex;
-
-                align-items: center;
-
-                gap: 9px;
-
-                padding:
-                    10px 16px;
-
-                border-radius: 999px;
-
-                background:
-                    rgba(
-                        180,
-                        20,
-                        20,
-                        0.12
-                    );
-
-                border:
-                    1px solid
-                    rgba(
-                        255,
-                        70,
-                        70,
-                        0.3
-                    );
-
-                color:
-                    #ff7070;
-
-                font-size: 12px;
-
-                font-weight: bold;
-
-                letter-spacing: 1px;
-
-            }
-
-
-            .status-dot {
-
-                width: 8px;
-                height: 8px;
-
-                border-radius: 50%;
-
-                background:
-                    #ff4444;
-
-            }
-
-
-            .ban-subtitle {
-
-                margin-top: 18px;
-
-                color: #aaa;
-
-                font-size: 16px;
-
-                line-height: 1.6;
-
-            }
-
-
-            .visitor-id {
-
-                margin-top: 25px;
-
-                color: #555;
-
-                font-family: monospace;
-
-                font-size: 10px;
-
-                word-break: break-all;
-
-            }
-
-
-            .blub-footer {
-
-                margin-top: 35px;
-
-                color: #444;
-
-                font-size: 11px;
-
-                letter-spacing: 2px;
-
-                text-transform: uppercase;
-
-            }
-
-        </style>
-
-
-        <div class="blub-ban-page">
-
-            <div class="ban-card">
-
-                <div class="security-icon">
+        <div style="
+            min-height:100vh;
+            background:#050505;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            padding:25px;
+            font-family:Arial,Helvetica,sans-serif;
+            text-align:center;
+        ">
+
+            <div style="
+                width:100%;
+                max-width:560px;
+                padding:50px 35px;
+                border:1px solid rgba(212,175,55,.35);
+                border-radius:24px;
+                background:rgba(10,10,10,.92);
+                box-shadow:0 0 60px rgba(212,175,55,.08);
+            ">
+
+                <div style="
+                    width:105px;
+                    height:105px;
+                    margin:0 auto 25px;
+                    border-radius:50%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    font-size:48px;
+                    border:2px solid #d4af37;
+                    background:#111;
+                ">
                     🚫
                 </div>
 
-                <div class="security-label">
+                <div style="
+                    font-size:11px;
+                    letter-spacing:4px;
+                    color:#d4af37;
+                    font-weight:bold;
+                ">
                     BLUB CLUB SECURITY
                 </div>
 
-                <h1 class="ban-title">
+                <h1 style="
+                    font-size:clamp(42px,9vw,72px);
+                    letter-spacing:3px;
+                    line-height:.95;
+                ">
                     ACCESS<br>
                     DENIED
                 </h1>
 
-                <div class="divider"></div>
+                <div style="
+                    width:70px;
+                    height:2px;
+                    background:#d4af37;
+                    margin:28px auto;
+                "></div>
 
-                <div class="status-box">
-
-                    <span class="status-dot"></span>
-
-                    VISITOR ACCESS REVOKED
-
+                <div style="
+                    display:inline-flex;
+                    padding:10px 16px;
+                    border-radius:999px;
+                    background:rgba(180,20,20,.12);
+                    border:1px solid rgba(255,70,70,.3);
+                    color:#ff7070;
+                    font-size:12px;
+                    font-weight:bold;
+                ">
+                    🔴 VISITOR ACCESS REVOKED
                 </div>
 
-                <p class="ban-subtitle">
-
+                <p style="
+                    margin-top:18px;
+                    color:#aaa;
+                    line-height:1.6;
+                ">
                     This account has been banned
                     from the BLUB CLUB.
-
                     <br><br>
-
                     If you believe this was a mistake,
                     contact a BLUB CLUB administrator.
-
                 </p>
 
-                <div class="visitor-id">
-
+                <div style="
+                    margin-top:25px;
+                    color:#555;
+                    font-family:monospace;
+                    font-size:10px;
+                    word-break:break-all;
+                ">
                     VISITOR ID:
                     ${escapeHtml(visitorId)}
-
-                </div>
-
-                <div class="blub-footer">
-
-                    BLUB CLUB • SECURITY SYSTEM
-
                 </div>
 
             </div>
 
         </div>
-
     `;
 
 }
@@ -2943,36 +2713,9 @@ function showBlubAuthError(
 
 
 /* ==========================================
-   HTML ESCAPE HELPER
+   BLUB MODE
 ========================================== */
 
-function escapeHtml(
-    value
-) {
-
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-
-}
-
-
-/* ==========================================
-   START BLUB AUTH
-========================================== */
-
-initializeBlubVisitor();
-
-</script>
-
-</script>
-
-
-<!--  BLUB MODE EASTER EGG -->
-<script>
 (function () {
 
     const secretCode = [
@@ -2993,7 +2736,7 @@ initializeBlubVisitor();
 
     document.addEventListener(
         "keydown",
-        function (event) {
+        event => {
 
             if (
                 event.code ===
@@ -3010,6 +2753,7 @@ initializeBlubVisitor();
                     activateBlubMode();
 
                     progress = 0;
+
                 }
 
             } else {
@@ -3034,7 +2778,9 @@ initializeBlubVisitor();
 
 
         const overlay =
-            document.createElement("div");
+            document.createElement(
+                "div"
+            );
 
         overlay.id =
             "blub-mode-overlay";
@@ -3045,7 +2791,7 @@ initializeBlubVisitor();
             <div class="blub-mode-text">
 
                 <div class="blub-emoji">
-                    
+                    🫧
                 </div>
 
                 <div class="blub-main">
@@ -3073,7 +2819,7 @@ initializeBlubVisitor();
 
         document
             .querySelectorAll(
-                ".staff-card, .blub-card, img"
+                ".staff-card, .card, img"
             )
             .forEach(
                 (element, index) => {
@@ -3103,7 +2849,7 @@ initializeBlubVisitor();
 
                 document
                     .querySelectorAll(
-                        ".staff-card, .blub-card, img"
+                        ".staff-card, .card, img"
                     )
                     .forEach(
                         element => {
@@ -3135,7 +2881,9 @@ initializeBlubVisitor();
 
 
     const style =
-        document.createElement("style");
+        document.createElement(
+            "style"
+        );
 
 
     style.textContent = `
@@ -3143,24 +2891,15 @@ initializeBlubVisitor();
         #blub-mode-overlay {
 
             position: fixed;
-
             inset: 0;
-
             z-index: 999999;
 
             display: flex;
-
             align-items: center;
-
             justify-content: center;
 
             background:
-                rgba(
-                    0,
-                    0,
-                    0,
-                    0.82
-                );
+                rgba(0,0,0,0.82);
 
             backdrop-filter:
                 blur(8px);
@@ -3172,32 +2911,21 @@ initializeBlubVisitor();
 
         }
 
-
         #blub-mode-overlay.blub-fade {
-
             opacity: 0;
-
         }
 
-
         .blub-mode-text {
-
             text-align: center;
-
             color: white;
-
             animation:
                 blubPop
                 0.7s
                 ease-out;
-
         }
 
-
         .blub-emoji {
-
             font-size: 90px;
-
             margin-bottom: 15px;
 
             animation:
@@ -3205,152 +2933,102 @@ initializeBlubVisitor();
                 1.5s
                 linear
                 infinite;
-
         }
-
 
         .blub-main {
-
             font-size:
-                clamp(
-                    45px,
-                    10vw,
-                    90px
-                );
+                clamp(45px,10vw,90px);
 
             font-weight: 900;
-
             letter-spacing: 6px;
-
         }
-
 
         .blub-sub {
-
             margin-top: 10px;
-
             color: #d4af37;
-
             font-size: 18px;
-
             font-weight: bold;
-
             letter-spacing: 7px;
-
         }
 
-
         .blub-chaos {
-
             animation:
                 blubShake
                 0.18s
                 infinite;
-
         }
-
 
         @keyframes blubPop {
 
             0% {
-
-                transform:
-                    scale(0.2);
-
+                transform: scale(0.2);
                 opacity: 0;
-
             }
 
             70% {
-
-                transform:
-                    scale(1.08);
-
+                transform: scale(1.08);
             }
 
             100% {
-
-                transform:
-                    scale(1);
-
+                transform: scale(1);
                 opacity: 1;
-
             }
 
         }
-
 
         @keyframes blubSpin {
 
             from {
-
-                transform:
-                    rotate(0deg);
-
+                transform: rotate(0deg);
             }
 
             to {
-
-                transform:
-                    rotate(360deg);
-
+                transform: rotate(360deg);
             }
 
         }
-
 
         @keyframes blubFloat {
 
-            0%,
-            100% {
-
+            0%,100% {
                 transform:
                     translateY(0)
                     rotate(0deg);
-
             }
 
             50% {
-
                 transform:
                     translateY(-25px)
                     rotate(3deg);
-
             }
 
         }
-
 
         @keyframes blubShake {
 
             0% {
-                transform:
-                    translate(0, 0);
+                transform: translate(0,0);
             }
 
             25% {
-                transform:
-                    translate(2px, -2px);
+                transform: translate(2px,-2px);
             }
 
             50% {
-                transform:
-                    translate(-2px, 2px);
+                transform: translate(-2px,2px);
             }
 
             75% {
-                transform:
-                    translate(2px, 2px);
+                transform: translate(2px,2px);
             }
 
             100% {
-                transform:
-                    translate(0, 0);
+                transform: translate(0,0);
             }
 
         }
 
-    ;
+    `;
 
 
     document.head.appendChild(
@@ -3358,8 +3036,17 @@ initializeBlubVisitor();
     );
 
 })();
-</script>
 
+
+/* ==========================================
+   START
+========================================== */
+
+loadStaff();
+
+initializeBlubVisitor();
+
+</script>
 
 </body>
 </html>
