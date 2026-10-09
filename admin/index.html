@@ -511,6 +511,7 @@
 </div>
 
 
+
 <div class="admin-panel" id="adminPanel">
 
     <div class="container">
@@ -530,6 +531,7 @@
         </div>
 
 
+
         <div class="stats">
 
             <div class="stat">
@@ -543,6 +545,7 @@
             </div>
 
         </div>
+
 
 
         <div class="tabs">
@@ -564,6 +567,7 @@
         </div>
 
 
+
         <section
             id="visitorsTab"
             class="tab active"
@@ -583,6 +587,7 @@
             </div>
 
         </section>
+
 
 
         <section
@@ -616,6 +621,7 @@
 
     </div>
 </div>
+
 
 
 <div
@@ -708,6 +714,7 @@
 </div>
 
 
+
 <script>
 
 const SUPABASE_URL =
@@ -721,6 +728,7 @@ const supabaseClient =
         SUPABASE_URL,
         SUPABASE_PUBLISHABLE_KEY
     );
+
 
 
 const loginScreen =
@@ -786,6 +794,11 @@ const cancelStaffButton =
 const saveStaffButton =
     document.getElementById("saveStaffButton");
 
+// Credentials are kept only in memory while the admin panel is open.
+let currentAdminName = null;
+let currentAdminPassword = null;
+
+
 
 /* ==========================================
    TABS
@@ -825,6 +838,7 @@ document
     });
 
 
+
 /* ==========================================
    LOGIN
 ========================================== */
@@ -844,6 +858,7 @@ adminPasswordInput.addEventListener(
 
     }
 );
+
 
 
 async function login() {
@@ -869,74 +884,66 @@ async function login() {
     loginButton.textContent =
         "CHECKING...";
 
+    try {
+        const {
+            data,
+            error
+        } =
+            await supabaseClient
+                .from("blub_admins")
+                .select("name")
+                .eq("name", name)
+                .eq("password", password)
+                .maybeSingle();
 
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-            .from("blub_admins")
-            .select("name")
-            .eq("name", name)
-            .eq("password", password)
-            .maybeSingle();
+        if (error) {
+            console.error(error);
 
+            loginError.textContent =
+                "Could not connect to BLUB security.";
 
-    if (error) {
+            return;
+        }
 
+        if (!data) {
+            loginError.textContent =
+                "Invalid admin name or password.";
+
+            return;
+        }
+
+        // Save credentials in memory for the ban RPC.
+        currentAdminName = data.name;
+        currentAdminPassword = password;
+
+        adminNameInput.value = "";
+        adminPasswordInput.value = "";
+
+        loginScreen.style.display =
+            "none";
+
+        adminPanel.style.display =
+            "block";
+
+        welcomeText.textContent =
+            "Logged in as " + data.name;
+
+        await Promise.all([
+            loadVisitors(),
+            loadStaff()
+        ]);
+
+    } catch (error) {
         console.error(error);
-
         loginError.textContent =
-            "Could not connect to BLUB security.";
-
+            "Unexpected login error. Check the browser console.";
+    } finally {
         loginButton.disabled = false;
-
         loginButton.textContent =
             "ENTER ADMIN PANEL";
-
-        return;
     }
-
-
-    if (!data) {
-
-        loginError.textContent =
-            "Invalid admin name or password.";
-
-        loginButton.disabled = false;
-
-        loginButton.textContent =
-            "ENTER ADMIN PANEL";
-
-        return;
-    }
-
-
-    adminNameInput.value = "";
-    adminPasswordInput.value = "";
-
-    loginScreen.style.display =
-        "none";
-
-    adminPanel.style.display =
-        "block";
-
-    welcomeText.textContent =
-        "Logged in as " + data.name;
-
-
-    await Promise.all([
-        loadVisitors(),
-        loadStaff()
-    ]);
-
-
-    loginButton.disabled = false;
-
-    loginButton.textContent =
-        "ENTER ADMIN PANEL";
-
 }
+
 
 
 /* ==========================================
@@ -947,7 +954,6 @@ async function loadVisitors() {
 
     visitorList.innerHTML =
         '<div class="loading">Loading BLUB visitors...</div>';
-
 
     const {
         data,
@@ -965,9 +971,7 @@ async function loadVisitors() {
                 }
             );
 
-
     if (error) {
-
         console.error(error);
 
         visitorList.innerHTML =
@@ -976,9 +980,7 @@ async function loadVisitors() {
         return;
     }
 
-
     if (!data || data.length === 0) {
-
         visitorList.innerHTML =
             '<div class="empty">No BLUB visitors yet.</div>';
 
@@ -987,11 +989,8 @@ async function loadVisitors() {
         return;
     }
 
-
     updateStats(data);
-
     visitorList.innerHTML = "";
-
 
     data.forEach(visitor => {
 
@@ -1001,13 +1000,11 @@ async function loadVisitors() {
         card.className =
             "visitor";
 
-
         const info =
             document.createElement("div");
 
         info.className =
             "visitor-info";
-
 
         const name =
             document.createElement("div");
@@ -1019,7 +1016,6 @@ async function loadVisitors() {
             visitor.display_name ||
             "Unnamed BLUB";
 
-
         const id =
             document.createElement("div");
 
@@ -1028,7 +1024,6 @@ async function loadVisitors() {
 
         id.textContent =
             "ID: " + visitor.id;
-
 
         const joined =
             document.createElement("div");
@@ -1042,14 +1037,11 @@ async function loadVisitors() {
                 visitor.created_at
             ).toLocaleString();
 
-
         info.appendChild(name);
         info.appendChild(id);
         info.appendChild(joined);
 
-
         if (visitor.banned) {
-
             const status =
                 document.createElement("span");
 
@@ -1060,9 +1052,7 @@ async function loadVisitors() {
                 "BANNED";
 
             info.appendChild(status);
-
         }
-
 
         const actions =
             document.createElement("div");
@@ -1070,29 +1060,22 @@ async function loadVisitors() {
         actions.className =
             "actions";
 
-
         const button =
             document.createElement("button");
 
-
         if (visitor.banned) {
-
             button.className =
                 "unban-button";
 
             button.textContent =
                 "UNBAN";
-
         } else {
-
             button.className =
                 "ban-button";
 
             button.textContent =
                 "BAN";
-
         }
-
 
         button.addEventListener(
             "click",
@@ -1103,18 +1086,13 @@ async function loadVisitors() {
                 )
         );
 
-
         actions.appendChild(button);
-
         card.appendChild(info);
-
         card.appendChild(actions);
-
         visitorList.appendChild(card);
-
     });
-
 }
+
 
 
 function updateStats(visitors) {
@@ -1128,71 +1106,64 @@ function updateStats(visitors) {
                 visitor.banned
         ).length;
 
-
     document.getElementById(
         "totalVisitors"
     ).textContent =
         total;
 
-
     document.getElementById(
         "bannedVisitors"
     ).textContent =
         banned;
-
 }
+
 
 
 /* ==========================================
    BAN / UNBAN
 ========================================== */
 
-async function setBan(
-    visitorId,
-    shouldBan
-) {
+async function setBan(visitorId, shouldBan) {
+
+    if (!currentAdminName || !currentAdminPassword) {
+        alert("Your admin session is missing. Please log in again.");
+        return;
+    }
 
     const action =
-        shouldBan
-            ? "ban"
-            : "unban";
+        shouldBan ? "ban" : "unban";
 
-
-    if (
-        !confirm(
-            `Are you sure you want to ${action} this BLUB?`
-        )
-    ) {
+    if (!confirm(
+        `Are you sure you want to ${action} this BLUB?`
+    )) {
         return;
     }
 
-
-    const {
-        error
-    } =
-        await supabaseClient
-            .from("visitors")
-            .update({
-                banned: shouldBan
-            })
-            .eq("id", visitorId);
-
-
-    if (error) {
-
-        console.error(error);
-
-        alert(
-            "Could not update ban status."
+    const { data, error } =
+        await supabaseClient.rpc(
+            "admin_set_visitor_ban",
+            {
+                p_admin_name: currentAdminName,
+                p_admin_password: currentAdminPassword,
+                p_visitor_id: visitorId,
+                p_should_ban: shouldBan
+            }
         );
 
+    if (error) {
+        console.error("Ban operation failed:", error);
+        alert("Could not update ban status: " + error.message);
         return;
     }
 
+    if (data !== true) {
+        alert("The ban operation did not complete.");
+        return;
+    }
 
     await loadVisitors();
-
 }
+
 
 
 /* ==========================================
@@ -1203,7 +1174,6 @@ async function loadStaff() {
 
     staffList.innerHTML =
         '<div class="loading">Loading BLUB staff...</div>';
-
 
     const {
         data,
@@ -1221,9 +1191,7 @@ async function loadStaff() {
                 }
             );
 
-
     if (error) {
-
         console.error(error);
 
         staffList.innerHTML =
@@ -1232,18 +1200,14 @@ async function loadStaff() {
         return;
     }
 
-
     if (!data || data.length === 0) {
-
         staffList.innerHTML =
             '<div class="empty">No staff members yet.</div>';
 
         return;
     }
 
-
     staffList.innerHTML = "";
-
 
     data.forEach(member => {
 
@@ -1253,13 +1217,11 @@ async function loadStaff() {
         card.className =
             "staff-member";
 
-
         const info =
             document.createElement("div");
 
         info.className =
             "staff-info";
-
 
         const name =
             document.createElement("div");
@@ -1270,7 +1232,6 @@ async function loadStaff() {
         name.textContent =
             member.name;
 
-
         const role =
             document.createElement("div");
 
@@ -1280,13 +1241,10 @@ async function loadStaff() {
         role.textContent =
             member.role;
 
-
         info.appendChild(name);
         info.appendChild(role);
 
-
         if (member.description) {
-
             const description =
                 document.createElement("div");
 
@@ -1297,16 +1255,13 @@ async function loadStaff() {
                 member.description;
 
             info.appendChild(description);
-
         }
-
 
         const actions =
             document.createElement("div");
 
         actions.className =
             "actions";
-
 
         const edit =
             document.createElement("button");
@@ -1323,7 +1278,6 @@ async function loadStaff() {
                 openEditStaff(member)
         );
 
-
         const remove =
             document.createElement("button");
 
@@ -1339,19 +1293,16 @@ async function loadStaff() {
                 deleteStaff(member.id)
         );
 
-
         actions.appendChild(edit);
         actions.appendChild(remove);
-
 
         card.appendChild(info);
         card.appendChild(actions);
 
         staffList.appendChild(card);
-
     });
-
 }
+
 
 
 /* ==========================================
@@ -1366,27 +1317,21 @@ addStaffButton.addEventListener(
             "ADD STAFF MEMBER";
 
         staffId.value = "";
-
         staffName.value = "";
-
         staffRole.value = "";
-
         staffDescription.value = "";
+        staffOrder.value = "1";
 
-        staffOrder.value =
-            "1";
-
-        staffFormError.textContent =
-            "";
+        staffFormError.textContent = "";
 
         staffModal.classList.add(
             "open"
         );
 
         staffName.focus();
-
     }
 );
+
 
 
 /* ==========================================
@@ -1413,16 +1358,15 @@ function openEditStaff(member) {
     staffOrder.value =
         member.display_order ?? 0;
 
-    staffFormError.textContent =
-        "";
+    staffFormError.textContent = "";
 
     staffModal.classList.add(
         "open"
     );
 
     staffName.focus();
-
 }
+
 
 
 /* ==========================================
@@ -1434,28 +1378,21 @@ cancelStaffButton.addEventListener(
     closeStaffModal
 );
 
-
 staffModal.addEventListener(
     "click",
     event => {
-
-        if (
-            event.target === staffModal
-        ) {
+        if (event.target === staffModal) {
             closeStaffModal();
         }
-
     }
 );
 
-
 function closeStaffModal() {
-
     staffModal.classList.remove(
         "open"
     );
-
 }
+
 
 
 /* ==========================================
@@ -1466,7 +1403,6 @@ saveStaffButton.addEventListener(
     "click",
     saveStaff
 );
-
 
 async function saveStaff() {
 
@@ -1483,121 +1419,83 @@ async function saveStaff() {
         staffDescription.value.trim();
 
     const displayOrder =
-        Number(
-            staffOrder.value
-        );
+        Number(staffOrder.value);
 
-
-    staffFormError.textContent =
-        "";
-
+    staffFormError.textContent = "";
 
     if (!name) {
-
         staffFormError.textContent =
             "Enter a staff name.";
 
         return;
     }
 
-
     if (!role) {
-
         staffFormError.textContent =
             "Enter a staff role.";
 
         return;
     }
 
-
     if (
-        !Number.isInteger(
-            displayOrder
-        ) ||
+        !Number.isInteger(displayOrder) ||
         displayOrder < 0
     ) {
-
         staffFormError.textContent =
             "Display order must be 0 or higher.";
 
         return;
     }
 
+    saveStaffButton.disabled = true;
+    saveStaffButton.textContent = "SAVING...";
 
-    saveStaffButton.disabled =
-        true;
+    try {
+        const staffData = {
+            name,
+            role,
+            description: description || null,
+            display_order: displayOrder
+        };
 
-    saveStaffButton.textContent =
-        "SAVING...";
+        let result;
 
+        if (id) {
+            result =
+                await supabaseClient
+                    .from("staff")
+                    .update(staffData)
+                    .eq("id", id);
+        } else {
+            result =
+                await supabaseClient
+                    .from("staff")
+                    .insert(staffData);
+        }
 
-    const staffData = {
+        if (result.error) {
+            console.error(result.error);
 
-        name,
+            staffFormError.textContent =
+                "Could not save staff member: " + result.error.message;
 
-        role,
+            return;
+        }
 
-        description:
-            description || null,
+        closeStaffModal();
+        await loadStaff();
 
-        display_order:
-            displayOrder
-
-    };
-
-
-    let result;
-
-
-    if (id) {
-
-        result =
-            await supabaseClient
-                .from("staff")
-                .update(staffData)
-                .eq("id", id);
-
-    } else {
-
-        result =
-            await supabaseClient
-                .from("staff")
-                .insert(staffData);
-
-    }
-
-
-    if (result.error) {
-
-        console.error(
-            result.error
-        );
+    } catch (error) {
+        console.error(error);
 
         staffFormError.textContent =
-            "Could not save staff member.";
-
-        saveStaffButton.disabled =
-            false;
-
-        saveStaffButton.textContent =
-            "SAVE STAFF";
-
-        return;
+            "Unexpected error while saving staff.";
+    } finally {
+        saveStaffButton.disabled = false;
+        saveStaffButton.textContent = "SAVE STAFF";
     }
-
-
-    closeStaffModal();
-
-    await loadStaff();
-
-
-    saveStaffButton.disabled =
-        false;
-
-    saveStaffButton.textContent =
-        "SAVE STAFF";
-
 }
+
 
 
 /* ==========================================
@@ -1606,39 +1504,31 @@ async function saveStaff() {
 
 async function deleteStaff(id) {
 
-    if (
-        !confirm(
-            "Delete this staff member from BLUB CLUB?"
-        )
-    ) {
+    if (!confirm(
+        "Delete this staff member from BLUB CLUB?"
+    )) {
         return;
     }
 
-
-    const {
-        error
-    } =
+    const { error } =
         await supabaseClient
             .from("staff")
             .delete()
             .eq("id", id);
 
-
     if (error) {
-
         console.error(error);
 
         alert(
-            "Could not delete staff member."
+            "Could not delete staff member: " + error.message
         );
 
         return;
     }
 
-
     await loadStaff();
-
 }
+
 
 
 /* ==========================================
@@ -1649,23 +1539,21 @@ logoutButton.addEventListener(
     "click",
     () => {
 
+        // Clear in-memory credentials when the admin logs out.
+        currentAdminName = null;
+        currentAdminPassword = null;
+
         adminPanel.style.display =
             "none";
 
         loginScreen.style.display =
             "flex";
 
-        adminNameInput.value =
-            "";
-
-        adminPasswordInput.value =
-            "";
-
-        loginError.textContent =
-            "";
+        adminNameInput.value = "";
+        adminPasswordInput.value = "";
+        loginError.textContent = "";
 
         adminNameInput.focus();
-
     }
 );
 
