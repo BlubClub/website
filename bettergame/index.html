@@ -429,6 +429,33 @@ h1 {
 
 .cheat-note { color: var(--danger); font-weight: 800; margin: -12px 0 24px; }
 
+#weapon-hud {
+    position: absolute;
+    left: max(16px, env(safe-area-inset-left, 0px));
+    bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 190px;
+    padding: 6px 12px 8px;
+    background: rgba(20, 12, 5, 0.85);
+    border: 3px solid var(--edge);
+    border-radius: 10px;
+    color: var(--cream);
+    font-family: var(--font-display);
+    text-align: left;
+    cursor: pointer;
+    pointer-events: auto;
+    z-index: 10;
+}
+#weapon-hud:focus-visible { outline: 3px solid var(--frost); outline-offset: 2px; }
+#wh-main { font-size: 1rem; letter-spacing: 1px; color: var(--gold); }
+#wh-sub { font-size: 0.85rem; letter-spacing: 1px; color: var(--muted); }
+.wh-bar { display: block; height: 8px; background: #2a1d10; border: 2px solid #000; border-radius: 5px; overflow: hidden; }
+#wh-fill { display: block; height: 100%; width: 0; background: #f4f4ff; }
+#wh-fill.max { background: var(--gold); }
+#wh-fill.cool { background: #7a6a58; }
+
 @media (max-width: 768px) {
     #mobile-controls { display: flex; }
     h1 { font-size: 3rem; }
@@ -439,6 +466,7 @@ h1 {
     #wave-announcement { font-size: 3rem; }
     #wave-announcement.boss { font-size: 2rem; }
     #ability-bar { bottom: 96px; }
+    #weapon-hud { bottom: calc(150px + env(safe-area-inset-bottom, 0px)); min-width: 150px; }
     .shop-head h2 { font-size: 1.5rem; }
     #boss-bar { width: 34vw; }
     #boss-name { font-size: 0.7rem; letter-spacing: 1px; }
@@ -482,6 +510,8 @@ h1 {
 
         <div id="ability-bar"></div>
 
+        <button id="weapon-hud" class="hidden" type="button"><span id="wh-main"></span><span id="wh-sub"></span><span class="wh-bar"><span id="wh-fill"></span></span></button>
+
         <div id="mobile-controls" class="hidden">
             <div id="move-controls">
                 <button class="control-btn" id="btn-up" type="button">▲</button>
@@ -501,7 +531,8 @@ h1 {
             You are King Cheesecake. <b>W/S</b> or <b>Up/Down</b> to move, hold <b>SPACE</b> to fire.<br>
             Spoon Bots drop coins. Don't let them touch the counter on the right.<br>
             Press <b>ESC</b> any time to pause and shop for guns, upgrades and Blubs.<br>
-            Click a Blub (or press its number) to unleash its ability. A boss arrives every 5 waves.
+            Click a Blub (or press its number) to unleash its ability. A boss arrives every 5 waves.<br>
+            The Goon Gun is a second weapon slot: press <b>`</b> to swap to it, hold SPACE to charge, release to fire.
         </p>
         <button id="start-btn" class="btn" type="button">PLAY NOW</button>
     </div>
@@ -559,10 +590,25 @@ const CONFIG = {
 const GUNS = [
     { id: 'strawberry', name: 'Strawberry Popper', cost: 0, dmg: 1, rate: 0.25, desc: 'The classic. One juicy strawberry per shot.' },
     { id: 'cream', name: 'Cream Twin', cost: 200, dmg: 1, rate: 0.28, desc: 'Two whipped cream shots side by side.' },
-    { id: 'blackberry', name: 'Blackberry Shotgun', cost: 500, dmg: 2, rate: 0.45, desc: 'Five blackberries in a wide spread, 2 damage each.' },
-    { id: 'waffle', name: 'Waffle Piercer', cost: 800, dmg: 3, rate: 0.4, desc: 'Crunchy waffle shots that pierce through every enemy in line.' },
-    { id: 'gatling', name: 'Jam Gatling', cost: 1300, dmg: 1, rate: 0.09, desc: 'A rapid stream of strawberry jam.' }
+    { id: 'waffle', name: 'Waffle Piercer', cost: 500, dmg: 3, rate: 0.4, desc: 'Crunchy waffle shots that pierce through every enemy in line.' },
+    { id: 'blackberry', name: 'Blackberry Shotgun', cost: 800, dmg: 2, rate: 0.45, desc: 'Five blackberries in a wide spread, 2 damage each.' },
+    { id: 'gatling', name: 'Jam Gatling', cost: 1300, dmg: 2.5, rate: 0.09, desc: 'A rapid stream of strawberry jam.' }
 ];
+
+const GOON = {
+    id: 'goon',
+    name: 'Goon Gun',
+    cost: 4000,
+    key: '`',
+    chargeTime: 2.0,
+    fullCooldown: 25,
+    partialCooldown: 1.5,
+    desc: 'Second weapon slot, used together with your normal gun. Swap with the ` key, hold SPACE to charge and release to fire. Partial charges are weak. A full charge blasts a massive area for 5 damage, then needs 25s to recharge and swaps you back.'
+};
+
+function newGoon() {
+    return { owned: false, active: false, charge: 0, cd: 0, cdTotal: 1 };
+}
 
 const UPGRADES = [
     { id: 'damage', name: 'Sharper Berries', tag: 'DMG', base: 90, max: 8, desc: '+25% damage on your gun per level.' },
@@ -617,6 +663,7 @@ let bossesDefeated = 0;
 let bossWaveMax = 0;
 let cheated = false;
 let ledger = 0;
+let goon = newGoon();
 let run = newRun();
 
 function readBest() {
@@ -670,6 +717,10 @@ const bossBar = document.getElementById('boss-bar');
 const bossName = document.getElementById('boss-name');
 const bossFill = document.getElementById('boss-fill');
 const abilityBar = document.getElementById('ability-bar');
+const weaponHud = document.getElementById('weapon-hud');
+const whMain = document.getElementById('wh-main');
+const whSub = document.getElementById('wh-sub');
+const whFill = document.getElementById('wh-fill');
 
 class AudioManager {
     constructor() {
@@ -1241,6 +1292,15 @@ function drawShot(c, type) {
         c.beginPath(); c.arc(0, 0, 9, 0, TAU); c.fill(); c.stroke();
         c.fillStyle = '#ffd23a';
         c.beginPath(); c.arc(0, 0, 4, 0, TAU); c.fill();
+    } else if (type === 'goon') {
+        c.fillStyle = 'rgba(255,207,58,0.35)';
+        c.beginPath(); c.arc(0, 0, 12, 0, TAU); c.fill();
+        c.fillStyle = '#ffcf3a';
+        c.strokeStyle = '#000';
+        c.lineWidth = 2;
+        c.beginPath(); c.arc(0, 0, 8, 0, TAU); c.fill(); c.stroke();
+        c.fillStyle = '#ffffff';
+        c.beginPath(); c.arc(-2, -2, 3.5, 0, TAU); c.fill();
     } else if (type === 'slice') {
         c.fillStyle = '#f6c33d';
         c.strokeStyle = '#8f5a12';
@@ -1369,6 +1429,9 @@ class Projectile {
         this.hits = new Map();
         this.age = 0;
         this.radius = o.radius || 0;
+        this.color = o.color || '#ffffff';
+        this.full = !!o.full;
+        this.detonateX = o.detonateX || 0;
         this.range = o.range || 0;
         this.startX = this.x;
         this.returning = false;
@@ -1399,6 +1462,14 @@ class Projectile {
             return;
         }
 
+        if (this.kind === 'goon') {
+            if (this.x + this.width / 2 <= this.detonateX) {
+                this.active = false;
+                goonBlast(this);
+            }
+            return;
+        }
+
         if (this.kind === 'boomerang') {
             if (!this.returning && this.startX - this.x > this.range) {
                 this.returning = true;
@@ -1420,7 +1491,17 @@ class Projectile {
         c.translate(this.x + this.width / 2, this.y + this.height / 2);
         c.rotate(this.rotation);
         c.scale(this.scale, this.scale);
-        drawShot(c, this.type);
+        if (this.kind === 'goon') {
+            c.shadowColor = this.color;
+            c.shadowBlur = 22;
+            c.fillStyle = this.color;
+            c.beginPath(); c.arc(0, 0, 11, 0, TAU); c.fill();
+            c.shadowBlur = 0;
+            c.fillStyle = '#ffffff';
+            c.beginPath(); c.arc(-2, -2, 5, 0, TAU); c.fill();
+        } else {
+            drawShot(c, this.type);
+        }
         c.restore();
     }
 }
@@ -1968,7 +2049,15 @@ class Player {
         if (this.y + this.height > H) this.y = H - this.height;
 
         if (this.fireTimer > 0) this.fireTimer -= dt;
-        if ((keys[' '] || isShootingMobile) && this.fireTimer <= 0) this.shoot();
+        if (goon.cd > 0) goon.cd = Math.max(0, goon.cd - dt);
+        const holding = keys[' '] || isShootingMobile;
+        if (goon.active) {
+            if (goon.cd > 0) goon.charge = 0;
+            else if (holding) goon.charge = Math.min(1, goon.charge + dt / GOON.chargeTime);
+            else if (goon.charge > 0) this.fireGoon();
+        } else if (holding && this.fireTimer <= 0) {
+            this.shoot();
+        }
 
         if (this.shootRecoil > 0) this.shootRecoil -= dt * 60;
         else this.shootRecoil = 0;
@@ -1997,13 +2086,86 @@ class Player {
         for (let i = 0; i < 3; i++) particles.push(new Particle(ox, oy, '#fff', 0.5));
     }
 
+    fireGoon() {
+        const ch = goon.charge;
+        goon.charge = 0;
+        if (ch < 0.12) return;
+        const full = ch >= 1;
+        const mult = 1 + 0.25 * lvl('damage');
+        const dmg = (full ? 5 : 0.35 + ch) * mult;
+        const radius = full ? 360 : 36 + 90 * ch;
+        const travel = full ? 560 : 180 + 200 * ch;
+        const ox = this.x - 24;
+        const oy = this.y + this.height / 2;
+        projectiles.push(new Projectile(ox, oy, 'goon', {
+            kind: 'goon',
+            dmg,
+            radius,
+            full,
+            color: full ? '#ffcf3a' : '#f4f4ff',
+            scale: full ? 2.6 : 0.6 + 0.8 * ch,
+            speed: full ? 1100 : 900,
+            detonateX: Math.max(30, ox - travel),
+            rot: 0
+        }));
+        goon.cd = full ? GOON.fullCooldown : GOON.partialCooldown;
+        goon.cdTotal = goon.cd;
+        this.shootRecoil = full ? 40 : 10;
+        audio.playTone(full ? 120 : 500, full ? 'sawtooth' : 'sine', full ? 0.6 : 0.15, full ? 0.25 : 0.08, full ? 40 : 250);
+        if (full) {
+            goon.active = false;
+            shakeScreen(0.35, 9);
+            floatingTexts.push(new FloatingText(this.x - 40, this.y - 16, 'GOON BLAST', '#ffcf3a', 30));
+        }
+    }
+
     draw(c) {
         c.save();
         const bobY = Math.sin(this.time * 5) * 5;
         c.translate(this.x + this.shootRecoil, this.y + bobY);
         drawKing(c, this.time);
         c.restore();
+        if (goon.active) drawGoonCharge(c, this, bobY);
     }
+}
+
+function drawGoonCharge(c, p, bobY) {
+    const cy = p.y + p.height / 2 + bobY;
+    const gx = p.x + p.shootRecoil - 14;
+    c.save();
+    c.lineJoin = 'round';
+    c.fillStyle = '#4a4a55';
+    c.strokeStyle = '#000';
+    c.lineWidth = 3;
+    roundRectPath(c, gx - 30, cy - 9, 40, 18, 6);
+    c.fill();
+    c.stroke();
+    c.fillStyle = '#2a2a33';
+    c.fillRect(gx - 30, cy - 4, 8, 8);
+
+    if (goon.cd > 0) {
+        c.fillStyle = '#7a6a58';
+        c.beginPath(); c.arc(gx - 38, cy, 7, 0, TAU); c.fill(); c.stroke();
+        c.restore();
+        return;
+    }
+
+    const full = goon.charge >= 1;
+    const pulse = full ? 1 + 0.1 * Math.sin(p.time * 32) : 1;
+    const r = (7 + goon.charge * 40) * pulse;
+    const ox = gx - 36 - r * 0.5;
+    const color = full ? '#ffcf3a' : '#f4f4ff';
+    c.shadowColor = color;
+    c.shadowBlur = 12 + goon.charge * 26;
+    c.fillStyle = color;
+    c.beginPath(); c.arc(ox, cy, r, 0, TAU); c.fill();
+    c.shadowBlur = 0;
+    c.fillStyle = '#ffffff';
+    c.beginPath(); c.arc(ox - r * 0.25, cy - r * 0.25, r * 0.45, 0, TAU); c.fill();
+    c.strokeStyle = full ? 'rgba(255,207,58,0.9)' : 'rgba(255,255,255,0.7)';
+    c.lineWidth = 2;
+    c.beginPath(); c.arc(ox, cy, r + 6 + (p.time * 40 % 14), 0, TAU); c.stroke();
+    c.restore();
 }
 
 let player = new Player();
@@ -2133,9 +2295,10 @@ function handleCollisions() {
         if (!p.active) continue;
         for (const e of enemies) {
             if (!e.active || !checkAABB(p, e) || !p.canHit(e)) continue;
-            if (p.kind === 'bomb') {
+            if (p.kind === 'bomb' || p.kind === 'goon') {
                 p.active = false;
-                explode(p.x + p.width / 2, p.y + p.height / 2, p.radius, p.dmg, '#ff3366');
+                if (p.kind === 'goon') goonBlast(p);
+                else explode(p.x + p.width / 2, p.y + p.height / 2, p.radius, p.dmg, '#ff3366');
                 break;
             }
             e.hit(p.dmg);
@@ -2150,7 +2313,7 @@ function handleCollisions() {
     for (const s of enemyShots) {
         if (!s.active) continue;
         for (const p of projectiles) {
-            if (!p.active || p.kind === 'bomb' || !checkAABB(p, s)) continue;
+            if (!p.active || p.kind === 'bomb' || p.kind === 'goon' || !checkAABB(p, s)) continue;
             s.active = false;
             for (let i = 0; i < 5; i++) particles.push(new Particle(s.x + 11, s.y + 11, '#ff6a6a', 1));
             if (!p.pierce) p.active = false;
@@ -2223,6 +2386,7 @@ function update(dt) {
 
     updateBossBar();
     updateAbilityBar();
+    updateWeaponHud();
 
     if (GAME_STATE !== 'PLAYING') return;
 
@@ -2447,6 +2611,14 @@ function renderShop() {
                 ${btn}
             </div>`;
         });
+        html += `<div class="card ${goon.owned ? 'owned' : ''}">
+            <div class="top"><canvas width="128" height="128" style="width:64px;height:64px" data-icon="gun:goon"></canvas>
+            <div><h3>${GOON.name}</h3><p>Second slot. Swap with ${GOON.key}</p></div></div>
+            <p>${GOON.desc}</p>
+            ${goon.owned
+                ? `<button class="buy" type="button" disabled>Owned</button>`
+                : `<button class="buy" type="button" data-buy="goon:buy" ${coins < GOON.cost ? 'disabled' : ''}>${coinLabel(GOON.cost)}</button>`}
+        </div>`;
     } else {
         UPGRADES.forEach(u => {
             const level = lvl(u.id);
@@ -2523,6 +2695,15 @@ function buyItem(key) {
             }
             ok = true;
         }
+    } else if (kind === 'goon') {
+        if (!goon.owned && coins >= GOON.cost) {
+            coins -= GOON.cost;
+            ledger -= GOON.cost;
+            goon.owned = true;
+            whLast = '';
+            weaponHud.classList.remove('hidden');
+            ok = true;
+        }
     } else if (kind === 'repair') {
         const rc = repairCost();
         if (bakeryHealth < maxBakery && coins >= rc) {
@@ -2543,6 +2724,7 @@ function clearInput() {
     for (const k of Object.keys(keys)) keys[k] = false;
     isShootingMobile = false;
     mobileMoveDir = 0;
+    goon.charge = 0;
 }
 
 function togglePause() {
@@ -2600,6 +2782,9 @@ function resetGame() {
     maxBakery = CONFIG.maxBakeryHealth;
     bakeryHealth = maxBakery;
     run = newRun();
+    goon = newGoon();
+    whLast = '';
+    weaponHud.classList.add('hidden');
     projectiles = [];
     enemies = [];
     enemyShots = [];
@@ -2651,6 +2836,7 @@ function endGame() {
     uiMobileControls.classList.add('hidden');
     abilityBar.classList.add('hidden');
     bossBar.classList.add('hidden');
+    weaponHud.classList.add('hidden');
 }
 
 function normalizeKey(e) {
@@ -2663,6 +2849,11 @@ window.addEventListener('keydown', (e) => {
     if (k in keys) {
         keys[k] = true;
         if (active && (k === ' ' || k.startsWith('Arrow'))) e.preventDefault();
+    }
+    if (k === '`' || e.code === 'Backquote') {
+        if (!e.repeat) swapWeapon();
+        e.preventDefault();
+        return;
     }
     if (k === 'p' || k === 'Escape') {
         if (!e.repeat) togglePause();
@@ -2725,6 +2916,7 @@ document.getElementById('start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', startGame);
 document.getElementById('resume-btn').addEventListener('click', togglePause);
 document.getElementById('shop-btn').addEventListener('click', togglePause);
+weaponHud.addEventListener('click', swapWeapon);
 
 const bindHold = (id, down, up) => {
     const button = document.getElementById(id);
@@ -2750,6 +2942,72 @@ const ORIG = {
     shoot: Player.prototype.shoot,
     speed: CONFIG.playerSpeed
 };
+
+let whLast = '';
+
+function goonBlast(p) {
+    const x = p.x + p.width / 2;
+    const y = p.y + p.height / 2;
+    explode(x, y, p.radius, p.dmg, p.color);
+    if (p.full) {
+        blasts.push({ x, y, r: 0, max: p.radius * 1.15, life: 0.8, total: 0.8, color: '#fff2b0' });
+        shakeScreen(0.7, 16);
+        for (let i = 0; i < 60; i++) particles.push(new Particle(x, y, ['#ffcf3a', '#ffffff', '#ffe27a'][i % 3], 3));
+    }
+}
+
+function swapWeapon() {
+    if (!goon.owned) return;
+    if (GAME_STATE !== 'PLAYING' && GAME_STATE !== 'WAVE_TRANSITION') return;
+    if (goon.active) {
+        goon.active = false;
+        goon.charge = 0;
+        audio.playTone(400, 'triangle', 0.08, 0.08, 300);
+        return;
+    }
+    if (goon.cd > 0) {
+        audio.playDeny();
+        floatingTexts.push(new FloatingText(player.x - 30, player.y - 10, `GOON GUN ${Math.ceil(goon.cd)}s`, '#ff8a8a', 22));
+        return;
+    }
+    goon.active = true;
+    goon.charge = 0;
+    audio.playTone(300, 'triangle', 0.1, 0.1, 600);
+}
+
+function updateWeaponHud() {
+    if (!goon.owned) return;
+    let main;
+    let sub;
+    let pct;
+    let cls = '';
+    if (goon.active) {
+        main = '[`] GOON GUN';
+        if (goon.cd > 0) sub = `Recharging ${Math.ceil(goon.cd)}s`;
+        else if (goon.charge >= 1) sub = 'MAX CHARGE, release!';
+        else if (goon.charge > 0) sub = `Charging ${Math.round(goon.charge * 100)}%`;
+        else sub = 'Hold SPACE to charge';
+    } else {
+        main = '[`] ' + gunById(run.gun).name.toUpperCase();
+        sub = goon.cd > 0 ? `Goon Gun ${Math.ceil(goon.cd)}s` : 'Goon Gun ready';
+    }
+    if (goon.cd > 0) {
+        pct = Math.round((1 - goon.cd / goon.cdTotal) * 100);
+        cls = 'cool';
+    } else if (goon.active) {
+        pct = Math.round(goon.charge * 100);
+        if (goon.charge >= 1) cls = 'max';
+    } else {
+        pct = 100;
+    }
+    const key = main + '|' + sub + '|' + pct + '|' + cls;
+    if (key === whLast) return;
+    whLast = key;
+    whMain.textContent = main;
+    whSub.textContent = sub;
+    whFill.style.width = pct + '%';
+    whFill.className = cls;
+}
 
 function markCheated() {
     if (cheated) return;
