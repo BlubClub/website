@@ -591,8 +591,8 @@ const GUNS = [
     { id: 'strawberry', name: 'Strawberry Popper', cost: 0, dmg: 1, rate: 0.25, desc: 'The classic. One juicy strawberry per shot.' },
     { id: 'cream', name: 'Cream Twin', cost: 200, dmg: 1, rate: 0.28, desc: 'Two whipped cream shots side by side.' },
     { id: 'waffle', name: 'Waffle Piercer', cost: 500, dmg: 3, rate: 0.4, desc: 'Crunchy waffle shots that pierce through every enemy in line.' },
-    { id: 'blackberry', name: 'Blackberry Shotgun', cost: 800, dmg: 2, rate: 0.45, desc: 'Five blackberries in a wide spread, 2 damage each.' },
-    { id: 'gatling', name: 'Jam Gatling', cost: 1300, dmg: 2.5, rate: 0.09, desc: 'A rapid stream of strawberry jam.' }
+    { id: 'gatling', name: 'Jam Gatling', cost: 800, dmg: 2.5, rate: 0.09, desc: 'A rapid stream of strawberry jam.' },
+    { id: 'blackberry', name: 'Blackberry Shotgun', cost: 2000, dmg: 2, rate: 0.45, desc: 'Five blackberries in a wide spread, 2 damage each.' }
 ];
 
 const GOON = {
@@ -643,6 +643,72 @@ const BLUBS = [
     { id: 'volcano', name: 'Volcano Blub', cost: 2200, fireRate: 1.2, shot: 'volcano', dmg: 2, ability: 'Eruption', cd: 40, desc: 'Calls down 14 lava strikes across the field, 10 damage each in a blast radius.' }
 ];
 
+const BLUB_UPS = {
+    og: { base: 20000, ups: [
+        { name: 'Double Batch', desc: 'Heals 40 bakery health.' },
+        { name: 'Family Recipe', desc: 'Heals 70 bakery health.' },
+        { name: 'Fresh Baked', desc: 'PASSIVE: the bakery slowly heals itself, 1 health every 1.5 seconds.' }
+    ] },
+    pancake: { base: 20000, ups: [
+        { name: 'Extra Syrup', desc: 'The slow lasts 10 seconds.' },
+        { name: 'Maple Flood', desc: 'Enemies crawl at 20% speed for 12 seconds.' },
+        { name: 'Sticky Floor', desc: 'PASSIVE: every enemy is permanently 15% slower.' }
+    ] },
+    pizza: { base: 24000, ups: [
+        { name: 'Extra Large', desc: 'Fires 11 slices.' },
+        { name: 'Stuffed Crust', desc: 'Each slice does 9 damage.' },
+        { name: 'Topping Rain', desc: 'PASSIVE: its regular shots fire 3 slices in a spread.' }
+    ] },
+    strawberry: { base: 24000, ups: [
+        { name: 'Big Berry', desc: 'The bomb does 14 damage in a bigger blast.' },
+        { name: 'Mega Berry', desc: 'The bomb does 25 damage in a huge blast.' },
+        { name: 'Jam Splash', desc: 'PASSIVE: its regular shots explode on impact.' }
+    ] },
+    watermelon: { base: 24000, ups: [
+        { name: 'Longer Storm', desc: 'Spits seeds for 4 seconds.' },
+        { name: 'Piercing Seeds', desc: 'The storm lasts 5 seconds, and seeds pierce enemies for 2.5 damage.' },
+        { name: 'Rapid Seeds', desc: 'PASSIVE: its regular shots fire 3 times as fast.' }
+    ] },
+    cookie: { base: 26000, ups: [
+        { name: 'Thick Dough', desc: 'The wall blocks 10 hits.' },
+        { name: 'Fortress Cookie', desc: 'The wall blocks 18 hits.' },
+        { name: 'Crunchy Coating', desc: 'PASSIVE: all damage to the bakery is reduced by 25%.' }
+    ] },
+    donut: { base: 28000, ups: [
+        { name: 'Jumbo Donut', desc: 'A bigger donut that does 6 damage per hit.' },
+        { name: 'Double Glaze', desc: 'Throws two donuts, 8 damage per hit.' },
+        { name: 'Sprinkle Rain', desc: 'PASSIVE: its regular shots pierce through enemies.' }
+    ] },
+    icecream: { base: 32000, ups: [
+        { name: 'Deep Freeze', desc: 'Freezes for 6 seconds (bosses 3).' },
+        { name: 'Absolute Zero', desc: 'Freezes for 9 seconds (bosses 5) and deals 10 damage to everything.' },
+        { name: 'Frostbite', desc: 'PASSIVE: its regular shots freeze whatever they hit.' }
+    ] },
+    volcano: { base: 40000, ups: [
+        { name: 'Bigger Eruption', desc: 'Calls down 22 lava strikes.' },
+        { name: 'Magma Storm', desc: '30 lava strikes, 18 damage each.' },
+        { name: 'Magma Core', desc: 'PASSIVE: lava erupts on its own every 8 seconds.' }
+    ] }
+};
+
+function blubLevel(id) {
+    return (run.blubLevels && run.blubLevels[id]) || 0;
+}
+
+function hasPassive(id) {
+    return !!ownedBlubs[id] && blubLevel(id) >= 3;
+}
+
+function blubUpCost(id) {
+    return Math.round(BLUB_UPS[id].base * [1, 2.5, 6][Math.min(2, blubLevel(id))] / 1000) * 1000;
+}
+
+function enemySpeedFactor(isBoss) {
+    const base = hasPassive('pancake') ? 0.85 : 1;
+    if (slowLeft <= 0) return base;
+    return Math.min(base, isBoss ? Math.max(0.35, slowFactor + 0.15) : slowFactor);
+}
+
 const stage = document.getElementById('game');
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d', { alpha: false });
@@ -660,6 +726,7 @@ let maxBakery = CONFIG.maxBakeryHealth;
 let screenShakeTime = 0;
 let screenShakeIntensity = 0;
 let slowLeft = 0;
+let slowFactor = 0.35;
 let freezeFx = 0;
 let shieldCharges = 0;
 let shieldFlash = 0;
@@ -683,7 +750,7 @@ function saveBest(v) {
 let bestWave = readBest();
 
 function newRun() {
-    return { gun: 'strawberry', ownedGuns: { strawberry: true }, levels: {} };
+    return { gun: 'strawberry', ownedGuns: { strawberry: true }, levels: {}, blubLevels: {} };
 }
 
 function lvl(id) { return run.levels[id] || 0; }
@@ -1439,6 +1506,8 @@ class Projectile {
         this.color = o.color || '#ffffff';
         this.full = !!o.full;
         this.detonateX = o.detonateX || 0;
+        this.splash = o.splash || 0;
+        this.freeze = o.freeze || 0;
         this.range = o.range || 0;
         this.startX = this.x;
         this.returning = false;
@@ -1592,7 +1661,7 @@ class Enemy {
             this.freezeLeft -= dt;
             return;
         }
-        const factor = slowLeft > 0 ? 0.35 : 1;
+        const factor = enemySpeedFactor(false);
         this.time += dt;
         this.x += this.vx * factor * dt;
         if (this.moveType === 'sine') this.y = this.startY + Math.sin(this.time * 3) * 40;
@@ -1757,7 +1826,7 @@ class Boss {
             this.freezeLeft -= dt;
             return;
         }
-        const slow = slowLeft > 0 ? 0.5 : 1;
+        const slow = enemySpeedFactor(true);
         this.time += dt;
         const target = Math.max(10, W * 0.38 - this.width / 2 - (this.slot % 2) * 130);
         const counterLeft = W - CONFIG.counterWidth;
@@ -1948,6 +2017,8 @@ class AllyBlub {
         this.cdLeft = 0;
         this.flash = 0;
         this.channel = null;
+        this.passiveT = 0;
+        this.regenT = 0;
         this.place();
         this.x = this.slotX;
         this.y = this.baseY;
@@ -1974,6 +2045,26 @@ class AllyBlub {
     update(dt) {
         this.time += dt;
         this.place();
+
+        if (this.id === 'og' && hasPassive('og')) {
+            this.regenT += dt;
+            if (this.regenT >= 1.5) {
+                this.regenT = 0;
+                if (bakeryHealth < maxBakery) {
+                    bakeryHealth = Math.min(maxBakery, bakeryHealth + 1);
+                    updateHud();
+                }
+            }
+        }
+        if (this.id === 'volcano' && hasPassive('volcano') && enemies.some(e => e.active)) {
+            this.passiveT += dt;
+            if (this.passiveT >= 8) {
+                this.passiveT = 0;
+                for (let i = 0; i < 4; i++) {
+                    strikes.push({ x: rand(30, W * 0.72), y: rand(60, H - 70), delay: i * 0.2, warn: 0.6, total: 0.6, dmg: 10 * allyMult(), done: false });
+                }
+            }
+        }
         this.x += (this.slotX - this.x) * Math.min(1, dt * 6);
         if (this.cdLeft > 0) this.cdLeft = Math.max(0, this.cdLeft - dt);
         if (this.flash > 0) this.flash -= dt;
@@ -1998,7 +2089,7 @@ class AllyBlub {
             if (this.channel.tick <= 0) {
                 this.channel.tick = 0.083;
                 projectiles.push(new Projectile(this.x, this.y + this.height / 2, 'watermelon', {
-                    dmg: 1.5 * allyMult(), angle: rand(-0.45, 0.45), speed: rand(650, 900), align: true, rot: 0
+                    dmg: (blubLevel('watermelon') >= 2 ? 2.5 : 1.5) * allyMult(), pierce: blubLevel('watermelon') >= 2, angle: rand(-0.45, 0.45), speed: rand(650, 900), align: true, rot: 0
                 }));
             }
             if (this.channel.left <= 0) this.channel = null;
@@ -2006,9 +2097,21 @@ class AllyBlub {
     }
 
     shoot() {
-        this.fireTimer = this.def.fireRate;
-        projectiles.push(new Projectile(this.x, this.y + this.height / 2, this.def.shot, { dmg: this.def.dmg * allyMult() }));
-        particles.push(new Particle(this.x, this.y + this.height / 2, '#fff', 0.5));
+        const passive = hasPassive(this.id);
+        this.fireTimer = this.def.fireRate / (passive && this.id === 'watermelon' ? 3 : 1);
+        const ox = this.x;
+        const oy = this.y + this.height / 2;
+        const dmg = this.def.dmg * allyMult();
+        if (passive && this.id === 'pizza') {
+            [-0.2, 0, 0.2].forEach(a => projectiles.push(new Projectile(ox, oy, 'pizza', { dmg: dmg * 1.5, angle: a })));
+        } else {
+            const o = { dmg };
+            if (passive && this.id === 'strawberry') o.splash = 70;
+            if (passive && this.id === 'donut') o.pierce = true;
+            if (passive && this.id === 'icecream') o.freeze = 1.2;
+            projectiles.push(new Projectile(ox, oy, this.def.shot, o));
+        }
+        particles.push(new Particle(ox, oy, '#fff', 0.5));
     }
 
     contains(px, py) {
@@ -2217,6 +2320,7 @@ function triggerBakeryDamage(amount) {
         floatingTexts.push(new FloatingText(W - CONFIG.counterWidth - 70, H / 2 + rand(-100, 100), 'BLOCKED', '#e0a860', 26));
         return;
     }
+    if (hasPassive('cookie')) amount *= 0.75;
     bakeryHealth = Math.max(0, bakeryHealth - amount);
     audio.playDamage();
     shakeScreen(0.25, 10);
@@ -2224,10 +2328,12 @@ function triggerBakeryDamage(amount) {
     if (bakeryHealth <= 0) endGame();
 }
 
-function explode(x, y, radius, dmg, color) {
+function explode(x, y, radius, dmg, color, quiet = false) {
     blasts.push({ x, y, r: 0, max: radius, life: 0.4, total: 0.4, color });
-    audio.playBlast();
-    shakeScreen(0.2, 6);
+    if (!quiet) {
+        audio.playBlast();
+        shakeScreen(0.2, 6);
+    }
     for (const e of enemies) {
         if (!e.active) continue;
         const cx = e.x + e.width / 2;
@@ -2237,7 +2343,7 @@ function explode(x, y, radius, dmg, color) {
     for (const s of enemyShots) {
         if (s.active && Math.hypot(s.x - x, s.y - y) <= radius) s.active = false;
     }
-    for (let i = 0; i < 18; i++) particles.push(new Particle(x, y, color, 2));
+    for (let i = 0; i < (quiet ? 8 : 18); i++) particles.push(new Particle(x, y, color, 2));
 }
 
 function useAbility(id) {
@@ -2245,39 +2351,51 @@ function useAbility(id) {
     const ally = ownedBlubs[id];
     if (!ally || ally.cdLeft > 0) return;
     const m = allyMult();
+    const L = blubLevel(id);
     const ax = ally.x;
     const ay = ally.y + ally.height / 2;
 
     if (id === 'og') {
-        bakeryHealth = Math.min(maxBakery, bakeryHealth + 20);
-        floatingTexts.push(new FloatingText(W - CONFIG.counterWidth - 40, H / 2, '+20 HP', '#7ddc5a', 30));
+        const heal = [20, 40, 70, 70][L];
+        bakeryHealth = Math.min(maxBakery, bakeryHealth + heal);
+        floatingTexts.push(new FloatingText(W - CONFIG.counterWidth - 40, H / 2, `+${heal} HP`, '#7ddc5a', 30));
         for (let i = 0; i < 16; i++) particles.push(new Particle(W - CONFIG.counterWidth, rand(80, H - 80), '#b9e61f', 1));
         updateHud();
     } else if (id === 'pancake') {
-        slowLeft = 6;
+        slowLeft = [6, 10, 12, 12][L];
+        slowFactor = [0.35, 0.35, 0.2, 0.2][L];
     } else if (id === 'pizza') {
-        for (let i = 0; i < 7; i++) {
-            projectiles.push(new Projectile(ax, ay, 'slice', { dmg: 4 * m, angle: -0.48 + i * 0.16, speed: 720, pierce: true, align: true, rot: 0, scale: 1.4 }));
+        const slices = [7, 11, 11, 11][L];
+        for (let i = 0; i < slices; i++) {
+            projectiles.push(new Projectile(ax, ay, 'slice', { dmg: [4, 4, 9, 9][L] * m, angle: -0.55 + i * (1.1 / (slices - 1)), speed: 720, pierce: true, align: true, rot: 0, scale: 1.4 }));
         }
     } else if (id === 'strawberry') {
-        projectiles.push(new Projectile(ax, ay, 'bomb', { dmg: 8 * m, speed: 560, scale: 2.4, kind: 'bomb', radius: 170 }));
+        projectiles.push(new Projectile(ax, ay, 'bomb', { dmg: [8, 14, 25, 25][L] * m, speed: 560, scale: 2.4 + 0.3 * Math.min(L, 2), kind: 'bomb', radius: [170, 230, 300, 300][L] }));
     } else if (id === 'watermelon') {
-        ally.channel = { left: 2.5, tick: 0 };
+        ally.channel = { left: [2.5, 4, 5, 5][L], tick: 0 };
     } else if (id === 'cookie') {
-        shieldCharges = 5;
+        shieldCharges = [5, 10, 18, 18][L];
     } else if (id === 'donut') {
-        projectiles.push(new Projectile(ax, ay, 'ring', { dmg: 3 * m, speed: 650, scale: 2.6, kind: 'boomerang', pierce: true, rehit: 0.35, range: Math.max(160, Math.min(W * 0.55, ax - 80)), rot: 14 }));
+        const throws = L >= 2 ? [-60, 60] : [0];
+        for (const dy of throws) {
+            projectiles.push(new Projectile(ax, clamp(ay + dy, 40, H - 40), 'ring', { dmg: [3, 6, 8, 8][L] * m, speed: 650, scale: L >= 1 ? 3.2 : 2.6, kind: 'boomerang', pierce: true, rehit: 0.35, range: Math.max(160, Math.min(W * 0.55, ax - 80)), rot: 14 }));
+        }
     } else if (id === 'icecream') {
         for (const e of enemies) {
             if (!e.active) continue;
-            e.freezeLeft = e.isBoss ? 2 : 4;
+            if (L >= 2) {
+                e.hit(10 * m, true);
+                if (!e.active) continue;
+            }
+            e.freezeLeft = e.isBoss ? [2, 3, 5, 5][L] : [4, 6, 9, 9][L];
             for (let i = 0; i < 6; i++) particles.push(new Particle(e.x + e.width / 2, e.y + e.height / 2, '#bfeaff', 1));
         }
         freezeFx = 0.6;
         audio.playFreeze();
     } else if (id === 'volcano') {
-        for (let i = 0; i < 14; i++) {
-            strikes.push({ x: rand(30, W * 0.72), y: rand(60, H - 70), delay: i * 0.17 + rand(0, 0.1), warn: 0.6, total: 0.6, dmg: 10 * m, done: false });
+        const count = [14, 22, 30, 30][L];
+        for (let i = 0; i < count; i++) {
+            strikes.push({ x: rand(30, W * 0.72), y: rand(60, H - 70), delay: i * (2.4 / count) + rand(0, 0.1), warn: 0.6, total: 0.6, dmg: [10, 10, 18, 18][L] * m, done: false });
         }
         shakeScreen(0.5, 6);
     }
@@ -2316,7 +2434,13 @@ function handleCollisions() {
                 else explode(p.x + p.width / 2, p.y + p.height / 2, p.radius, p.dmg, '#ff3366');
                 break;
             }
+            if (p.splash) {
+                p.active = false;
+                explode(p.x + p.width / 2, p.y + p.height / 2, p.splash, p.dmg, '#ff3366', true);
+                break;
+            }
             e.hit(p.dmg);
+            if (p.freeze && e.active) e.freezeLeft = Math.max(e.freezeLeft, e.isBoss ? p.freeze * 0.35 : p.freeze);
             if (p.pierce) {
                 p.markHit(e);
             } else {
@@ -2605,14 +2729,32 @@ function renderShop() {
     if (shopTab === 'blubs') {
         BLUBS.forEach((b, i) => {
             const owned = !!ownedBlubs[b.id];
+            const info = BLUB_UPS[b.id];
+            const level = blubLevel(b.id);
+            let lower;
+            if (owned) {
+                let pips = '';
+                for (let k = 0; k < 3; k++) pips += `<span class="pip ${k < level ? 'on' : ''}"></span>`;
+                lower = `<div class="pips">${pips}</div>`;
+                if (level > 0) lower += `<p class="ability"><b>Lv ${level}: ${info.ups[level - 1].name}</b> ${info.ups[level - 1].desc}</p>`;
+                const next = info.ups[level];
+                if (next) {
+                    const cost = blubUpCost(b.id);
+                    lower += `<p><b>Next: ${next.name}</b> ${next.desc}</p>
+                        <button class="buy" type="button" data-buy="bup:${b.id}" ${coins < cost ? 'disabled' : ''}>Upgrade ${coinLabel(cost)}</button>`;
+                } else {
+                    lower += `<button class="buy" type="button" disabled>Fully upgraded</button>`;
+                }
+            } else {
+                lower = `<p>Buy it to unlock 3 ability upgrades. The last one gives a passive.</p>
+                    <button class="buy" type="button" data-buy="blub:${b.id}" ${coins < b.cost ? 'disabled' : ''}>${coinLabel(b.cost)}</button>`;
+            }
             html += `<div class="card ${owned ? 'owned' : ''}">
                 <div class="top"><canvas width="128" height="128" style="width:64px;height:64px" data-icon="blub:${b.id}"></canvas>
                 <div><h3>${b.name}</h3><p>Auto-fires ${b.shot === 'og' ? 'pellets' : b.shot + ' shots'}</p></div></div>
                 <p class="ability"><b>${b.ability}</b> ${b.desc}</p>
                 <p>Recharge ${Math.round(b.cd * cooldownMult())}s. Click the Blub or press ${i + 1}.</p>
-                ${owned
-                    ? `<button class="buy" type="button" disabled>Owned</button>`
-                    : `<button class="buy" type="button" data-buy="blub:${b.id}" ${coins < b.cost ? 'disabled' : ''}>${coinLabel(b.cost)}</button>`}
+                ${lower}
             </div>`;
         });
     } else if (shopTab === 'guns') {
@@ -2713,6 +2855,17 @@ function buyItem(key) {
                 bakeryHealth = Math.min(maxBakery, bakeryHealth + 25);
             }
             ok = true;
+        }
+    } else if (kind === 'bup') {
+        if (BLUB_UPS[id] && ownedBlubs[id] && blubLevel(id) < 3) {
+            const cost = blubUpCost(id);
+            if (coins >= cost) {
+                coins -= cost;
+                ledger -= cost;
+                run.blubLevels[id] = blubLevel(id) + 1;
+                ownedBlubs[id].flash = 1;
+                ok = true;
+            }
         }
     } else if (kind === 'goon') {
         if (!goon.owned && coins >= GOON.cost) {
