@@ -603,7 +603,12 @@ const GOON = {
     chargeTime: 2.0,
     fullCooldown: 25,
     partialCooldown: 1.5,
-    desc: 'Second weapon slot, used together with your normal gun. Swap with the ` key, hold SPACE to charge and release to fire. Partial charges are weak. A full charge blasts a massive area for 5 damage, then needs 25s to recharge and swaps you back.'
+    fullDamage: 30,
+    bubbleDmg: 5,
+    bubbleTick: 0.4,
+    bubbleLife: 9,
+    bubbleCount: 40,
+    desc: 'Second weapon slot, used together with your normal gun. Swap with the ` key, hold SPACE to charge and release to fire. Partial charges are weak. A full charge blasts a massive area for 30 damage and splats poison bubbles that keep hurting enemies for about 9 seconds. Then it needs 25s to recharge and swaps you back.'
 };
 
 function newGoon() {
@@ -695,6 +700,8 @@ let particles = [];
 let floatingTexts = [];
 let blasts = [];
 let strikes = [];
+let bubbles = [];
+let splats = [];
 let allies = [];
 let ownedBlubs = {};
 
@@ -1597,12 +1604,16 @@ class Enemy {
         }
     }
 
-    hit(damage) {
+    hit(damage, quiet = false) {
         if (!this.active) return;
         this.hp -= damage;
         this.flashTime = 0.1;
-        audio.playHit();
-        for (let i = 0; i < 4; i++) particles.push(new Particle(this.x + this.width, this.y + this.height / 2, '#ccc'));
+        if (quiet) {
+            if (Math.random() < 0.3) particles.push(new Particle(this.x + rand(0, this.width), this.y + this.height / 2, '#7dff4a', 0.6));
+        } else {
+            audio.playHit();
+            for (let i = 0; i < 4; i++) particles.push(new Particle(this.x + this.width, this.y + this.height / 2, '#ccc'));
+        }
         if (this.hp <= 0) this.die();
     }
 
@@ -1804,12 +1815,16 @@ class Boss {
         audio.playTone(260, 'sawtooth', 0.2, 0.08, 120);
     }
 
-    hit(damage) {
+    hit(damage, quiet = false) {
         if (!this.active) return;
         this.hp -= damage;
         this.flashTime = 0.08;
-        audio.playHit();
-        particles.push(new Particle(this.x + this.width * rand(0.3, 1), this.y + this.height * rand(0.2, 0.8), '#ddd'));
+        if (quiet) {
+            if (Math.random() < 0.3) particles.push(new Particle(this.x + this.width * rand(0.2, 1), this.y + this.height * rand(0.2, 0.8), '#7dff4a', 0.6));
+        } else {
+            audio.playHit();
+            particles.push(new Particle(this.x + this.width * rand(0.3, 1), this.y + this.height * rand(0.2, 0.8), '#ddd'));
+        }
         if (this.hp <= 0) this.die();
     }
 
@@ -2092,7 +2107,7 @@ class Player {
         if (ch < 0.12) return;
         const full = ch >= 1;
         const mult = 1 + 0.25 * lvl('damage');
-        const dmg = (full ? 5 : 0.35 + ch) * mult;
+        const dmg = (full ? GOON.fullDamage : 0.35 + ch) * mult;
         const radius = full ? 360 : 36 + 90 * ch;
         const travel = full ? 560 : 180 + 200 * ch;
         const ox = this.x - 24;
@@ -2374,6 +2389,7 @@ function update(dt) {
         }
     }
 
+    updatePoison(dt);
     handleCollisions();
 
     projectiles = projectiles.filter(p => p.active);
@@ -2383,6 +2399,8 @@ function update(dt) {
     floatingTexts = floatingTexts.filter(t => t.life > 0);
     blasts = blasts.filter(b => b.life > 0);
     strikes = strikes.filter(s => !s.done);
+    bubbles = bubbles.filter(b => b.life > 0);
+    splats = splats.filter(s => s.life > 0);
 
     updateBossBar();
     updateAbilityBar();
@@ -2495,6 +2513,7 @@ function draw() {
     }
     drawBackground(ctx);
     drawShield(ctx);
+    drawPoison(ctx);
     player.draw(ctx);
     for (const a of allies) a.draw(ctx);
     drawStrikes(ctx);
@@ -2792,6 +2811,8 @@ function resetGame() {
     floatingTexts = [];
     blasts = [];
     strikes = [];
+    bubbles = [];
+    splats = [];
     allies = [];
     ownedBlubs = {};
     slowLeft = 0;
@@ -2943,6 +2964,89 @@ const ORIG = {
     speed: CONFIG.playerSpeed
 };
 
+function spawnPoison(x, y, p) {
+    const mult = p.dmg / GOON.fullDamage;
+    const maxX = W - CONFIG.counterWidth - 12;
+    for (let i = 0; i < GOON.bubbleCount; i++) {
+        const a = rand(0, TAU);
+        const d = Math.sqrt(Math.random()) * p.radius * 0.95;
+        const life = GOON.bubbleLife * rand(0.8, 1.15);
+        bubbles.push({
+            x: clamp(x + Math.cos(a) * d, 16, maxX),
+            y: clamp(y + Math.sin(a) * d, 50, H - 45),
+            r: rand(10, 22),
+            life,
+            total: life,
+            tick: rand(0, GOON.bubbleTick),
+            phase: rand(0, TAU),
+            dmg: GOON.bubbleDmg * mult
+        });
+    }
+    for (let i = 0; i < 16; i++) {
+        const a = rand(0, TAU);
+        const d = Math.sqrt(Math.random()) * p.radius;
+        const life = GOON.bubbleLife * rand(0.9, 1.2);
+        const blobs = [];
+        for (let k = 0; k < 5; k++) blobs.push({ dx: rand(-18, 18), dy: rand(-12, 12), r: rand(8, 22) });
+        splats.push({
+            x: clamp(x + Math.cos(a) * d, 16, maxX),
+            y: clamp(y + Math.sin(a) * d, 50, H - 45),
+            life,
+            total: life,
+            blobs
+        });
+    }
+}
+
+function updatePoison(dt) {
+    for (const s of splats) s.life -= dt;
+    for (const b of bubbles) {
+        b.life -= dt;
+        b.tick -= dt;
+        if (b.tick > 0 || b.life <= 0) continue;
+        b.tick = GOON.bubbleTick;
+        const frac = Math.max(0, b.life / b.total);
+        const r = b.r * (0.55 + 0.45 * frac);
+        for (const e of enemies) {
+            if (!e.active) continue;
+            const nx = clamp(b.x, e.x, e.x + e.width);
+            const ny = clamp(b.y, e.y, e.y + e.height);
+            if (Math.hypot(b.x - nx, b.y - ny) <= r) e.hit(b.dmg, true);
+        }
+    }
+}
+
+function drawPoison(c) {
+    for (const s of splats) {
+        const a = Math.max(0, s.life / s.total);
+        c.fillStyle = `rgba(88,196,52,${0.4 * a})`;
+        for (const d of s.blobs) {
+            c.beginPath();
+            c.arc(s.x + d.dx, s.y + d.dy, d.r, 0, TAU);
+            c.fill();
+        }
+    }
+    const t = lastTime / 1000;
+    for (const b of bubbles) {
+        const a = Math.max(0, b.life / b.total);
+        const r = b.r * (0.55 + 0.45 * a);
+        const wy = Math.sin(t * 2 + b.phase) * 4;
+        c.globalAlpha = 0.15 + 0.7 * a;
+        c.fillStyle = 'rgba(120,255,80,0.55)';
+        c.strokeStyle = '#1f6b16';
+        c.lineWidth = 2;
+        c.beginPath();
+        c.arc(b.x, b.y + wy, r, 0, TAU);
+        c.fill();
+        c.stroke();
+        c.fillStyle = 'rgba(255,255,255,0.8)';
+        c.beginPath();
+        c.arc(b.x - r * 0.3, b.y + wy - r * 0.3, r * 0.28, 0, TAU);
+        c.fill();
+    }
+    c.globalAlpha = 1;
+}
+
 let whLast = '';
 
 function goonBlast(p) {
@@ -2953,6 +3057,8 @@ function goonBlast(p) {
         blasts.push({ x, y, r: 0, max: p.radius * 1.15, life: 0.8, total: 0.8, color: '#fff2b0' });
         shakeScreen(0.7, 16);
         for (let i = 0; i < 60; i++) particles.push(new Particle(x, y, ['#ffcf3a', '#ffffff', '#ffe27a'][i % 3], 3));
+        for (let i = 0; i < 40; i++) particles.push(new Particle(x, y, ['#7dff4a', '#4fbf2e', '#b6ff8a'][i % 3], 2.6));
+        spawnPoison(x, y, p);
     }
 }
 
