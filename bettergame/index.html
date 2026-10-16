@@ -412,6 +412,23 @@ h1 {
 
 .shop-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; color: var(--muted); font-weight: 800; }
 
+#cheat-badge {
+    position: absolute;
+    left: max(16px, env(safe-area-inset-left, 0px));
+    top: 88px;
+    padding: 4px 10px;
+    background: rgba(120, 10, 10, 0.88);
+    border: 2px solid #000;
+    border-radius: 8px;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: #ffd0d0;
+    z-index: 10;
+}
+
+.cheat-note { color: var(--danger); font-weight: 800; margin: -12px 0 24px; }
+
 @media (max-width: 768px) {
     #mobile-controls { display: flex; }
     h1 { font-size: 3rem; }
@@ -460,6 +477,8 @@ h1 {
         </div>
 
         <div id="wave-announcement">WAVE 1</div>
+
+        <div id="cheat-badge" class="hidden">CHEATS ON · BEST WAVE NOT SAVED</div>
 
         <div id="ability-bar"></div>
 
@@ -513,6 +532,7 @@ h1 {
             <div>COINS EARNED: <span id="final-coins" class="highlight">0</span></div>
             <div>BEST WAVE: <span id="final-best" class="highlight">1</span></div>
         </div>
+        <p id="cheat-note" class="cheat-note hidden">Cheats were used, so your best wave was not saved.</p>
         <button id="restart-btn" class="btn" type="button">PLAY AGAIN</button>
     </div>
 </div>
@@ -556,6 +576,10 @@ const UPGRADES = [
 
 const REPAIR = { id: 'repair', name: 'Fresh Bake Repair', cost: 60, heal: 30, desc: 'Restores 30 bakery health. Buy as often as you need.' };
 
+function repairCost() {
+    return Math.round(REPAIR.cost * Math.pow(3, Math.floor(bossesDefeated / 3)));
+}
+
 const BLUBS = [
     { id: 'og', name: 'OG Blub', cost: 150, fireRate: 1.8, shot: 'og', dmg: 1, ability: 'Original Recipe', cd: 16, desc: 'Restores 20 bakery health.' },
     { id: 'pancake', name: 'Pancake Blub', cost: 300, fireRate: 1.7, shot: 'pancake', dmg: 1, ability: 'Syrup Splat', cd: 18, desc: 'Drenches the bakery floor in syrup. Every enemy moves 65% slower for 6 seconds.' },
@@ -589,6 +613,10 @@ let freezeFx = 0;
 let shieldCharges = 0;
 let shieldFlash = 0;
 let coinSoundCooldown = 0;
+let bossesDefeated = 0;
+let bossWaveMax = 0;
+let cheated = false;
+let ledger = 0;
 let run = newRun();
 
 function readBest() {
@@ -596,6 +624,7 @@ function readBest() {
 }
 
 function saveBest(v) {
+    if (cheated) return;
     try { localStorage.setItem('blubclub_bestwave', String(v)); } catch (e) {}
 }
 
@@ -1601,23 +1630,26 @@ function bossEye(c, x, y, r, angry) {
 }
 
 class Boss {
-    constructor(index) {
+    constructor(index, opts = {}) {
         this.index = index;
-        this.def = BOSS_DEFS[index % BOSS_DEFS.length];
-        const cycle = Math.floor(index / BOSS_DEFS.length);
-        this.name = this.def.name + (cycle > 0 ? ' MK' + (cycle + 1) : '');
+        this.power = index < BOSS_DEFS.length ? index : (BOSS_DEFS.length - 1) + (index - BOSS_DEFS.length + 1) * 0.5;
+        const defIdx = opts.defIdx !== undefined ? opts.defIdx : index % BOSS_DEFS.length;
+        this.def = BOSS_DEFS[defIdx];
+        this.slot = opts.slot || 0;
+        this.slots = opts.slots || 1;
+        this.name = this.def.name;
         this.isBoss = true;
         this.width = this.def.w;
         this.height = this.def.h;
         this.x = -this.width - 30;
         this.y = H / 2 - this.height / 2;
-        this.maxHp = this.def.hp * (1 + 0.45 * index);
+        this.maxHp = this.def.hp * (1 + 0.45 * this.power);
         this.hp = this.maxHp;
         this.active = true;
         this.flashTime = 0;
         this.freezeLeft = 0;
-        this.time = 0;
-        this.shotTimer = 3;
+        this.time = this.slots > 1 ? this.slot / this.slots * (TAU / 0.9) : 0;
+        this.shotTimer = 3 + this.slot * 0.5;
         this.summonTimer = this.def.summon;
         this.dashTimer = 7;
         this.dashLeft = 0;
@@ -1635,7 +1667,7 @@ class Boss {
         }
         const slow = slowLeft > 0 ? 0.5 : 1;
         this.time += dt;
-        const target = W * 0.38 - this.width / 2;
+        const target = Math.max(10, W * 0.38 - this.width / 2 - (this.slot % 2) * 130);
         const counterLeft = W - CONFIG.counterWidth;
 
         if (this.dashLeft > 0) {
@@ -1682,8 +1714,8 @@ class Boss {
         const cy = this.y + this.height / 2;
         const base = Math.atan2(player.y + player.height / 2 - cy, player.x + player.width / 2 - cx);
         const n = this.def.fan;
-        const speed = 240 + this.index * 12;
-        const dmg = 4 + Math.floor(this.index / 2);
+        const speed = 240 + this.power * 12;
+        const dmg = 4 + Math.floor(this.power / 2);
         for (let i = 0; i < n; i++) {
             const a = base + (i - (n - 1) / 2) * 0.22;
             enemyShots.push(new EnemyShot(cx, cy, Math.cos(a) * speed, Math.sin(a) * speed, dmg));
@@ -1704,7 +1736,8 @@ class Boss {
         this.active = false;
         audio.playExplosion();
         audio.playBlast();
-        const reward = Math.round(this.def.reward * (1 + this.index * 0.25));
+        bossesDefeated++;
+        const reward = Math.round(this.def.reward * (1 + this.power * 0.25));
         const cx = this.x + this.width / 2;
         const cy = this.y + this.height / 2;
         awardCoins(reward, cx, this.y);
@@ -1987,6 +2020,7 @@ function waveEnemyCount(w) { return isBossWave(w) ? 4 + w : Math.min(40, 8 + w *
 function awardCoins(base, x, y) {
     const amount = Math.max(1, Math.round(base * (1 + 0.15 * lvl('coins'))));
     coins += amount;
+    ledger += amount;
     totalCoins += amount;
     floatingTexts.push(new FloatingText(x, y, '+' + amount, '#ffd700'));
     for (let i = 0; i < 5; i++) particles.push(new Particle(x, y, '#ffd700', 1));
@@ -2126,14 +2160,25 @@ function handleCollisions() {
 }
 
 function updateBossBar() {
-    const boss = enemies.find(e => e.isBoss && e.active);
-    if (!boss) {
+    let count = 0;
+    let hp = 0;
+    let max = 0;
+    let name = '';
+    for (const e of enemies) {
+        if (!e.isBoss || !e.active) continue;
+        count++;
+        hp += Math.max(0, e.hp);
+        max += e.maxHp;
+        name = e.name;
+    }
+    if (count === 0) {
         bossBar.classList.add('hidden');
         return;
     }
+    bossWaveMax = Math.max(bossWaveMax, max);
     bossBar.classList.remove('hidden');
-    bossName.textContent = boss.name;
-    bossFill.style.width = Math.max(0, boss.hp / boss.maxHp * 100) + '%';
+    bossName.textContent = count === 1 ? name : `${count} BOSSES`;
+    bossFill.style.width = (hp / bossWaveMax * 100) + '%';
 }
 
 function update(dt) {
@@ -2306,6 +2351,7 @@ function draw() {
 function gameLoop(timestamp) {
     const dt = Math.min(0.05, (timestamp - lastTime) / 1000 || 0);
     lastTime = timestamp;
+    integrityCheck();
     if (screenShakeTime > 0) screenShakeTime -= dt;
     if (GAME_STATE === 'WAVE_TRANSITION') {
         waveTransitionTimer -= dt;
@@ -2417,10 +2463,11 @@ function renderShop() {
             </div>`;
         });
         const full = bakeryHealth >= maxBakery;
+        const rc = repairCost();
         html += `<div class="card">
             <div class="top"><div class="badge">FIX</div><div><h3>${REPAIR.name}</h3><p>Bakery ${Math.ceil(bakeryHealth)}/${maxBakery}</p></div></div>
-            <p>${REPAIR.desc}</p>
-            <button class="buy" type="button" data-buy="repair:fix" ${coins < REPAIR.cost || full ? 'disabled' : ''}>${full ? 'Bakery is full' : coinLabel(REPAIR.cost)}</button>
+            <p>${REPAIR.desc} Price triples every 3 bosses beaten (${bossesDefeated} so far).</p>
+            <button class="buy" type="button" data-buy="repair:fix" ${coins < rc || full ? 'disabled' : ''}>${full ? 'Bakery is full' : coinLabel(rc)}</button>
         </div>`;
     }
 
@@ -2444,6 +2491,7 @@ function buyItem(key) {
         const def = blubById(id);
         if (def && !ownedBlubs[id] && coins >= def.cost) {
             coins -= def.cost;
+            ledger -= def.cost;
             const ally = new AllyBlub(def, BLUBS.indexOf(def));
             ownedBlubs[id] = ally;
             allies.push(ally);
@@ -2457,6 +2505,7 @@ function buyItem(key) {
             ok = true;
         } else if (g && coins >= g.cost) {
             coins -= g.cost;
+            ledger -= g.cost;
             run.ownedGuns[id] = true;
             run.gun = id;
             ok = true;
@@ -2464,7 +2513,9 @@ function buyItem(key) {
     } else if (kind === 'up') {
         const u = UPGRADES.find(x => x.id === id);
         if (u && lvl(id) < u.max && coins >= upgradeCost(u)) {
-            coins -= upgradeCost(u);
+            const price = upgradeCost(u);
+            coins -= price;
+            ledger -= price;
             run.levels[id] = lvl(id) + 1;
             if (id === 'hp') {
                 maxBakery += 25;
@@ -2473,8 +2524,10 @@ function buyItem(key) {
             ok = true;
         }
     } else if (kind === 'repair') {
-        if (bakeryHealth < maxBakery && coins >= REPAIR.cost) {
-            coins -= REPAIR.cost;
+        const rc = repairCost();
+        if (bakeryHealth < maxBakery && coins >= rc) {
+            coins -= rc;
+            ledger -= rc;
             bakeryHealth = Math.min(maxBakery, bakeryHealth + REPAIR.heal);
             ok = true;
         }
@@ -2512,7 +2565,7 @@ function beginWave() {
     enemiesSpawnedThisWave = 0;
     enemiesThisWave = waveEnemyCount(wave);
     spawnTimer = isBossWave(wave) ? 3.5 : 0;
-    if (wave > bestWave) {
+    if (!cheated && wave > bestWave) {
         bestWave = wave;
         saveBest(bestWave);
     }
@@ -2523,8 +2576,14 @@ function beginWave() {
     clearTimeout(waveBannerTimer);
     waveBannerTimer = setTimeout(() => waveAnnounce.classList.remove('show'), boss ? 1700 : 900);
     audio.setWaveTempo(wave);
+    bossWaveMax = 0;
     if (boss) {
-        enemies.push(new Boss(Math.floor(wave / CONFIG.bossEvery) - 1));
+        const n = Math.floor(wave / CONFIG.bossEvery) - 1;
+        const count = n < BOSS_DEFS.length ? 1 : n - BOSS_DEFS.length + 2;
+        for (let i = 0; i < count; i++) {
+            const defIdx = n < BOSS_DEFS.length ? n : (n * 2 + i * 3) % BOSS_DEFS.length;
+            enemies.push(new Boss(n, { defIdx, slot: i, slots: count }));
+        }
         audio.playBoss();
         shakeScreen(0.4, 5);
     }
@@ -2533,7 +2592,10 @@ function beginWave() {
 
 function resetGame() {
     coins = 0;
+    ledger = 0;
     totalCoins = 0;
+    bossesDefeated = 0;
+    bossWaveMax = 0;
     wave = 1;
     maxBakery = CONFIG.maxBakeryHealth;
     bakeryHealth = maxBakery;
@@ -2583,6 +2645,7 @@ function endGame() {
     document.getElementById('final-wave').textContent = wave;
     document.getElementById('final-coins').textContent = totalCoins;
     document.getElementById('final-best').textContent = bestWave;
+    document.getElementById('cheat-note').classList.toggle('hidden', !cheated);
     screenGameOver.classList.remove('hidden');
     uiHud.classList.add('hidden');
     uiMobileControls.classList.add('hidden');
@@ -2680,6 +2743,32 @@ if (document.fonts && document.fonts.ready) {
 drawKingIcon(document.getElementById('king-preview'));
 renderAbilityBar();
 updateHud();
+
+const ORIG = {
+    update,
+    triggerBakeryDamage,
+    shoot: Player.prototype.shoot,
+    speed: CONFIG.playerSpeed
+};
+
+function markCheated() {
+    if (cheated) return;
+    cheated = true;
+    document.getElementById('cheat-badge').classList.remove('hidden');
+}
+
+function integrityCheck() {
+    if (cheated) return;
+    if (window.__blubCheats ||
+        update !== ORIG.update ||
+        triggerBakeryDamage !== ORIG.triggerBakeryDamage ||
+        Player.prototype.shoot !== ORIG.shoot ||
+        CONFIG.playerSpeed !== ORIG.speed ||
+        coins !== ledger) {
+        markCheated();
+    }
+}
+
 requestAnimationFrame(gameLoop);
 </script>
 </body>
