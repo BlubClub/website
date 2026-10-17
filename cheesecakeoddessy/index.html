@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#251337">
+<title>Cheesecake Odyssey: The Nine Worlds</title>
+<style>
+:root{--cream:#fff0c8;--gold:#ffd15c;--pink:#ff8bab;--ink:#1a1430;--glass:rgba(23,19,43,.78);--line:rgba(255,240,200,.22)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#17142b;color:var(--cream);font-family:Inter,ui-rounded,system-ui,-apple-system,"Segoe UI",sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}button{font:inherit;color:inherit;cursor:pointer;border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:12px 18px;background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(255,255,255,.06));box-shadow:0 8px 24px rgba(0,0,0,.2);transition:transform .12s,border-color .12s,filter .12s;touch-action:manipulation}button:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.6);filter:brightness(1.08)}button:active{transform:translateY(1px) scale(.99)}button.primary{color:#35203a;border:0;font-weight:900;background:linear-gradient(135deg,#ffe98a,#ffbf65 60%,#ff91a7);box-shadow:0 10px 30px rgba(255,172,96,.26)}button.secondary{background:rgba(255,255,255,.08)}
+#app{position:fixed;inset:0}#hud{position:absolute;inset:0;pointer-events:none;display:none;text-shadow:0 2px 8px rgba(0,0,0,.6)}.hud-panel{position:absolute;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);border-radius:15px;padding:10px 13px;box-shadow:0 8px 28px rgba(0,0,0,.22)}#worldHud{left:16px;top:15px;min-width:205px}#worldEyebrow{font-size:10px;letter-spacing:.19em;font-weight:900;color:#ffda82;text-transform:uppercase}#worldName{font-size:19px;font-weight:950;line-height:1.15;margin-top:3px}#worldSub{font-size:11px;opacity:.78;margin-top:3px}#progressHud{left:50%;top:15px;transform:translateX(-50%);width:min(270px,37vw)}.progress-title{display:flex;justify-content:space-between;font-size:11px;font-weight:900;letter-spacing:.06em}.fuel-track{height:8px;background:rgba(0,0,0,.4);border-radius:999px;overflow:hidden;margin-top:7px;border:1px solid rgba(255,255,255,.12)}#fuelFill{height:100%;width:0;background:linear-gradient(90deg,#ff8b9f,#ffdf6e,#fff5ba);border-radius:999px;transition:width .2s}#totalCakes{font-size:10px;opacity:.72;margin-top:6px;text-align:center}#statsHud{right:16px;top:15px;display:flex;align-items:center;gap:8px}.stat-pill{display:flex;align-items:center;gap:7px;font-weight:900;font-size:13px}.heart{font-size:17px;color:#ff6f95;letter-spacing:1px}.coin-icon{color:#ffd65e;font-size:19px}#helpHud{left:16px;bottom:16px;font-size:11px;line-height:1.65;opacity:.94}kbd{font:inherit;font-size:10px;font-weight:900;padding:2px 5px;border-radius:5px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2)}#actionPrompt{position:absolute;bottom:clamp(24px,8vh,70px);left:50%;transform:translateX(-50%);background:rgba(22,17,36,.86);border:1px solid rgba(255,225,139,.45);border-radius:13px;padding:11px 17px;font-weight:850;font-size:13px;text-align:center;max-width:90vw;display:none;white-space:normal}#toast{position:absolute;left:50%;top:19%;transform:translate(-50%,-8px);padding:12px 18px;border-radius:14px;background:rgba(24,18,42,.9);border:1px solid rgba(255,222,133,.38);font-weight:950;letter-spacing:.04em;opacity:0;transition:opacity .18s,transform .18s;white-space:nowrap}#toast.show{opacity:1;transform:translate(-50%,0)}#bossHud{position:absolute;top:90px;left:50%;transform:translateX(-50%);width:min(420px,68vw);display:none}.boss-title{text-align:center;font-size:11px;letter-spacing:.2em;font-weight:1000;color:#ffe18a;margin-bottom:7px}.boss-track{height:13px;background:rgba(18,7,24,.8);border:1px solid rgba(255,255,255,.3);border-radius:999px;overflow:hidden}.boss-fill{height:100%;width:100%;background:linear-gradient(90deg,#ff4d6d,#ffbe65,#fff1b2);transition:width .24s}
+.screen{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:radial-gradient(ellipse at 50% 30%,rgba(62,31,85,.2),rgba(12,8,28,.72));backdrop-filter:blur(3px)}.screen.hidden{display:none}.panel{width:min(720px,96vw);max-height:94vh;overflow:auto;background:linear-gradient(145deg,rgba(44,27,65,.96),rgba(19,21,46,.96));border:1px solid rgba(255,231,167,.3);border-radius:27px;padding:clamp(20px,4vw,38px);box-shadow:0 30px 90px rgba(0,0,0,.42);text-align:center}.eyebrow{font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:.28em;color:#ffcf77}.logo{font-size:clamp(37px,7.5vw,76px);line-height:.94;font-weight:1000;letter-spacing:-.065em;margin:13px 0 12px;color:#fff1d2;text-shadow:0 5px 0 rgba(113,53,90,.7),0 0 34px rgba(255,163,117,.23)}.logo span{display:block;color:#ffd25e}.subtitle{max-width:530px;margin:0 auto 22px;color:rgba(255,240,216,.8);line-height:1.55;font-size:14px}.cake-badge{display:inline-flex;gap:9px;align-items:center;padding:8px 13px;border:1px solid rgba(255,223,129,.25);border-radius:999px;background:rgba(255,212,108,.08);font-size:12px;font-weight:900;margin-bottom:16px}.cake-emoji{font-size:20px}.button-row{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:15px}.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:25px;text-align:left}.feature{background:rgba(255,255,255,.055);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:12px}.feature .icon{font-size:22px}.feature strong{display:block;font-size:12px;margin:5px 0 3px}.feature small{display:block;color:rgba(255,240,216,.67);font-size:10px;line-height:1.4}.controls-copy{margin:17px auto 0;max-width:560px;line-height:1.9;font-size:12px;color:rgba(255,240,216,.78)}.controls-copy b{color:#ffe391}.small-note{font-size:10px;opacity:.55;margin-top:18px}.modal-title{font-size:clamp(30px,6vw,48px);font-weight:1000;letter-spacing:-.04em;margin:7px 0 9px}.modal-description{line-height:1.55;font-size:14px;opacity:.8;max-width:480px;margin:0 auto}
+#transition{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(19,12,34,.92);z-index:10;text-align:center;flex-direction:column;gap:14px}#transition.show{display:flex}#transitionTitle{font-size:clamp(30px,7vw,60px);font-weight:1000;color:#ffdc7c;text-shadow:0 0 25px rgba(255,164,84,.35)}#transitionSub{font-weight:750;letter-spacing:.12em;font-size:12px;text-transform:uppercase}
+#touchControls{display:none;position:absolute;inset:0;pointer-events:none}#lookZone{position:absolute;top:0;right:0;width:57%;height:68%;pointer-events:auto;touch-action:none;background:transparent}#joystickBase{position:absolute;left:max(18px,env(safe-area-inset-left));bottom:max(24px,env(safe-area-inset-bottom));width:124px;height:124px;border-radius:50%;border:2px solid rgba(255,240,206,.38);background:radial-gradient(circle,rgba(255,255,255,.13),rgba(15,12,34,.24));box-shadow:inset 0 0 22px rgba(255,255,255,.08),0 7px 24px rgba(0,0,0,.18);pointer-events:auto;touch-action:none}#joystickKnob{position:absolute;width:52px;height:52px;left:34px;top:34px;border-radius:50%;background:linear-gradient(145deg,rgba(255,235,174,.85),rgba(255,139,168,.75));border:2px solid rgba(255,255,255,.7);box-shadow:0 3px 13px rgba(0,0,0,.3);pointer-events:none}#touchButtons{position:absolute;right:max(12px,env(safe-area-inset-right));bottom:max(18px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(3,clamp(54px,15vw,76px));grid-template-rows:repeat(2,clamp(54px,15vw,76px));gap:8px;pointer-events:auto}#touchButtons button{border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;font-size:10px;font-weight:1000;letter-spacing:.02em;background:rgba(29,23,49,.72);border:1px solid rgba(255,255,255,.35);backdrop-filter:blur(5px);box-shadow:0 7px 18px rgba(0,0,0,.3);touch-action:none;min-width:0;min-height:0}#touchButtons button .sym{font-size:20px;line-height:1}#touchButtons #touchJump{background:linear-gradient(145deg,rgba(255,218,113,.88),rgba(251,148,142,.85));color:#342044}#touchButtons #touchPound{background:rgba(98,66,130,.8)}#touchButtons #touchAction{background:rgba(54,122,101,.85)}#touchButtons #touchPause{position:absolute;right:2px;bottom:calc(100% + 10px);width:46px;height:46px;font-size:9px}#touchButtons #touchSprint{background:rgba(199,108,65,.85)}#touchHint{position:absolute;right:20px;top:16px;background:rgba(20,15,36,.45);padding:7px 10px;border-radius:9px;font-size:10px;opacity:.7;pointer-events:none}
+@media(max-width:650px){#worldHud{left:8px;top:8px;min-width:0;padding:8px 10px;max-width:42vw}#worldName{font-size:14px}#worldSub{font-size:9px}#worldEyebrow{font-size:8px}#progressHud{top:8px;width:34vw;padding:8px 9px}.progress-title{font-size:9px}#totalCakes{font-size:8px}#statsHud{right:8px;top:57px;padding:7px 9px;gap:6px}.stat-pill{font-size:11px}.heart{font-size:14px}#helpHud{display:none}#bossHud{top:104px}#actionPrompt{bottom:clamp(185px,28vh,240px);font-size:11px}#toast{top:22%;font-size:11px;max-width:90vw;white-space:normal;text-align:center}.feature-grid{grid-template-columns:1fr 1fr}.feature:last-child{grid-column:span 2}.panel{padding:20px 16px;border-radius:22px}.subtitle{font-size:12px}.controls-copy{font-size:11px}}
+@media (pointer:coarse),(max-width:800px){#touchControls.active{display:block}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="game" aria-label="3D Cheesecake Odyssey platform game"></div>
+  <div id="hud">
+    <div id="worldHud" class="hud-panel"><div id="worldEyebrow">WORLD 1 / 9</div><div id="worldName">Crumbleaf Meadows</div><div id="worldSub">Find the cheesecake pieces!</div></div>
+    <div id="progressHud" class="hud-panel"><div class="progress-title"><span>🚀 ROCKET FUEL</span><span id="fuelText">0 / 4</span></div><div class="fuel-track"><div id="fuelFill"></div></div><div id="totalCakes">TOTAL CHEESECAKES · 0</div></div>
+    <div id="statsHud" class="hud-panel"><div class="stat-pill"><span>❤️</span><span id="healthText" class="heart">♥ ♥ ♥ ♥</span></div><div class="stat-pill"><span class="coin-icon">✦</span><span id="cakeTotalMini">0</span></div></div>
+    <div id="helpHud" class="hud-panel"><div><kbd>W A S D</kbd> move · <kbd>SPACE</kbd> jump / double jump</div><div><kbd>Q</kbd> ground pound · <kbd>SHIFT</kbd> sprint · <kbd>E</kbd> rocket</div><div>Drag mouse to orbit camera · Collect 4 cheesecakes per world</div></div>
+    <div id="bossHud"><div class="boss-title">SPOON OF BOSS THE 5TH</div><div class="boss-track"><div id="bossFill" class="boss-fill"></div></div></div>
+    <div id="actionPrompt"></div><div id="toast"></div>
+  </div>
+  <div id="touchControls">
+    <div id="touchHint">SWIPE RIGHT SIDE TO LOOK</div>
+    <div id="lookZone" aria-label="Swipe to look around"></div>
+    <div id="joystickBase" aria-label="Movement joystick"><div id="joystickKnob"></div></div>
+    <div id="touchButtons">
+      <button id="touchJump"><span class="sym">↑</span><span>JUMP</span></button>
+      <button id="touchPound"><span class="sym">↓</span><span>POUND</span></button>
+      <button id="touchSprint"><span class="sym">»</span><span>SPRINT</span></button>
+      <button id="touchAction"><span class="sym">🚀</span><span id="actionButtonText">USE</span></button>
+      <button id="touchPause"><span class="sym">Ⅱ</span><span>PAUSE</span></button>
+    </div>
+  </div>
+  <div id="startScreen" class="screen">
+    <div class="panel">
+      <div class="eyebrow">A BLUB CLUB ADVENTURE</div>
+      <div class="logo">CHEESECAKE <span>ODYSSEY</span></div>
+      <div class="cake-badge"><span class="cake-emoji">🍰</span><span>NINE WORLDS · ONE ROCKET · ONE ANGRY SPOON</span></div>
+      <p class="subtitle">Explore nine enormous floating-island wilds, climb green cliffs, cross timber bridges, discover ancient shrines and hidden islets, then recover four legendary cheesecakes to fuel a full-size rocket. Somewhere beyond World Nine, Spoon of Boss the 5th awaits.</p>
+      <div class="button-row"><button id="startBtn" class="primary">START THE ODYSSEY ✦</button><button id="howBtn" class="secondary">HOW TO PLAY</button></div>
+      <div id="howCopy" class="controls-copy" style="display:none"><b>Move:</b> WASD / arrows &nbsp; <b>Jump:</b> Space (press again for double jump)<br><b>Ground pound:</b> Q while airborne or S while airborne &nbsp; <b>Sprint:</b> Shift<br><b>Rocket:</b> E beside the rocket after collecting all 4 cheesecakes<br><b>Camera:</b> drag with mouse or swipe the right side of the screen<br><b>Boss:</b> dodge the slam, then ground-pound the spoon during its recovery!</div>
+      <div class="feature-grid"><div class="feature"><div class="icon">🍰</div><strong>Cheesecake hunt</strong><small>Four far-flung cheesecake cores in every world power your next launch.</small></div><div class="feature"><div class="icon">💥</div><strong>Jump & ground pound</strong><small>Double-jump across gaps and smash enemies from above.</small></div><div class="feature"><div class="icon">🥄</div><strong>Final boss</strong><small>Face Spoon of Boss the 5th in the ultimate dessert duel.</small></div></div>
+      <div class="small-note">OPEN-WORLD LOW-POLY ADVENTURE · Floating archipelagos · Keyboard and touchscreen · Internet required for Three.js</div>
+    </div>
+  </div>
+  <div id="pauseScreen" class="screen hidden"><div class="panel"><div class="eyebrow">TAKE A LITTLE BREATHER</div><div class="modal-title">PAUSED ⏸</div><p class="modal-description">The cheesecake is not going anywhere. Probably.</p><div class="button-row"><button id="resumeBtn" class="primary">RESUME ADVENTURE</button><button id="restartWorldBtn" class="secondary">RESTART WORLD</button><button id="quitBtn" class="secondary">TITLE SCREEN</button></div></div></div>
+  <div id="endScreen" class="screen hidden"><div class="panel"><div class="eyebrow" id="endEyebrow">ODYSSEY COMPLETE</div><div class="modal-title" id="endTitle">YOU DID IT!</div><p class="modal-description" id="endDescription">The dessert galaxy is safe. For now.</p><div class="button-row"><button id="againBtn" class="primary">PLAY AGAIN</button><button id="titleBtn" class="secondary">TITLE SCREEN</button></div></div></div>
+  <div id="transition"><div id="transitionTitle">ROCKET LAUNCH!</div><div id="transitionSub">Powered by cheesecake. Obviously.</div></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+const $ = id => document.getElementById(id);
+const ui = {
+  game:$('game'), hud:$('hud'), start:$('startScreen'), pause:$('pauseScreen'), end:$('endScreen'),
+  worldEye:$('worldEyebrow'), worldName:$('worldName'), worldSub:$('worldSub'), fuelText:$('fuelText'), fuelFill:$('fuelFill'), total:$('totalCakes'), health:$('healthText'), mini:$('cakeTotalMini'), prompt:$('actionPrompt'), toast:$('toast'), bossHud:$('bossHud'), bossFill:$('bossFill'), transition:$('transition'), transitionTitle:$('transitionTitle'), transitionSub:$('transitionSub'), touch:$('touchControls'), actionButtonText:$('actionButtonText')
+};
+if (!window.THREE) {
+  ui.start.querySelector('.subtitle').textContent='The 3D engine could not load. Check your internet connection, then reload this HTML file.';
+  $('startBtn').disabled=true; return;
+}
+const THREE = window.THREE;
+const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0 || matchMedia('(pointer:coarse)').matches;
+if (IS_TOUCH) ui.touch.classList.add('active');
+let renderer, scene, camera, clock, levelRoot, hero, heroModel, rocket, rocketFlame, boss, bossWarning, bossShockwave, worldTerrain=null;
+let gameState='menu', worldIndex=0, worldCakes=0, totalCakes=0, health=4, invuln=0, toastTimer=0, worldTime=0, transitionTimer=0;
+let platforms=[], collectibles=[], enemies=[], hazards=[], particles=[];
+const keys=Object.create(null), joy={x:0,y:0}, pointer={dragging:false,id:null,x:0,y:0,lookTouch:null};
+let mobileSprint=false, cameraYaw=0, cameraPitch=0.42, jumpQueued=false, poundQueued=false, actionQueued=false, lastTimestamp=0, camTarget=new THREE.Vector3(), camDesired=new THREE.Vector3(), scratch=new THREE.Vector3();
+const GRAVITY=27, WALK_SPEED=10.2, SPRINT_SPEED=15.0, JUMP_SPEED=11.6, DOUBLE_JUMP_SPEED=10.8;
+const worlds = [
+ {name:'Crumbleaf Meadows',sub:'A grassy first bite',sky:0x9edcff,fog:0x9edcff,top:0x66ae77,side:0x31745e,accent:0xffd96a,glow:0xaaf6b2,prop:'tree',xs:[-4,0,4,1]},
+ {name:'Strawberry Skyways',sub:'Sweet, pink, and suspiciously bouncy',sky:0xf3b8d5,fog:0xf3b8d5,top:0xffb6ca,side:0xb84f83,accent:0xff6689,glow:0xffd5eb,prop:'berry',xs:[4,-1,-4,2]},
+ {name:'Cocoa Catacombs',sub:'Mind the crumbly chocolate',sky:0x9b817d,fog:0x9b817d,top:0x997052,side:0x533b42,accent:0xf6c17d,glow:0xffe2a5,prop:'cocoa',xs:[-4,1,4,-1]},
+ {name:'Neon Dairyway',sub:'The future is lactose-intolerant',sky:0x161b47,fog:0x252959,top:0x353a71,side:0x171936,accent:0x62f5df,glow:0x69fff2,prop:'neon',xs:[4,0,-4,1]},
+ {name:'Frosting Peaks',sub:'Cold cream. Colder jumps.',sky:0xa9e4f4,fog:0xa9e4f4,top:0xcbeef2,side:0x67a4bd,accent:0xffffff,glow:0x8ff5ff,prop:'ice',xs:[-4,-1,4,0]},
+ {name:'Caramel Foundry',sub:'Hot pipes. Sticky landings.',sky:0xffc38d,fog:0xffc38d,top:0xc57b4c,side:0x74443a,accent:0xff6d3e,glow:0xffe08b,prop:'pipe',xs:[4,0,-4,2]},
+ {name:'Mooncheese Expanse',sub:'One small step for Blub',sky:0x222943,fog:0x222943,top:0x8d8b78,side:0x4d5061,accent:0xffe9a1,glow:0xfff4bc,prop:'moon',xs:[-4,1,4,-2]},
+ {name:'Sprinkle Cloud Kingdom',sub:'A sugar rush at altitude',sky:0xbbaaf0,fog:0xbbaaf0,top:0xc1a6e7,side:0x7965b2,accent:0xff88c7,glow:0xffcbeb,prop:'cloud',xs:[4,-1,-4,1]},
+ {name:'Royal Pantry',sub:'The final piece of the cake',sky:0x351b3a,fog:0x351b3a,top:0x8d526d,side:0x49263f,accent:0xffd06e,glow:0xffa4c2,prop:'royal',xs:[-4,1,4,0]}
+];
+function mat(color,roughness=.7,metalness=0,opts={}) {return new THREE.MeshStandardMaterial({color,roughness,metalness,flatShading:true,...opts});}
+function addMesh(parent, geo, material, pos, scale, rot) { const m=new THREE.Mesh(geo,material); if(pos)m.position.set(pos[0],pos[1],pos[2]); if(scale)m.scale.set(scale[0],scale[1],scale[2]); if(rot)m.rotation.set(rot[0],rot[1],rot[2]); parent.add(m); return m; }
+function box(parent,pos,size,color,roughness=.8,metalness=.05,materialOpts={}) { return addMesh(parent,new THREE.BoxGeometry(size[0],size[1],size[2]),mat(color,roughness,metalness,materialOpts),pos); }
+function sphere(parent,pos,scale,color,segments=10,roughness=.48,metalness=.05) { return addMesh(parent,new THREE.SphereGeometry(1,segments,Math.max(6,Math.floor(segments*.65))),mat(color,roughness,metalness),pos,scale); }
+function cylinder(parent,pos,rTop,rBottom,height,color,segments=8,roughness=.65,metalness=.06,rot=null) { return addMesh(parent,new THREE.CylinderGeometry(rTop,rBottom,height,segments),mat(color,roughness,metalness),pos,null,rot); }
+function torus(parent,pos,radius,tube,color,segments=8,rot=null,roughness=.5,metalness=.15) { return addMesh(parent,new THREE.TorusGeometry(radius,tube,segments,32),mat(color,roughness,metalness),pos,null,rot); }
+function makeLabel(text,color='#fff0c8',bg='rgba(27,19,44,.86)') {
+ const c=document.createElement('canvas'); c.width=512;c.height=128;const x=c.getContext('2d');x.fillStyle=bg;x.beginPath();x.roundRect(10,10,492,108,26);x.fill();x.strokeStyle='rgba(255,230,163,.7)';x.lineWidth=3;x.stroke();x.fillStyle=color;x.font='900 34px system-ui';x.textAlign='center';x.textBaseline='middle';x.fillText(text,256,64,460);const tex=new THREE.CanvasTexture(c);tex.colorSpace=THREE.SRGBColorSpace;const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));sprite.scale.set(5.2,1.3,1);return sprite;
+}
+function createCakeModel(scale=1) {
+ const g=new THREE.Group();g.scale.setScalar(scale);
+ // A layered low-poly triangular cheesecake slice.
+ const shape=new THREE.Shape();shape.moveTo(-.62,-.42);shape.lineTo(.62,-.42);shape.lineTo(0,.58);shape.closePath();
+ function wedge(depth,y,color,off=0){const geo=new THREE.ExtrudeGeometry(shape,{depth,steps:1,bevelEnabled:true,bevelSegments:1,bevelThickness:.035,bevelSize:.035,curveSegments:1});geo.rotateX(-Math.PI/2);const m=new THREE.Mesh(geo,mat(color,.42,.02));m.position.y=y+off;g.add(m);return m;}
+ wedge(.52,0,0xa95e3e);wedge(.49,.08,0xffe6b0);wedge(.45,.20,0xffd36b);
+ // Icing drizzle, strawberry and a tiny mint leaf.
+ for(let i=0;i<3;i++){sphere(g,[-.25+i*.23,.38,-.1+i*.09],[.075,.045,.075],i===1?0xff6a8b:0xfff5d4,7,.35,0);}
+ sphere(g,[0,.48,-.24],[.16,.18,.16],0xff6687,8,.4,0);sphere(g,[-.11,.46,-.25],[.055,.08,.06],0xffb7c6,7,.35,0);
+ cylinder(g,[.19,.41,.04],.07,.04,.16,0x6cca8a,5,.5,0,[0,0,.35]);
+ const ring=torus(g,[0,.04,0],.76,.025,0xfff3c1,5,[0,0,0],.38,.08);ring.scale.set(1,1,.75);g.userData.ring=ring;
+ return g;
+}
+function createHero() {
+ const g=new THREE.Group();
+ sphere(g,[0,.83,0],[.67,.78,.58],0x47d4dc,12,.4,.03);
+ sphere(g,[0,.68,-.48],[.42,.31,.12],0xa1fff0,10,.42,.02);
+ // Eyes and pupils face -Z.
+ for(const x of [-.23,.23]) {sphere(g,[x,1.23,-.49],[.14,.18,.08],0xffffff,10,.25,0);sphere(g,[x+.025,1.22,-.563],[.064,.094,.04],0x25243b,9,.3,0);sphere(g,[x+.04,1.26,-.59],[.025,.03,.018],0xffffff,6,.2,0);}
+ // Tiny smile.
+ const smile=torus(g,[0,1.0,-.59],.12,.023,0x28656f,6,[0,0,Math.PI],.55,0);smile.scale.set(1.25,.46,1);
+ // Cheesecake hat / cap.
+ cylinder(g,[0,1.57,0],.48,.58,.17,0xffcf5e,8,.46,.06);
+ const cap=cylinder(g,[0,1.73,0],.31,.43,.2,0xffe5a0,7,.4,.04);cap.rotation.z=-.12;
+ sphere(g,[.15,1.83,-.06],[.09,.055,.09],0xff7392,7,.4,0);
+ // Tiny arms and boots.
+ sphere(g,[-.68,.78,-.02],[.22,.29,.22],0x47d4dc,8);sphere(g,[.68,.78,-.02],[.22,.29,.22],0x47d4dc,8);
+ for(const x of [-.36,.36]){sphere(g,[x,.17,0],[.26,.18,.32],0xff9b69,8,.62,.02);sphere(g,[x,.15,-.11],[.2,.1,.25],0x824969,8,.7,0);}
+ return g;
+}
+function createRocket(parent,pos,accent) {
+ const g=new THREE.Group();g.position.set(pos[0],pos[1],pos[2]);parent.add(g);
+ // An unmistakably large launch vehicle: two stages, payload fairing, strap-on boosters and engine cluster.
+ const dark=mat(0x454958,.36,.62);
+ cylinder(g,[0,5.65,0],1.34,1.4,8.15,0xe7e8e6,14,.26,.43);
+ cylinder(g,[0,2.05,0],1.38,1.42,1.3,0x6d7480,14,.33,.55);
+ cylinder(g,[0,9.86,0],1.31,1.34,.48,0x454958,14,.31,.64);
+ cylinder(g,[0,12.3,0],.99,1.08,4.55,0xf3eadb,14,.24,.35);
+ cylinder(g,[0,10.25,0],1.05,1.12,.22,accent,14,.28,.48);
+ addMesh(g,new THREE.ConeGeometry(1.02,2.65,14),mat(0xf2e7d5,.22,.35),[0,15.86,0]);
+ sphere(g,[0,17.18,0],[.16,.23,.16],accent,8,.22,.35);
+ // Structural hoops and repeated painted bands around both stages.
+ for(const [y,r,t,col] of [[2.72,1.39,.075,accent],[3.15,1.37,.035,0x777e89],[7.8,1.36,.065,accent],[8.45,1.34,.035,0xf9f3e7],[10.48,1.1,.06,0x4f5563],[13.0,1.02,.045,accent],[14.48,.99,.045,0x555b69]])torus(g,[0,y,0],r,t,col,8,[Math.PI/2,0,0],.27,.5);
+ // Portholes and service panels on the upper stage.
+ for(let i=0;i<8;i++){const a=i*Math.PI/4;const x=Math.cos(a)*1.005,z=Math.sin(a)*1.005;sphere(g,[x,12.35,z],[.105,.16,.105],0x4cafd2,8,.19,.58);torus(g,[x,12.35,z],.135,.025,0xf5dfac,6,[Math.PI/2,0,0],.23,.48);}
+ for(const side of [-1,1]){
+  box(g,[side*.18,6.1,-1.345],[.18,3.3,.035],accent,.32,.18);
+  for(let j=0;j<5;j++)box(g,[side*.18,4.7+j*.58,-1.37],[.28,.075,.045],0xf4eee0,.4,.12);
+ }
+ // Four strap-on boosters, with their own noses, bands, tail skirts, fins and flame cones.
+ const flameMeshes=[];
+ for(let i=0;i<4;i++){
+  const a=i*Math.PI/2+.35,x=Math.cos(a)*1.63,z=Math.sin(a)*1.63;
+  cylinder(g,[x,3.28,z],.36,.42,4.8,0xd8dce2,9,.29,.42);
+  cylinder(g,[x,1.12,z],.4,.43,.48,0x525966,9,.32,.6);
+  addMesh(g,new THREE.ConeGeometry(.38,.9,9),mat(0xe8e5dc,.25,.35),[x,5.97,z]);
+  torus(g,[x,1.46,z],.405,.045,accent,7,[Math.PI/2,0,0],.25,.44);
+  addMesh(g,new THREE.ConeGeometry(.29,.78,7),new THREE.MeshBasicMaterial({color:0xffa143}),[x,.56,z],null,[Math.PI,0,0]).userData.boosterFlame=true;
+  const fl=g.children[g.children.length-1];fl.userData.baseScale=.9;flameMeshes.push(fl);
+  // Dark stabilizing fins on each booster.
+  const finGeo=new THREE.BufferGeometry();finGeo.setAttribute('position',new THREE.Float32BufferAttribute([0,.35,0,.82,.03,0,.27,1.28,0,0,.35,.13,.82,.03,.13,.27,1.28,.13],3));finGeo.setIndex([0,2,1,3,4,5,0,3,5,0,5,2,1,2,5,1,5,4]);finGeo.computeVertexNormals();
+  const fin=new THREE.Mesh(finGeo,mat(accent,.36,.25,{side:THREE.DoubleSide}));fin.position.set(x,0,z);fin.rotation.y=a;g.add(fin);
+ }
+ // Central engine cluster with dark bell nozzles and bright, animated exhaust.
+ for(const [x,z,r] of [[0,0,.34],[-.55,0,.23],[.55,0,.23],[0,-.55,.23],[0,.55,.23]]){
+  addMesh(g,new THREE.CylinderGeometry(r*.72,r,0.88,9,1,true),dark,[x,.78,z],null,[Math.PI,0,0]);
+  const flame=addMesh(g,new THREE.ConeGeometry(r*.86,1.4,8),new THREE.MeshBasicMaterial({color:0xffa143,transparent:true,opacity:.82}),[x,.12,z],null,[Math.PI,0,0]);flame.userData.baseScale=1;flameMeshes.push(flame);
+  const core=addMesh(g,new THREE.ConeGeometry(r*.42,.85,7),new THREE.MeshBasicMaterial({color:0xfff2a3,transparent:true,opacity:.9}),[x,.09,z],null,[Math.PI,0,0]);core.userData.baseScale=.8;flameMeshes.push(core);
+ }
+ rocketFlame=flameMeshes[flameMeshes.length-2];
+ // Launch pad, safety arms and service tower. The tower stays attached to the island, not the rocket.
+ const tower=new THREE.Group();tower.position.set(pos[0]+4.1,pos[1]+.15,pos[2]);parent.add(tower);
+ for(const x of [-1.1,1.1])for(const z of [-.72,.72])cylinder(tower,[x,6.7,z],.095,.13,13.4,0x7c8997,6,.5,.5);
+ for(const y of [1.2,3.5,5.8,8.1,10.4,12.9]){
+  box(tower,[0,y,-.72],[2.55,.11,.12],0xc0c5c8,.38,.5);box(tower,[0,y,.72],[2.55,.11,.12],0xc0c5c8,.38,.5);
+  box(tower,[-1.1,y,0],[.11,.11,1.5],0xc0c5c8,.38,.5);box(tower,[1.1,y,0],[.11,.11,1.5],0xc0c5c8,.38,.5);
+ }
+ for(const y of [4.4,8.7,11.3])box(tower,[-1.65,y,0],[1.2,.3,3.0],accent,.34,.3);
+ // Arm that reaches toward the rocket at several service levels.
+ for(const y of [4.1,7.4,10.2]){box(tower,[-.85,y,-.1],[1.65,.18,.34],0xa6b3bf,.38,.5);box(tower,[-.12,y-.25,-.1],[.22,.55,.22],0x7e8794,.4,.4);}
+ g.userData.flameMeshes=flameMeshes;g.userData.baseY=pos[1];g.userData.accent=accent;g.userData.launching=false;
+ g.userData.ring=torus(g,[0,.28,0],2.6,.09,accent,9,[Math.PI/2,0,0],.28,.45);
+ return g;
+}
+function createPlatform(parent,x,y,z,w,d,theme,kind='normal') {
+ const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);
+ const h=1, side=kind==='start'?theme.side:theme.side;
+ box(g,[0,0,0],[w,h,d],side,.78,.08);
+ box(g,[0,.415,0],[w-.12,.16,d-.12],theme.top,.82,.02);
+ // segmented top panels keep the level art readable without texture assets.
+ const tileMat=mat(theme.top, .8,.04);const tileW=Math.min(2.8,w-.8);const tileD=Math.min(2.8,d-.8);
+ for(let ix=-1;ix<=1;ix++){for(let iz=-1;iz<=1;iz++){if(Math.abs(ix*tileW)>w/2-.4||Math.abs(iz*tileD)>d/2-.4)continue;const m=new THREE.Mesh(new THREE.BoxGeometry(tileW-.09,.025,tileD-.09),tileMat);m.position.set(ix*tileW,.505,iz*tileD);g.add(m);}}
+ const barY=.49, barH=.045;
+ box(g,[0,barY,-d/2+.13],[w-.2,barH,.12],theme.accent,.38,.18);
+ box(g,[0,barY,d/2-.13],[w-.2,barH,.12],theme.accent,.38,.18);
+ box(g,[-w/2+.13,barY,0],[.12,barH,d-.2],theme.accent,.38,.18);
+ box(g,[w/2-.13,barY,0],[.12,barH,d-.2],theme.accent,.38,.18);
+ // Tiny corner bolts.
+ for(const xx of [-1,1])for(const zz of [-1,1])sphere(g,[xx*(w/2-.35),.54,zz*(d/2-.35)],[.085,.035,.085],0xffedbb,6,.35,.22);
+ if(kind==='start'){const r=torus(g,[0,.58,2],2.1,.045,theme.glow,6,[Math.PI/2,0,0],.36,.08);r.scale.set(1.5,1,1);}
+ if(kind==='exit'){for(const xx of [-1,1]){box(g,[xx*(w/2-.45),.75,0],[.18,.55,d-.5],theme.accent,.4,.16);}}
+ return {x,y,z,w,d,h,top:y+.5,kind,mesh:g};
+}
+function createPortal(parent,pos,theme) {
+ const g=new THREE.Group();g.position.set(pos[0],pos[1],pos[2]);parent.add(g);
+ torus(g,[0,1.65,0],1.25,.105,theme.accent,8,[0,0,0],.28,.24);
+ torus(g,[0,1.65,.03],.92,.035,theme.glow,7,[0,0,0],.25,.1);
+ const core=addMesh(g,new THREE.CircleGeometry(.94,24),new THREE.MeshBasicMaterial({color:theme.glow,transparent:true,opacity:.12,side:THREE.DoubleSide}),[0,1.65,.02]);
+ for(let i=0;i<8;i++){const a=i*Math.PI/4;const s=sphere(g,[Math.cos(a)*1.22,1.65+Math.sin(a)*1.22,.06],[.075,.075,.075],theme.glow,6,.3,.1);s.userData.phase=i;}
+ g.userData.core=core;return g;
+}
+function createTree(parent,x,y,z,color,accent) {
+ const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);
+ cylinder(g,[0,.68,0],.17,.24,1.36,0x79543a,6,.9,0);
+ cylinder(g,[-.22,1.12,0],.08,.1,.78,0x79543a,5,.9,0,[0,0,.65]);cylinder(g,[.22,1.2,.04],.07,.1,.82,0x79543a,5,.9,0,[0,0,-.58]);
+ addMesh(g,new THREE.DodecahedronGeometry(.8,0),mat(color,.93,0),[0,1.86,0],[1.12,.83,1.0]);
+ addMesh(g,new THREE.DodecahedronGeometry(.62,0),mat(color,.94,0),[-.48,1.73,.14],[1,.83,.9]);
+ addMesh(g,new THREE.DodecahedronGeometry(.66,0),mat(color,.94,0),[.47,1.79,-.08],[1,.86,.92]);
+ sphere(g,[.22,2.2,-.42],[.12,.12,.12],accent,6,.43,0);return g;
+}
+function createWorldProp(parent,type,x,y,z,theme,i=0) {
+ if(type==='tree')return createTree(parent,x,y,z,i%2?0x45946c:0x58a37a,theme.accent);
+ const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);
+ if(type==='berry'){sphere(g,[0,.7,0],[.48,.68,.43],i%2?0xff6c92:0xe9477c,8);for(let k=0;k<5;k++){const a=k*1.256;sphere(g,[Math.cos(a)*.23,1.3,Math.sin(a)*.23],[.13,.2,.13],0x60c786,6);}}
+ else if(type==='cocoa'){box(g,[0,.72,0],[.7,1.45,.7],0x76503f);box(g,[0,1.52,0],[.85,.16,.85],theme.accent);for(let k=-1;k<=1;k++)box(g,[k*.22,1.18,-.36],[.09,.35,.035],0xc89563);}
+ else if(type==='neon'){const c=cylinder(g,[0,1.0,0],.08,.48,2.0,theme.accent,5,.3,.15);c.rotation.z=(i%2?.18:-.18);torus(g,[0,.1,0],.56,.045,theme.glow,6,[Math.PI/2,0,0],.3,.1);}
+ else if(type==='ice'){addMesh(g,new THREE.OctahedronGeometry(.64,0),mat(0xdafaff,.2,.12,{transparent:true,opacity:.87}),[0,.78,0],[.7,1.5,.7]);addMesh(g,new THREE.OctahedronGeometry(.32,0),mat(theme.accent,.22,.1),[.4,.45,.15],[.6,1.3,.6]);}
+ else if(type==='pipe'){cylinder(g,[0,.6,0],.22,.22,1.2,0x7c5b54,8,.48,.25);cylinder(g,[0,1.25,0],.35,.22,.25,theme.accent,8,.4,.2);torus(g,[0,1.25,0],.29,.05,0xffe49a,6,[Math.PI/2,0,0],.4,.2);}
+ else if(type==='moon'){addMesh(g,new THREE.DodecahedronGeometry(.62,0),mat(0xaaa995,.9,.02),[0,.65,0],[1.1,.8,1]);for(let k=0;k<3;k++)sphere(g,[(k-1)*.2,.9,-.45],[.12,.07,.04],0x6e706d,7,.95,0);}
+ else if(type==='cloud'){for(let k=0;k<4;k++)sphere(g,[(k-1.5)*.28,.7+(k%2)*.13,0],[.45,.35,.4],i%2?0xf7efff:0xffffff,8,.98,0);cylinder(g,[0,.2,0],.11,.16,.35,theme.accent,6,.7,0);}
+ else if(type==='royal'){cylinder(g,[0,.85,0],.27,.42,1.7,0x6f304d,8,.48,.15);cylinder(g,[0,1.78,0],.42,.27,.2,theme.accent,8,.36,.22);for(let k=0;k<4;k++){const a=k*Math.PI/2;sphere(g,[Math.cos(a)*.3,1.98,Math.sin(a)*.3],[.12,.18,.12],0xff789b,7,.36,.06);}}
+ return g;
+}
+function createCollectible(parent,x,y,z,theme) {
+ const g=createCakeModel(.72);g.position.set(x,y,z);parent.add(g);g.userData.baseY=y;g.userData.phase=Math.random()*Math.PI*2;g.userData.taken=false;
+ const halo=torus(g,[0,.02,0],.94,.025,theme.glow,5,[Math.PI/2,0,0],.3,.08);halo.scale.set(1,1,.8);
+ collectibles.push(g);return g;
+}
+function createEnemy(parent,x,y,z,theme,platform,variant=0) {
+ const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);
+ const body=sphere(g,[0,.57,0],[.57,.57,.5],variant===1?0xff7b72:(variant===2?0x9b76df:0x7bdf8a),10,.55,.02);
+ sphere(g,[0,.44,-.36],[.3,.18,.12],0xffd0b6,8,.55,0);
+ for(const ex of [-.2,.2]){sphere(g,[ex,.72,-.43],[.12,.14,.06],0xffffff,8,.3,0);sphere(g,[ex,.71,-.48],[.057,.076,.035],0x241b37,7,.3,0);}
+ if(variant===1){for(let k=0;k<3;k++){const s=addMesh(g,new THREE.ConeGeometry(.12,.3,5),mat(0xffd05f,.45,0),[(k-1)*.28,1.0,-.03]);s.rotation.z=(k-1)*-.25;}}
+ if(variant===2){for(let k=0;k<3;k++){const a=k*2.1;sphere(g,[Math.cos(a)*.45,.7,Math.sin(a)*.35],[.16,.16,.16],0xffb3ff,7,.4,.08);}}
+ const en={group:g,x,z,baseX:x,baseZ:z,y,phase:Math.random()*6,platform,variant,alive:true,hitCooldown:0};enemies.push(en);return en;
+}
+function createHazard(parent,x,y,z,theme,type='spikes') {
+ const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);
+ if(type==='spikes'){
+  for(let i=0;i<4;i++)addMesh(g,new THREE.ConeGeometry(.22,.65,5),mat(0xff5b78,.46,.06),[(i-1.5)*.34,.32,0]);box(g,[0,.05,0],[1.5,.12,.72],0x542a50,.62,.1);
+ }else{const disk=cylinder(g,[0,.08,0],.9,.9,.15,0x55ec9a,16,.35,.05);disk.material.emissive=new THREE.Color(0x167c62);disk.material.emissiveIntensity=.7;torus(g,[0,.17,0],.72,.05,0xb2ffd7,6,[Math.PI/2,0,0],.3,.08);}
+ hazards.push({group:g,x,z,y,phase:Math.random()*5,type,active:true});return g;
+}
+function createParticleBurst(pos,color,count=10,power=4) {
+ if(!levelRoot)return;
+ for(let i=0;i<count;i++){
+  const m=addMesh(levelRoot,new THREE.OctahedronGeometry(.08+Math.random()*.06,0),new THREE.MeshBasicMaterial({color,transparent:true,opacity:1}),pos.slice());
+  m.userData.vel=new THREE.Vector3((Math.random()-.5)*power,Math.random()*power*.8,(Math.random()-.5)*power);m.userData.life=.45+Math.random()*.5;particles.push(m);
+ }
+}
+function createPoundRing(pos,color=0xffe27b,maxScale=3.2){
+ const ring=torus(levelRoot,[pos.x,.57,pos.z],1,.09,color,7,[Math.PI/2,0,0],.35,.05);ring.material.transparent=true;ring.material.opacity=.9;ring.userData.life=.42;ring.userData.maxScale=maxScale;ring.scale.set(.25,1,.25);particles.push(ring);return ring;
+}
+function disposeRoot() {
+ if(!levelRoot)return;scene.remove(levelRoot);
+ levelRoot.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){if(m.map)m.map.dispose();m.dispose();}}});levelRoot=null;platforms=[];collectibles=[];enemies=[];hazards=[];particles=[];rocket=null;rocketFlame=null;boss=null;bossWarning=null;bossShockwave=null;worldTerrain=null;
+}
+function seededRandom(seed){let s=(seed>>>0)||1;return()=>{s=(Math.imul(s,1664525)+1013904223)>>>0;return s/4294967296;};}
+function terrainEdgeRadius(a,index=worldIndex){const seed=(index+1)*.83;return 90*(.935+.045*Math.sin(a*3+seed)+.029*Math.cos(a*5-seed*.7)+.018*Math.sin(a*9+seed*1.7));}
+function terrainHeightAt(x,z,index=worldIndex){
+ const seed=index+1;let h=2.35+.88*Math.sin(x*.033+seed*.71)*Math.cos(z*.036-seed*.53)+.5*Math.sin((x+z)*.061+seed*.8)+.22*Math.cos(x*.095-z*.055+seed);
+ const peaks=[[-35,-25,4.6,23],[35,-30,6.0,27],[13,48,5.0,23],[-56,17,3.5,20]];
+ const mountain=[.8,.9,1.05,1.08,1.55,1.2,.7,.92,1.12][index]||1;
+ for(const [px,pz,amp,r] of peaks){const dx=x-px,dz=z-pz;h+=amp*mountain*Math.exp(-(dx*dx+dz*dz)/(r*r*.82));}
+ // Each biome has a slightly different rolling surface rhythm, while the open valleys remain traversable.
+ h+=.24*Math.sin(x*.14+z*.06+seed*1.8)*Math.sin(z*.12-seed*.6);
+ return h;
+}
+function terrainContains(x,z,index=worldIndex){const a=Math.atan2(z,x);return Math.hypot(x,z)<terrainEdgeRadius(a,index)-.35;}
+function createMainIslandTerrain(parent,theme,index){
+ const rings=42,segments=128,positions=[],colors=[],indices=[];const base=new THREE.Color(theme.top),side=new THREE.Color(theme.side),light=new THREE.Color(theme.glow),soil=new THREE.Color(index===2?0x754c3b:(index===4?0xa4ccd6:(index===6?0x77766b:0x9c7854)));
+ for(let r=0;r<=rings;r++){
+  const t=r/rings;
+  for(let j=0;j<segments;j++){
+   const a=j/segments*Math.PI*2,edge=terrainEdgeRadius(a,index),rr=edge*t,x=Math.cos(a)*rr,z=Math.sin(a)*rr,y=terrainHeightAt(x,z,index);
+   positions.push(x,y,z);
+   let c=base.clone();const variation=.5+.5*Math.sin(x*.075+index*1.1)*Math.cos(z*.067-index*.8);c.lerp(light,Math.max(0,variation-.62)*.34+Math.max(0,(y-4)/13)*.22);
+   const patch=Math.max(0,Math.sin(x*.15+index)*Math.cos(z*.12-index*.9)-.66)*.34;c.lerp(soil,patch);
+   const edgeBlend=THREE.MathUtils.clamp((t-.83)/.17,0,1)*.22;c.lerp(soil,edgeBlend);colors.push(c.r,c.g,c.b);
+  }
+ }
+ for(let r=0;r<rings;r++)for(let j=0;j<segments;j++){const nj=(j+1)%segments,a=r*segments+j,b=r*segments+nj,c=(r+1)*segments+j,d=(r+1)*segments+nj;indices.push(a,d,c,a,b,d);}
+ const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));geo.setIndex(indices);geo.computeVertexNormals();
+ const top=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.96,metalness:0,flatShading:true,side:THREE.DoubleSide}));top.receiveShadow=true;parent.add(top);
+ // The thick, faceted underside turns the play space into a giant floating landmass, not a flat stage.
+ const cliffPos=[],cliffCol=[],cliffIdx=[],scales=[1,1.025,.97,.83,.59,.29,.035],drops=[0,2.4,6.5,12.5,20,27,31],rockA=new THREE.Color(theme.side),rockB=new THREE.Color(0x302b43);
+ for(let k=0;k<scales.length;k++)for(let j=0;j<segments;j++){
+  const a=j/segments*Math.PI*2,edge=terrainEdgeRadius(a,index),rr=edge*scales[k],x=Math.cos(a)*rr,z=Math.sin(a)*rr,y=terrainHeightAt(edge*Math.cos(a),edge*Math.sin(a),index)-drops[k];cliffPos.push(x,y,z);
+  const c=rockA.clone().lerp(rockB,Math.min(.78,k*.13));if(j%7===0)c.lerp(light,.13);cliffCol.push(c.r,c.g,c.b);
+ }
+ for(let k=0;k<scales.length-1;k++)for(let j=0;j<segments;j++){const nj=(j+1)%segments,a=k*segments+j,b=k*segments+nj,c=(k+1)*segments+j,d=(k+1)*segments+nj;cliffIdx.push(a,b,d,a,d,c);}
+ const cg=new THREE.BufferGeometry();cg.setAttribute('position',new THREE.Float32BufferAttribute(cliffPos,3));cg.setAttribute('color',new THREE.Float32BufferAttribute(cliffCol,3));cg.setIndex(cliffIdx);cg.computeVertexNormals();parent.add(new THREE.Mesh(cg,new THREE.MeshStandardMaterial({vertexColors:true,roughness:.98,flatShading:true,side:THREE.DoubleSide})));
+ worldTerrain={index,radius:90,mesh:top};
+ // Hanging rock shards add the layered, hand-built underside silhouette.
+ const rand=seededRandom(777+index*43);for(let i=0;i<36;i++){const a=i/36*Math.PI*2,rad=terrainEdgeRadius(a,index)*(.58+rand()*.34),y=terrainHeightAt(Math.cos(a)*rad,Math.sin(a)*rad,index)-20-rand()*12;const size=.7+rand()*2.0;addMesh(parent,new THREE.DodecahedronGeometry(size,0),mat(index===4?0x708b9a:theme.side,.98,0),[Math.cos(a)*rad,y,Math.sin(a)*rad],[.8,1.4+rand(),.9]);}
+}
+function createCloud(parent,x,y,z,scale,color=0xffffff){const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);for(let i=0;i<5;i++){const m=sphere(g,[(i-2)*.78,(i%2)*.22,Math.sin(i*1.7)*.25],[.9+(i%3)*.18,.55+(i%2)*.2,.75],color,7,.98,0);m.material.transparent=true;m.material.opacity=.82;}g.scale.setScalar(scale);return g;}
+function createFloatingIsland(parent,cx,top,cz,radius,theme,index,collidable=false){
+ const g=new THREE.Group();g.position.set(cx,top,cz);parent.add(g);
+ const cliff=addMesh(g,new THREE.ConeGeometry(radius*1.12,radius*1.65,12,4),mat(theme.side,.98,.02),[0,-radius*.78,0]);cliff.rotation.x=Math.PI;cliff.rotation.y=.18;
+ const rim=addMesh(g,new THREE.CylinderGeometry(radius*.92,radius*1.08,.9,12,1),mat(theme.side,.95,0),[0,-.43,0]);
+ addMesh(g,new THREE.CylinderGeometry(radius*.94,radius*.94,.14,12,1),mat(theme.top,.93,0),[0,.025,0]);
+ torus(g,[0,.095,0],radius*.91,.16,theme.accent,7,[Math.PI/2,0,0],.6,.06).rotation.x=Math.PI/2;
+ for(let i=0;i<6;i++){const a=i/6*Math.PI*2,rr=radius*(.48+((i%2)*.16)),x=Math.cos(a)*rr,z=Math.sin(a)*rr;if(i%3===0)createTree(g,x,.1,z,index===4?0x9bcad0:(index===1?0xffa2c0:0x4b9a67),theme.accent);else addMesh(g,new THREE.DodecahedronGeometry(.55+(i%2)*.3,0),mat(index===4?0xc5eaf2:theme.side,.96,0),[x,.24,z],[1,1.2,1]);}
+ const obelisk=cylinder(g,[0,.9,0],.35,.55,1.6,theme.side,7,.78,.08);cylinder(g,[0,1.78,0],.5,.35,.16,theme.accent,7,.4,.18);addMesh(g,new THREE.OctahedronGeometry(.4,0),mat(theme.glow,.28,.12,{emissive:theme.glow,emissiveIntensity:.7}),[0,2.25,0]);
+ if(collidable)platforms.push({x:cx,z:cz,w:0,d:0,radius:radius*.91,top:top+.1,kind:'island',mesh:g});return g;
+}
+function createWoodBridge(parent,x,z,length,width,y,axis,theme){
+ const alongX=axis==='x',plankN=Math.ceil(length/1.5),plankLen=length/plankN-.045;platforms.push({x,z,w:alongX?length:width,d:alongX?width:length,top:y,kind:'bridge'});
+ const plankGeo=new THREE.BoxGeometry(alongX?plankLen:width-.18,.16,alongX?width-.18:plankLen),plankMat=mat(0xffffff,.88,.03),planks=new THREE.InstancedMesh(plankGeo,plankMat,plankN),dummy=new THREE.Object3D(),woodColors=[0x8a563a,0xb17a4d,0x98633f];
+ for(let i=0;i<plankN;i++){const t=(i+.5)/plankN-.5;dummy.position.set(x+(alongX?t*length:0),y-.08,z+(alongX?0:t*length));dummy.updateMatrix();planks.setMatrixAt(i,dummy.matrix);planks.setColorAt(i,new THREE.Color(woodColors[i%3]));}planks.instanceMatrix.needsUpdate=true;if(planks.instanceColor)planks.instanceColor.needsUpdate=true;parent.add(planks);
+ // Two substantial dark beams under the walkway.
+ for(const side of [-1,1])box(parent,[x,y-.25,z+(alongX?side*(width/2-.16):0)],[alongX?length:.22,.22,alongX?.22:length],0x68452f,.9,.02);
+ const posts=Math.floor(length/6.8),postN=(posts+1)*2,postGeo=new THREE.CylinderGeometry(.09,.12,.9,6),postMesh=new THREE.InstancedMesh(postGeo,mat(0x6e4933,.9,0),postN),capGeo=new THREE.SphereGeometry(1,6,5),capMesh=new THREE.InstancedMesh(capGeo,mat(theme.accent,.5,.08),postN);let n=0;
+ for(let i=0;i<=posts;i++){const t=i/posts-.5,px=x+(alongX?t*length:0),pz=z+(alongX?0:t*length);for(const side of [-1,1]){const xx=px+(alongX?0:side*(width/2-.14)),zz=pz+(alongX?side*(width/2-.14):0);dummy.position.set(xx,y+.45,zz);dummy.scale.set(1,1,1);dummy.updateMatrix();postMesh.setMatrixAt(n,dummy.matrix);dummy.position.set(xx,y+.92,zz);dummy.scale.set(.12,.1,.12);dummy.updateMatrix();capMesh.setMatrixAt(n,dummy.matrix);n++;}}
+ postMesh.instanceMatrix.needsUpdate=true;capMesh.instanceMatrix.needsUpdate=true;parent.add(postMesh,capMesh);
+ const railMat=mat(0x906847,.9,0);for(const side of [-1,1]){const a=alongX?new THREE.Vector3(x-length/2,y+.73,z+side*(width/2-.14)):new THREE.Vector3(x+side*(width/2-.14),y+.73,z-length/2);const b=alongX?new THREE.Vector3(x+length/2,y+.73,z+side*(width/2-.14)):new THREE.Vector3(x+side*(width/2-.14),y+.73,z+length/2);const curve=new THREE.LineCurve3(a,b);parent.add(new THREE.Mesh(new THREE.TubeGeometry(curve,Math.max(8,posts*3),.055,5,false),railMat));}
+}
+function createBush(parent,x,y,z,color,accent,scale=1){const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);for(let i=0;i<4;i++){const a=i*1.57; sphere(g,[Math.cos(a)*.42,.32+(i%2)*.12,Math.sin(a)*.35],[.47,.4,.42],color,7,.95,0);}for(let i=0;i<3;i++)sphere(g,[(i-1)*.22,.62,Math.sin(i*2)*.18],[.09,.11,.09],accent,6,.42,.02);g.scale.setScalar(scale);return g;}
+function createRock(parent,x,y,z,theme,rand,scale=1){const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);addMesh(g,new THREE.DodecahedronGeometry(.72,0),mat(theme.side,.99,0),[0,.48,0],[.9+rand()*.7,.55+rand()*.7,.8+rand()*.6]);if(rand()>.55)addMesh(g,new THREE.DodecahedronGeometry(.28,0),mat(theme.accent,.72,.05),[.38,.55,.18],[.7,1.7,.8]);g.scale.setScalar(scale);return g;}
+function createMushroom(parent,x,y,z,theme,rand,scale=1,worldIdx=0){const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);cylinder(g,[0,.38,0],.17,.2,.72,worldIdx===5?0x90604c:0xf5e8cc,6,.92,0);const cap=addMesh(g,new THREE.DodecahedronGeometry(.46,0),mat(rand()>.5?theme.accent:theme.glow,.72,0),[0,.78,0],[1.15,.55,1]);for(let i=0;i<3;i++)sphere(g,[(i-1)*.2,.91,.28],[.06,.05,.04],0xfff2cd,5,.6,0);g.scale.setScalar(scale);return g;}
+function createFlowerPatch(parent,x,y,z,theme,rand,scale=1){const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);for(let i=0;i<2;i++){const px=(i-.5)*.34,pz=Math.sin(i*2)*.17,h=.34+rand()*.3;cylinder(g,[px,h*.5,pz],.025,.035,h,0x467c4b,5,.9,0);const color=i%2?theme.accent:theme.glow;addMesh(g,new THREE.DodecahedronGeometry(.17,0),mat(color,.85,0),[px,h,pz],[1,.54,.9]);sphere(g,[px,h+.025,pz],[.06,.06,.06],0xffe8a0,5,.7,0);}g.scale.setScalar(scale);return g;}
+function createWorldHouse(parent,x,y,z,theme,index,scale=1){const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);const wall=index===1?0xffc2d5:(index===2?0x78534c:(index===4?0xd3ebf4:(index===8?0x8e526c:0xd9c49a)));box(g,[0,1.05,0],[3.0,2.1,2.7],wall,.9,.02);addMesh(g,new THREE.ConeGeometry(2.15,1.6,5),mat(theme.accent,.86,0),[0,2.65,0],[1,1,.86],[0,.4,0]);box(g,[0,.73,-1.37],[.72,1.45,.08],0x573949,.9,.02);for(const xw of [-.95,.95]){box(g,[xw,1.45,-1.405],[.46,.47,.07],theme.glow,.45,.04);box(g,[xw,1.45,-1.45],[.07,.54,.035],theme.side,.7,0);box(g,[xw,1.45,-1.45],[.53,.07,.035],theme.side,.7,0);}g.scale.setScalar(scale);return g;}
+function createDetailedLandmark(parent,x,z,theme,index){
+ const baseY=terrainHeightAt(x,z,index),g=new THREE.Group();g.position.set(x,baseY,z);parent.add(g);
+ // A wide stepped plaza gives each biome a memorable landmark silhouette.
+ cylinder(g,[0,.16,0],7.2,7.6,.32,theme.side,12,.88,.08);cylinder(g,[0,.36,0],6.6,6.8,.14,theme.top,12,.84,.03);torus(g,[0,.46,0],6.55,.09,theme.accent,8,[Math.PI/2,0,0],.55,.18);
+ if(index===0){ // ancient grove shrine
+  for(let i=0;i<6;i++){const a=i*Math.PI/3,xp=Math.cos(a)*3.25,zp=Math.sin(a)*3.25;cylinder(g,[xp,1.65,zp],.28,.35,2.5,0xbcb48c,7,.92,.03);cylinder(g,[xp,2.96,zp],.43,.3,.18,theme.accent,7,.55,.12);}
+  box(g,[0,3.13,0],[7.6,.32,1.2],0xc8bd91,.88,.02);box(g,[0,3.13,0],[1.2,.32,7.6],0xc8bd91,.88,.02);createPortal(g,[0,.12,-2.2],theme);for(let i=0;i<4;i++)sphere(g,[(i-1.5)*1.2,.72,0],[.23,.55,.22],0x75b987,7,.9,0);
+ }else if(index===1){ // strawberry castle towers
+  box(g,[0,1.45,0],[6.3,2.7,4.6],0xffd3e1,.82,.02);box(g,[0,2.9,0],[6.7,.2,4.9],theme.accent,.65,.05);
+  for(const [tx,tz] of [[-2.25,-1.45],[2.25,-1.45],[-2.25,1.45],[2.25,1.45]]){cylinder(g,[tx,2.15,tz],.62,.78,3.8,0xff9dbd,8,.58,.04);addMesh(g,new THREE.ConeGeometry(.76,1.2,7),mat(theme.accent,.5,.06),[tx,4.55,tz]);sphere(g,[tx,5.25,tz],[.16,.22,.16],0xfff0a2,7,.35,0);}
+  box(g,[0,1.0,-2.35],[1.1,2.0,.14],0x8c466c,.72,.02);sphere(g,[0,3.2,-2.6],[.46,.46,.13],0xff6a96,8,.42,.04);
+ }else if(index===2){ // chocolate ruin and split columns
+  box(g,[0,1.05,0],[5.7,1.7,5.0],0x65413d,.96,.01);for(const tx of [-2.1,2.1])for(const tz of [-1.7,1.7]){cylinder(g,[tx,1.65,tz],.38,.47,2.9,0x9a7052,7,.85,.02);cylinder(g,[tx,3.18,tz],.63,.45,.22,0x4b3235,7,.9,.02);}box(g,[0,3.36,0],[5.3,.35,4.7],0x5a383b,.95,.01);for(let i=0;i<5;i++)addMesh(g,new THREE.DodecahedronGeometry(.38,0),mat(0x9a684e,.94,0),[(i-2)*.78,.55,-2.8],[1.4,.7,1]);
+ }else if(index===3){ // neon dairyway portal station
+  for(let i=0;i<4;i++){const a=i*Math.PI/2,xp=Math.cos(a)*3,zp=Math.sin(a)*3;cylinder(g,[xp,1.55,zp],.25,.4,2.5,theme.side,6,.4,.3);torus(g,[xp,2.9,zp],.62,.07,theme.glow,6,[Math.PI/2,0,0],.26,.35);}
+  createPortal(g,[0,.12,-1.1],theme);addMesh(g,new THREE.OctahedronGeometry(1.15,0),mat(theme.accent,.28,.25,{emissive:theme.accent,emissiveIntensity:.6}),[0,3.25,1.7]);
+ }else if(index===4){ // frost observatory
+  for(let i=0;i<7;i++){const a=i*Math.PI*2/7,xp=Math.cos(a)*2.8,zp=Math.sin(a)*2.8;addMesh(g,new THREE.OctahedronGeometry(.9+(i%3)*.2,0),mat(i%2?0xe8ffff:theme.accent,.25,.12,{transparent:true,opacity:.92}),[xp,1.8+(i%3)*.4,zp],[.7,1.7,.7]);}
+  cylinder(g,[0,1.0,0],1.65,2.1,1.5,0xa0cbd9,9,.43,.12);torus(g,[0,1.82,0],1.75,.11,0xf6ffff,8,[Math.PI/2,0,0],.22,.3);
+ }else if(index===5){ // caramel foundry
+  box(g,[0,1.0,0],[6.2,1.6,4.3],0x744638,.76,.3);for(const [tx,tz,h] of [[-2,-1.3,4.6],[2,-1.2,3.5],[-2,1.4,3.2],[2,1.5,4.2]]){cylinder(g,[tx,h/2,tz],.42,.53,h,0x875c4e,8,.48,.42);torus(g,[tx,h-.45,tz],.48,.07,theme.accent,7,[Math.PI/2,0,0],.35,.25);addMesh(g,new THREE.ConeGeometry(.48,.68,7),mat(0x4d3b42,.42,.4),[tx,h+.25,tz]);}for(let i=0;i<4;i++)box(g,[-2.4+i*1.6,1.0,-2.2],[.5,.17,.12],theme.accent,.35,.2);
+ }else if(index===6){ // mooncheese observatory
+  addMesh(g,new THREE.DodecahedronGeometry(2.6,1),mat(0xd4d0a8,.9,.02),[0,.65,0],[1,.5,1]);for(let i=0;i<4;i++){const a=i*Math.PI/2;const tx=Math.cos(a)*3,tz=Math.sin(a)*3;cylinder(g,[tx,1.55,tz],.16,.27,2.4,0x71798b,7,.54,.35);sphere(g,[tx,2.8,tz],[.32,.32,.32],theme.accent,7,.4,.1);}cylinder(g,[0,2.0,0],.6,.78,2.3,0x737c88,9,.34,.55);cylinder(g,[0,3.25,0],1.1,.62,.3,theme.accent,9,.32,.48);
+ }else if(index===7){ // cloud citadel
+  for(let i=0;i<5;i++)sphere(g,[(i-2)*1.05,.4+Math.sin(i)*.18,0],[1.2,.65,1.0],0xf7f4ff,8,.98,0);box(g,[0,1.4,0],[4.8,1.8,3.0],0xded0f1,.82,.03);for(const tx of [-1.8,1.8])for(const tz of [-1,1]){cylinder(g,[tx,2.6,tz],.35,.47,2.5,theme.accent,7,.56,.1);addMesh(g,new THREE.ConeGeometry(.58,.8,6),mat(theme.glow,.65,.04),[tx,4.2,tz]);}sphere(g,[0,3.5,-1.65],[.42,.48,.18],theme.accent,8,.32,.15);
+ }else{ // royal pantry palace
+  box(g,[0,1.6,0],[7,3.0,4.6],0x773d61,.58,.15);box(g,[0,3.25,0],[7.5,.2,4.9],theme.accent,.32,.3);for(const tx of [-2.6,-.9,.9,2.6]){cylinder(g,[tx,2.0,-2.0],.24,.34,3.8,0xffd47b,8,.26,.55);cylinder(g,[tx,3.97,-2.0],.42,.3,.18,0xffe8ab,8,.22,.52);}for(const tx of [-2.5,0,2.5])addMesh(g,new THREE.ConeGeometry(.85,1.4,5),mat(0x4d284c,.45,.2),[tx,4.5,0]);sphere(g,[0,3.0,-2.42],[.43,.43,.13],0xff7aab,8,.32,.1);
+ }
+ const title=makeLabel(['GROVE SHRINE','BERRYKEEP CASTLE','COCOA RUINS','DAIRYWAY NODE','FROST OBSERVATORY','CARAMEL FOUNDRY','MOONCHEESE ARRAY','CLOUD CITADEL','ROYAL PANTRY'][index],'#fff0c8');title.scale.set(5.6,1.25,1);title.position.set(0,6.2,0);g.add(title);return g;
+}
+function createGroundRibbon(parent,points,width,color,index,offset=.13,opacity=1){const pos=[],uv=[],idx=[];for(let i=0;i<points.length;i++){const [x,z]=points[i],before=points[Math.max(0,i-1)],after=points[Math.min(points.length-1,i+1)],dx=after[0]-before[0],dz=after[1]-before[1],len=Math.hypot(dx,dz)||1,nx=-dz/len,nz=dx/len;for(const side of [-1,1]){const px=x+nx*width*.5*side,pz=z+nz*width*.5*side;pos.push(px,terrainHeightAt(px,pz,index)+offset,pz);}}for(let i=0;i<points.length-1;i++){const a=i*2,b=a+1,c=a+2,d=a+3;idx.push(a,c,b,b,c,d);}const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));geo.setIndex(idx);geo.computeVertexNormals();const mesh=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color,roughness:color===0x56bce9?.25:.97,metalness:color===0x56bce9?.12:0,transparent:opacity<1,opacity,side:THREE.DoubleSide,depthWrite:opacity>=1}));parent.add(mesh);return mesh;}
+function createWaterfalls(parent,theme,index){const waterColors=[0x53cde9,0xff9fc5,0x8e6a54,0x40f5ed,0xa6efff,0xff8145,0xc5d9e7,0xf8dfff,0x83e8ef],water=waterColors[index];for(let i=0;i<4;i++){const a=(i/4)*Math.PI*2+.35,rad=terrainEdgeRadius(a,index)-.4,x=Math.cos(a)*rad,z=Math.sin(a)*rad,y=terrainHeightAt(x,z,index)-7;const plane=new THREE.Mesh(new THREE.PlaneGeometry(6+index%3,19,1,8),new THREE.MeshStandardMaterial({color:water,transparent:true,opacity:.46,roughness:.2,metalness:.06,side:THREE.DoubleSide,depthWrite:false,emissive:water,emissiveIntensity:.08}));plane.position.set(x,y,z);plane.rotation.y=-a;parent.add(plane);for(let j=0;j<3;j++){const streak=box(parent,[x+Math.cos(a+Math.PI/2)*(j-1)*1.4,y+1.3,z+Math.sin(a+Math.PI/2)*(j-1)*1.4],[.055,15,.045],0xd8fbff,.25,.05,{transparent:true,opacity:.38});streak.rotation.y=-a;}}
+}
+function createLaunchSite(parent,x,z,theme,index){const base=terrainHeightAt(x,z,index)+.12;const pad=cylinder(parent,[x,base-.09,z],10.2,10.6,.24,0x827f8a,16,.48,.35);cylinder(parent,[x,base+.035,z],9.7,9.7,.06,0xc1bdaf,16,.4,.32);torus(parent,[x,base+.08,z],9.6,.16,theme.accent,10,[Math.PI/2,0,0],.28,.38);for(let i=0;i<16;i++){const a=i*Math.PI/8;const px=x+Math.cos(a)*8.8,pz=z+Math.sin(a)*8.8;box(parent,[px,base+.09,pz],[.68,.045,.2],i%2?0xfff1d0:theme.accent,.4,.18).rotation.y=-a;}
+ platforms.push({x,z,w:0,d:0,radius:9.7,top:base+.08,kind:'launchpad',mesh:pad});
+ // Exterior fuel tanks and service pipes flank the pad.
+ for(const side of [-1,1]){const tx=x+side*11.8,tz=z+1.5;cylinder(parent,[tx,base+2.1,tz],1.0,1.05,4.1,side<0?0xe4e4df:0xa6b4c6,10,.35,.32);torus(parent,[tx,base+1.0,tz],1.02,.06,theme.accent,7,[Math.PI/2,0,0],.3,.25);cylinder(parent,[tx,base+4.22,tz],.77,1.0,.22,theme.accent,8,.3,.22);const pipe=cylinder(parent,[x+side*7.2,base+1.0,z+3.0],.16,.16,9.8,0x5e6c7d,7,.38,.55);pipe.rotation.z=side*.12;}
+ const g=createRocket(parent,[x,base+.08,z],theme.accent);return g;
+}
+function createChest(parent,x,y,z,theme){const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);box(g,[0,.35,0],[1.25,.64,.86],0x8c5536,.72,.12);box(g,[0,.72,0],[1.3,.22,.9],theme.accent,.36,.38);box(g,[0,.5,-.45],[.23,.35,.08],0xffedb2,.3,.5);sphere(g,[0,.95,0],[.16,.12,.16],theme.glow,6,.3,.12);return g;}
+function makeDecorations(theme,index){const rand=seededRandom(173+index*997);const reserved=[[-35,-25],[35,-30],[13,48],[39,-56],[0,0]];const safePoint=(minR=15,maxR=78)=>{for(let n=0;n<100;n++){const a=rand()*Math.PI*2,r=minR+rand()*(maxR-minR),x=Math.cos(a)*r,z=Math.sin(a)*r;if(!terrainContains(x,z,index))continue;if(reserved.some(([rx,rz])=>Math.hypot(x-rx,z-rz)<9))continue;return [x,z];}return [rand()*40-20,rand()*40-20];};
+ const treeCount=[38,27,12,15,18,14,10,17,19][index];for(let i=0;i<treeCount;i++){const [x,z]=safePoint(11,58),y=terrainHeightAt(x,z,index),scale=.72+rand()*.85,color=index===1?(rand()>.5?0x63b97b:0x72c98a):(index===4?0xa7d9e8:(index===7?0xe8d4f8:(index===8?0x477c5c:(rand()>.45?0x4c9865:0x6bb46f))));const tree=createTree(levelRoot,x,y,z,color,theme.accent);tree.scale.setScalar(scale);if(index===5){for(const child of tree.children){if(child.material&&child.material.color)child.material.color.lerp(new THREE.Color(0xa45b3d),.24);}}}
+ const rockCount=[32,25,42,29,46,35,44,27,30][index];for(let i=0;i<rockCount;i++){const [x,z]=safePoint(13,64);createRock(levelRoot,x,terrainHeightAt(x,z,index),z,theme,rand,.65+rand()*.8);}
+ const bushCount=[20,24,13,10,15,12,9,16,17][index];for(let i=0;i<bushCount;i++){const [x,z]=safePoint(10,58);const c=index===1?0x70b971:(index===4?0xa8d7e0:(index===7?0xd9c3ee:(index===8?0x4f9360:0x5fa967)));createBush(levelRoot,x,terrainHeightAt(x,z,index),z,c,theme.accent,.55+rand()*.75);}
+ for(let i=0;i<12;i++){const [x,z]=safePoint(9,78);createFlowerPatch(levelRoot,x,terrainHeightAt(x,z,index),z,theme,rand,.6+rand()*.8);}
+ const mushCount=[13,22,18,10,12,9,10,25,10][index];for(let i=0;i<mushCount;i++){const [x,z]=safePoint(12,59);createMushroom(levelRoot,x,terrainHeightAt(x,z,index),z,theme,rand,.55+rand()*.8,index);}
+ // Small villages, ruins, and world-specific outposts give the wilds signs of life.
+ const houseSpots=index===0?[[-12,23],[13,26],[-19,11]]:index===1?[[-12,23],[13,25]]:index===2?[[-15,24],[17,22]]:index===3?[[-12,22],[15,24]]:index===4?[[-12,23],[16,25]]:index===5?[[-15,22],[16,24]]:index===6?[[-14,24],[14,26]]:index===7?[[-12,24],[13,23]]:[[-14,22],[15,23]];
+ for(const [x,z] of houseSpots)createWorldHouse(levelRoot,x,terrainHeightAt(x,z,index),z,theme,index,.85+rand()*.22);
+ // Three enormous biome landmarks, spread across the explorable land.
+ createDetailedLandmark(levelRoot,-35,-25,theme,index);createDetailedLandmark(levelRoot,35,-30,theme,index);createDetailedLandmark(levelRoot,13,48,theme,index);
+ // A local road and river give the broad landscape clear natural routes without fencing the player in.
+ createGroundRibbon(levelRoot,[[0,8],[-10,1],[-24,-5],[-35,-25],[-47,-39]],3.4,index===2?0x9a7957:0xc5a27b,index,.10,.94);
+ createGroundRibbon(levelRoot,[[1,10],[16,17],[28,10],[35,-3],[35,-30]],3.0,0xc3a37b,index,.10,.94);
+ createGroundRibbon(levelRoot,[[0,8],[8,24],[15,38],[13,48],[7,66]],3.0,0xc3a37b,index,.10,.94);
+ const waterPoints=[[-76,5],[-58,-4],[-37,5],[-18,1],[6,8],[25,5],[50,14],[72,22]];createGroundRibbon(levelRoot,waterPoints,3.8,[0x56bce9,0xf59dca,0x6f625f,0x35e4df,0xc7f7ff,0xff803e,0xb8d8e8,0xf5e8ff,0x66d6d5][index],index,.075,.68);
+ // Four bridge-linked satellite isles form a true floating archipelago around the mainland.
+ const dirs=[{x:0,z:-112,axis:'z',a:-Math.PI/2},{x:112,z:0,axis:'x',a:0},{x:0,z:112,axis:'z',a:Math.PI/2},{x:-112,z:0,axis:'x',a:Math.PI}],satelliteYs=[];
+ for(let i=0;i<dirs.length;i++){const d=dirs[i],bridgeY=terrainHeightAt(d.x===0?0:Math.sign(d.x)*73,d.z===0?0:Math.sign(d.z)*73,index)+.22;satelliteYs.push(bridgeY);const bx=d.x===0?0:Math.sign(d.x)*103,bz=d.z===0?0:Math.sign(d.z)*103;createWoodBridge(levelRoot,bx,bz,58,4.6,bridgeY,d.axis,theme);createFloatingIsland(levelRoot,d.x,bridgeY,d.z,10.5,theme,index,true);const portal=createPortal(levelRoot,[d.x,bridgeY,d.z-1],theme);portal.scale.setScalar(.82);createChest(levelRoot,d.x+2,bridgeY,d.z+1.5,theme);}
+ // One of the four island sanctuaries holds a required cheesecake core this world.
+ const sat=dirs[index%4],satY=satelliteYs[index%4];
+ // Distant islands, cloud banks and waterfalls build a horizon that stretches far beyond the playable shore.
+ createWaterfalls(levelRoot,theme,index);for(let i=0;i<14;i++){const a=rand()*Math.PI*2,r=104+rand()*76,y=8+rand()*24;createCloud(levelRoot,Math.cos(a)*r,y,Math.sin(a)*r,.75+rand()*1.4,index===3?0xb4c3ff:0xffffff);}
+ for(let i=0;i<6;i++){const a=i/6*Math.PI*2,r=169+(i%3)*14,x=Math.cos(a)*r,z=Math.sin(a)*r,y=rand()*8-1;createFloatingIsland(levelRoot,x,y,z,7+rand()*6,theme,index,false);}
+ // Low-poly sprinkles/glints float over the valleys rather than filling the sky with noise.
+ const starGeo=new THREE.OctahedronGeometry(.13,0),starMat=new THREE.MeshBasicMaterial({color:theme.glow});const starCount=54,starMesh=new THREE.InstancedMesh(starGeo,starMat,starCount),starDummy=new THREE.Object3D();for(let i=0;i<starCount;i++){const a=rand()*Math.PI*2,r=18+rand()*170,y=6+rand()*32;starDummy.position.set(Math.cos(a)*r,y,Math.sin(a)*r);starDummy.scale.setScalar(.4+rand()*1.2);starDummy.updateMatrix();starMesh.setMatrixAt(i,starDummy.matrix);}starMesh.instanceMatrix.needsUpdate=true;levelRoot.add(starMesh);
+ return {dirs,satelliteYs,sat,satY};
+}
+function createLevel(index){
+ disposeRoot();levelRoot=new THREE.Group();scene.add(levelRoot);worldIndex=index;worldTime=0;worldCakes=0;platforms=[];collectibles=[];enemies=[];hazards=[];
+ const theme=worlds[index];scene.background=new THREE.Color(theme.sky);scene.fog=new THREE.Fog(theme.fog,165,370);
+ createMainIslandTerrain(levelRoot,theme,index);
+ // Cloud sea below the floating continent.
+ const cloudSea=new THREE.Mesh(new THREE.PlaneGeometry(900,900),new THREE.MeshBasicMaterial({color:index===3?0x302e70:(index===8?0x5b284c:0x9bdbf4),transparent:true,opacity:.30,side:THREE.DoubleSide,depthWrite:false}));cloudSea.rotation.x=-Math.PI/2;cloudSea.position.y=-34;levelRoot.add(cloudSea);
+ // A quiet spawn plaza and a world gate create a recognizable home base in each open world.
+ const spawnX=0,spawnZ=8,spawnY=terrainHeightAt(spawnX,spawnZ,index);
+ cylinder(levelRoot,[0,spawnY+.06,8],8.5,8.8,.16,theme.side,12,.8,.08);cylinder(levelRoot,[0,spawnY+.16,8],8.05,8.05,.08,theme.top,12,.86,.02);torus(levelRoot,[0,spawnY+.22,8],7.85,.08,theme.accent,8,[Math.PI/2,0,0],.45,.12);platforms.push({x:0,z:8,w:0,d:0,radius:8.0,top:spawnY+.2,kind:'spawn-plaza'});
+ const homePortal=createPortal(levelRoot,[0,spawnY,14],theme);homePortal.scale.setScalar(.9);const homeLabel=makeLabel(index===8?'ROYAL WILDS':'WILD EXPANSE','#fff0c8');homeLabel.position.set(0,spawnY+5,14);levelRoot.add(homeLabel);
+ const decorated=makeDecorations(theme,index);
+ // Four cheesecake cores are scattered across far-apart landmarks, including one on a satellite island.
+ const cakeSpots=[[-44,-9], [46,-22], [6,69]];for(let i=0;i<cakeSpots.length;i++){const [x,z]=cakeSpots[i],h=terrainHeightAt(x,z,index);createCollectible(levelRoot,x,h+1.35,z,theme);}
+ createCollectible(levelRoot,decorated.sat.x,decorated.satY+1.45,decorated.sat.z,theme);
+ // Each cake throws a soft beacon far into the sky so exploration stays ambitious rather than aimless.
+ for(const c of collectibles){const beam=new THREE.Mesh(new THREE.CylinderGeometry(.055,.36,12,7,1,true),new THREE.MeshBasicMaterial({color:theme.glow,transparent:true,opacity:.15,depthWrite:false,side:THREE.DoubleSide}));beam.position.set(0,6.4,0);c.add(beam);const flare=addMesh(c,new THREE.OctahedronGeometry(.22,0),new THREE.MeshBasicMaterial({color:theme.accent}),[0,12.4,0]);flare.scale.set(.8,1.9,.8);}
+ // A real-scale launch vehicle sits at a pad on the western highland, with a tall service tower.
+ const rx=39,rz=-56;rocket=createLaunchSite(levelRoot,rx,rz,theme,index);const rLabel=makeLabel('CHEESECAKE ROCKET · LAUNCH COMPLEX','#fff0c8','rgba(29,25,45,.88)');rLabel.scale.set(8.5,1.65,1);rLabel.position.set(rx,rocket.position.y+20.4,rz);levelRoot.add(rLabel);
+ const navBeam=new THREE.Mesh(new THREE.CylinderGeometry(.06,.62,28,8,1,true),new THREE.MeshBasicMaterial({color:theme.accent,transparent:true,opacity:.10,depthWrite:false,side:THREE.DoubleSide}));navBeam.position.set(rx,rocket.position.y+14,rz);levelRoot.add(navBeam);
+ // A few roaming troublemakers populate paths between landmarks.
+ for(let i=0;i<6;i++){const spots=[[-22,4],[23,4],[-49,29],[48,16],[7,39],[-16,-48]],q=spots[i],y=terrainHeightAt(q[0],q[1],index);createEnemy(levelRoot,q[0],y,q[1],theme,null,i%3);}
+ if(index%3===2){createHazard(levelRoot,16,terrainHeightAt(16,9,index),9,theme,'goo');createHazard(levelRoot,-18,terrainHeightAt(-18,25,index),25,theme,'spikes');}
+ // Initial footing is on natural terrain, not a tiny start platform.
+ hero.position.set(spawnX,spawnY+.18,spawnZ);hero.rotation.set(0,0,0);hero.scale.set(1,1,1);heroState.x=spawnX;heroState.y=spawnY+.18;heroState.z=spawnZ;heroState.vx=0;heroState.vy=0;heroState.vz=0;heroState.grounded=true;heroState.jumps=0;heroState.groundPound=false;heroState.coyote=.13;heroState.hitCooldown=0;heroState.checkpoint={x:spawnX,y:spawnY+.18,z:spawnZ};cameraYaw=0;cameraPitch=.38;health=Math.min(4,health+1);invuln=0;
+ ui.worldEye.textContent=`WORLD ${index+1} / 9`;ui.worldName.textContent=theme.name;ui.worldSub.textContent='Explore the floating wilds · Find 4 cheesecake cores';ui.bossHud.style.display='none';ui.bossFill.style.width='100%';ui.actionButtonText.textContent='ROCKET';updateHud();showToast(`WORLD ${index+1}: ${theme.name.toUpperCase()} · THE WILDS AWAIT`,2.0);
+}
+const heroState={x:0,y:.5,z:0,vx:0,vy:0,vz:0,grounded:true,jumps:0,groundPound:false,coyote:.12,hitCooldown:0,checkpoint:{x:0,y:.5,z:0},prevY:.5};
+function updateHud() {
+ ui.fuelText.textContent=`${worldCakes} / 4`;ui.fuelFill.style.width=`${Math.min(100,worldCakes/4*100)}%`;ui.total.textContent=`TOTAL CHEESECAKES · ${totalCakes}`;ui.mini.textContent=String(totalCakes);ui.health.textContent='♥ '.repeat(health).trim()||'—';
+ if(boss){ui.bossHud.style.display='block';ui.bossFill.style.width=`${Math.max(0,boss.hp/boss.maxHp*100)}%`;}
+}
+function showToast(text,duration=1.4){ui.toast.textContent=text;ui.toast.classList.add('show');toastTimer=duration;}
+function setScreen(which){ui.start.classList.toggle('hidden',which!=='menu');ui.pause.classList.toggle('hidden',which!=='pause');ui.end.classList.toggle('hidden',which!=='end');ui.hud.style.display=(which==='game'||which==='playing'||which==='boss'||which==='paused')?'block':'none';}
+function setState(s){gameState=s;if(s==='playing'||s==='boss'){setScreen('game');}else if(s==='paused'){setScreen('pause');}else if(s==='menu'){setScreen('menu');}else if(s==='gameover'||s==='victory'){setScreen('end');}}
+function showEnd(victory){gameState=victory?'victory':'gameover';setScreen('end');$('endEyebrow').textContent=victory?'ODYSSEY COMPLETE':'ODYSSEY INTERRUPTED';$('endTitle').textContent=victory?'SPOON DEFEATED! 🏆':'OUT OF CHEESECAKE ENERGY';$('endDescription').textContent=victory?`You defeated Spoon of Boss the 5th and saved all nine dessert worlds. Cheesecakes collected: ${totalCakes}. Absolute dessert legend.`:`The spoon got you this time. You collected ${totalCakes} cheesecakes. Give it another go!`;ui.bossHud.style.display='none';}
+function startGame(){health=4;totalCakes=0;worldCakes=0;worldIndex=0;createLevel(0);setState('playing');ui.touch.classList.toggle('active',IS_TOUCH);}
+function restartCurrent(){if(gameState==='boss'){createBossArena();setState('boss');}else{createLevel(worldIndex);setState('playing');}}
+function pauseGame(){if(gameState==='playing'||gameState==='boss'){gameState='paused';setScreen('pause');}else if(gameState==='paused'){setState(boss?'boss':'playing');}}
+function launchRocket(){if(worldCakes<4){showToast(`ROCKET NEEDS ${4-worldCakes} MORE CHEESECAKE${4-worldCakes===1?'':'S'}!`,1.3);return;}
+ gameState='transition';ui.transitionTitle.textContent=worldIndex===8?'ONE LAST FLIGHT…':'ROCKET LAUNCH!';ui.transitionSub.textContent=worldIndex===8?'Destination: the Royal Spoon Arena':'Charting a course across the floating wilds…';ui.transition.classList.add('show');transitionTimer=1.55;if(rocket){rocket.userData.launching=true;}
+}
+function completeLaunch(){ui.transition.classList.remove('show');worldCakes=0;if(worldIndex<8){createLevel(worldIndex+1);setState('playing');}else{createBossArena();setState('boss');}}
+function addCheckpointToast(){showToast('CHECKPOINT SAVED!',1.2);}
+function createBossModel(parent) {
+ const g=new THREE.Group();parent.add(g);
+ // Robed body, long polished spoon handle, and a huge spoon bowl for a head.
+ sphere(g,[0,1.45,0],[1.32,1.42,.95],0x562e58,12,.46,.06);
+ for(let s of [-1,1]){const arm=cylinder(g,[s*1.2,1.55,-.02],.23,.31,1.2,0x9b6a50,8,.45,.18);arm.rotation.z=s*.7;sphere(g,[s*1.56,1.0,-.05],[.31,.29,.3],0xcfa35d,8,.42,.25);sphere(g,[s*.48,.19,-.06],[.43,.22,.45],0x38203f,8,.7,.05);}
+ cylinder(g,[0,2.75,0],.2,.17,2.0,0xf0c66e,10,.23,.68);
+ torus(g,[0,3.65,0],.23,.07,0xffe9a4,8,[Math.PI/2,0,0],.23,.55);
+ sphere(g,[0,4.08,-.02],[1.12,1.32,.45],0xd5dce5,12,.22,.75);
+ // Concave-looking dark bowl core and gold rim.
+ sphere(g,[0,4.08,-.42],[.78,.94,.085],0x6f3c60,12,.26,.28);
+ torus(g,[0,4.08,-.35],.91,.13,0xffd36b,10,[0,0,0],.22,.72);torus(g,[0,4.08,-.44],.75,.035,0xfff0b1,7,[0,0,0],.22,.55);
+ for(const x of [-.32,.32]){sphere(g,[x,4.22,-.53],[.14,.2,.08],0xffffff,8,.25,0);sphere(g,[x,4.2,-.6],[.07,.115,.035],0x26162b,7,.26,0);}
+ // Angy brows and mouth.
+ for(const s of [-1,1]){const brow=box(g,[s*.32,4.52,-.55],[.36,.09,.09],0x4b233b,.45,0);brow.rotation.z=s*.24;}
+ box(g,[0,3.86,-.55],[.36,.07,.07],0x3b1a31,.42,0);
+ // Five royal points on the crown: the Fifth is important.
+ for(let i=0;i<5;i++){const x=(i-2)*.34;const spike=addMesh(g,new THREE.ConeGeometry(.14,.42,5),mat(0xffd25f,.35,.2),[x,5.22-Math.abs(i-2)*.04,-.05]);sphere(g,[x,5.38-Math.abs(i-2)*.04,-.05],[.07,.07,.07],i===2?0xff5c8a:0xfff0a6,6,.22,.12);}
+ sphere(g,[0,1.95,-.88],[.28,.28,.1],0x75ffcf,8,.22,.14);g.userData.core=g.children[g.children.length-1];
+ const label=makeLabel('SPOON OF BOSS THE 5TH','#ffeebc','rgba(55,17,43,.92)');label.scale.set(7.0,1.75,1);label.position.set(0,6.45,0);g.add(label);
+ return g;
+}
+function createBossArena(){
+ disposeRoot();levelRoot=new THREE.Group();scene.add(levelRoot);scene.background=new THREE.Color(0x20132d);scene.fog=new THREE.Fog(0x20132d,44,115);platforms=[];collectibles=[];enemies=[];hazards=[];
+ const theme={top:0x633d65,side:0x30213f,accent:0xffd268,glow:0xff7fa8};
+ const floor=createPlatform(levelRoot,0,0,0,46,46,theme,'start');platforms.push(floor);
+ // Circular arena rim, four dessert pillars and ember lamps.
+ torus(levelRoot,[0,.62,0],19,.3,0xffbf68,10,[Math.PI/2,0,0],.32,.4);
+ for(let i=0;i<12;i++){const a=i*Math.PI/6;const x=Math.cos(a)*20,z=Math.sin(a)*20;const col=i%2?0xffd16a:0xff74a8;const p=cylinder(levelRoot,[x,1.1,z],.32,.48,2.2,0x4b2b50,7,.5,.18);sphere(levelRoot,[x,2.3,z],[.25,.25,.25],col,7,.35,.08);}
+ for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4;const x=Math.cos(a)*13,z=Math.sin(a)*13;cylinder(levelRoot,[x,1.7,z],.55,.85,3.4,0x77496b,8,.44,.2);cylinder(levelRoot,[x,3.48,z],.95,.55,.24,0xffcd72,8,.3,.3);sphere(levelRoot,[x,3.85,z],[.3,.3,.3],0xff83ad,8,.3,.1);}
+ // A frosting-colored central ring telegraphs the duel space.
+ const inner=torus(levelRoot,[0,.58,-4],5,.065,0x7cfad0,7,[Math.PI/2,0,0],.3,.12);
+ // Arena stars and cake-banner pylons.
+ for(let i=0;i<30;i++){const x=(Math.random()-.5)*70,z=(Math.random()-.5)*70,y=7+Math.random()*15;sphere(levelRoot,[x,y,z],[.09,.09,.09],i%3?0xffd268:0xff8aaf,5,.3,.04);}
+ heroState.x=0;heroState.y=floor.top;heroState.z=14;heroState.vx=0;heroState.vy=0;heroState.vz=0;heroState.grounded=true;heroState.jumps=0;heroState.groundPound=false;heroState.coyote=.12;heroState.checkpoint={x:0,y:floor.top,z:14};hero.position.set(0,floor.top,14);hero.rotation.set(0,Math.PI,0);hero.scale.set(1,1,1);cameraYaw=0;cameraPitch=.28;
+ const arenaLabel=makeLabel('THE ROYAL DESSERT COURT','#fff0d1','rgba(38,18,49,.92)');arenaLabel.scale.set(9,2.2,1);arenaLabel.position.set(0,5.2,-19);levelRoot.add(arenaLabel);
+ const bossModel=createBossModel(levelRoot);boss={group:bossModel,x:0,z:-7,y:floor.top,hp:6,maxHp:6,state:'idle',timer:2.0,attackTimer:2.0,slamX:0,slamZ:0,slamRadius:0,ringHit:false,hitFlash:0,alive:true};bossModel.position.set(0,floor.top,-7);bossModel.scale.setScalar(1.05);
+ bossWarning=torus(levelRoot,[0,.64,0],1,.09,0xff626f,7,[Math.PI/2,0,0],.38,.04);bossWarning.visible=false;bossWarning.material.transparent=true;bossWarning.material.opacity=.8;
+ // Starting health for the final battle, with a small mercy refill.
+ health=Math.max(3,health);invuln=0;worldCakes=4;ui.worldEye.textContent='FINAL BOSS';ui.worldName.textContent='The Royal Dessert Court';ui.worldSub.textContent='Ground-pound the spoon during its recovery!';ui.actionButtonText.textContent='PUNCH?';ui.bossHud.style.display='block';updateHud();showToast('SPOON OF BOSS THE 5TH CHALLENGES YOU!',2.0);
+}
+function triggerJump(){if(gameState!=='playing'&&gameState!=='boss')return; if(heroState.grounded||heroState.coyote>0){heroState.vy=JUMP_SPEED;heroState.grounded=false;heroState.jumps=1;heroState.coyote=0;heroState.groundPound=false;createParticleBurst([heroState.x,heroState.y+.08,heroState.z],worldIndex<9?worlds[worldIndex].accent:0xffd268,5,2.3);}else if(heroState.jumps<2&&!heroState.groundPound){heroState.vy=DOUBLE_JUMP_SPEED;heroState.jumps=2;createParticleBurst([heroState.x,heroState.y+.4,heroState.z],0xfff0a6,7,3.1);showToast('DOUBLE JUMP!',.6);}}
+function triggerGroundPound(){if((gameState!=='playing'&&gameState!=='boss')||heroState.grounded||heroState.groundPound)return;heroState.groundPound=true;heroState.vy=-27;heroState.vx*=.25;heroState.vz*=.25;showToast('GROUND POUND!',.55);}
+function performAction(){if(gameState==='playing'){
+ if(!rocket){return;}const dx=heroState.x-rocket.position.x,dz=heroState.z-rocket.position.z,dy=heroState.y-rocket.userData.baseY;
+ if(Math.hypot(dx,dz)<5.2&&Math.abs(dy)<3.4){launchRocket();}else{showToast('FIND THE CHEESECAKE ROCKET AT THE END!',1.1);}
+ }else if(gameState==='boss'){showToast('GROUND POUND THE SPOON WHEN IT IS STUNNED!',1.2);}}
+function hurt(sourceX,sourceZ){if(invuln>0||gameState==='paused'||gameState==='transition')return;health--;invuln=1.35;const dx=heroState.x-sourceX,dz=heroState.z-sourceZ,len=Math.hypot(dx,dz)||1;heroState.vx+=dx/len*6;heroState.vz+=dz/len*6;heroState.vy=Math.max(heroState.vy,5);createParticleBurst([heroState.x,heroState.y+1,heroState.z],0xff617d,12,4);showToast('BONK! WATCH YOUR STEP!',.9);updateHud();if(health<=0){showEnd(false);}}
+function respawn(){const cp=heroState.checkpoint;heroState.x=cp.x;heroState.y=cp.y;heroState.z=cp.z;heroState.vx=0;heroState.vy=0;heroState.vz=0;heroState.grounded=true;heroState.jumps=0;heroState.groundPound=false;hero.position.set(cp.x,cp.y,cp.z);invuln=1.8;createPoundRing(new THREE.Vector3(cp.x,cp.y,cp.z),0x9fffe3,2.4);showToast('BACK TO THE CHECKPOINT!',1.3);}
+function onPoundLanding(){createPoundRing(new THREE.Vector3(heroState.x,heroState.y,heroState.z),worldIndex<9?worlds[worldIndex].accent:0xffd268,3.1);createParticleBurst([heroState.x,heroState.y+.18,heroState.z],worldIndex<9?worlds[worldIndex].glow:0xffd268,10,4);
+ for(const en of enemies){if(!en.alive)continue;const d=Math.hypot(heroState.x-en.group.position.x,heroState.z-en.group.position.z);if(d<2.9&&Math.abs(heroState.y-en.y)<2.4){en.alive=false;en.group.visible=false;createParticleBurst([en.group.position.x,en.y+.7,en.group.position.z],0x8dffc4,14,5);showToast('SLIME STOMP! + STYLE',.8);}}
+ if(boss&&boss.alive){const d=Math.hypot(heroState.x-boss.x,heroState.z-boss.z);if(d<4.0){if(boss.state==='recover'){boss.hp--;boss.hitFlash=.35;boss.timer=Math.max(boss.timer,.5);createParticleBurst([boss.x,boss.y+4.1,boss.z-.4],0x9ffff0,22,6);boss.group.position.y+=.35;showToast(`SPOON BONK! ${boss.hp} HP REMAIN`,1.0);if(boss.hp<=0){boss.alive=false;createParticleBurst([boss.x,boss.y+2.4,boss.z],0xffdb70,55,9);showEnd(true);}updateHud();}else{showToast('SPOON PLATING DEFLECTED IT! HIT DURING RECOVERY!',1.1);}}}
+}
+function updatePlayer(dt){
+ if(gameState!=='playing'&&gameState!=='boss')return;
+ const forward=(keys.KeyW||keys.ArrowUp?1:0)-(keys.KeyS||keys.ArrowDown?1:0)-joy.y;
+ const side=(keys.KeyD||keys.ArrowRight?1:0)-(keys.KeyA||keys.ArrowLeft?1:0)+joy.x;
+ let ix=side,iz=forward;const il=Math.hypot(ix,iz);if(il>1){ix/=il;iz/=il;}
+ const sin=Math.sin(cameraYaw),cos=Math.cos(cameraYaw);
+ // Camera-relative movement: W moves away from the camera and A/D strafe smoothly.
+ const dx=ix*cos-iz*sin;const dz=-ix*sin-iz*cos;
+ const sprint=keys.ShiftLeft||keys.ShiftRight||mobileSprint;const maxSpeed=sprint?SPRINT_SPEED:WALK_SPEED;
+ const desiredX=dx*maxSpeed,desiredZ=dz*maxSpeed;
+ const accel=heroState.grounded?18:6.5;const blend=1-Math.exp(-accel*dt);
+ heroState.vx+=(desiredX-heroState.vx)*blend;heroState.vz+=(desiredZ-heroState.vz)*blend;
+ if(il<.04){const friction=1-Math.exp(-(heroState.grounded?13:1.0)*dt);heroState.vx*=friction;heroState.vz*=friction;}
+ if(jumpQueued){triggerJump();jumpQueued=false;}if(poundQueued){triggerGroundPound();poundQueued=false;}if(actionQueued){performAction();actionQueued=false;}
+ heroState.prevY=heroState.y;const wasGrounded=heroState.grounded;heroState.vy=Math.max(-32,heroState.vy-GRAVITY*(heroState.groundPound?1.18:1)*dt);
+ heroState.x+=heroState.vx*dt;heroState.z+=heroState.vz*dt;heroState.y+=heroState.vy*dt;heroState.grounded=false;
+ // Pick the highest valid surface below the descending player. The main island is a sampled heightfield,
+ // while bridges and satellite islands are separate walkable surfaces.
+ let landingY=-Infinity;
+ if(heroState.vy<=0){
+  for(const p of platforms){const inside=p.radius?Math.hypot(heroState.x-p.x,heroState.z-p.z)<=p.radius:Math.abs(heroState.x-p.x)<=p.w/2-.04&&Math.abs(heroState.z-p.z)<=p.d/2-.04;if(!inside)continue;const crossed=heroState.prevY>=p.top-.42&&heroState.y<=p.top;if(crossed&&p.top>landingY)landingY=p.top;}
+  if(worldTerrain&&terrainContains(heroState.x,heroState.z,worldTerrain.index)){const th=terrainHeightAt(heroState.x,heroState.z,worldTerrain.index);const crossed=heroState.prevY>=th-.36&&heroState.y<=th;const walkingSnap=wasGrounded&&!heroState.groundPound&&heroState.y<=th+.5&&heroState.prevY>=th-.62;if((crossed||walkingSnap)&&th>landingY)landingY=th;}
+  if(landingY>-Infinity){const wasPound=heroState.groundPound;heroState.y=landingY;heroState.vy=0;heroState.grounded=true;heroState.jumps=0;heroState.coyote=.13;heroState.groundPound=false;if(wasPound)onPoundLanding();}
+ }
+ if(!heroState.grounded)heroState.coyote=Math.max(0,heroState.coyote-dt);else heroState.coyote=.13;
+ if(heroState.y < -13){hurt(heroState.x,heroState.z);if(gameState==='gameover'||gameState==='victory')return;respawn();}
+ if(invuln>0)invuln=Math.max(0,invuln-dt);if(heroState.hitCooldown>0)heroState.hitCooldown-=dt;
+ // Enemy collision; stomp them by ground-pounding near the landing point.
+ for(const en of enemies){if(!en.alive)continue;const ex=en.group.position.x,ez=en.group.position.z;const d=Math.hypot(heroState.x-ex,heroState.z-ez);if(d<.96&&Math.abs(heroState.y-en.y)<1.75&&heroState.hitCooldown<=0){heroState.hitCooldown=.8;hurt(ex,ez);}}
+ // Hazard damage. Some pools pulse, so timing your jump matters.
+ for(const hz of hazards){if(!hz.active)continue;const d=Math.hypot(heroState.x-hz.x,heroState.z-hz.z);if(d<1.05&&Math.abs(heroState.y-hz.y)<1.0&&heroState.hitCooldown<=0){heroState.hitCooldown=.85;hurt(hz.x,hz.z);}}
+ if(gameState==='boss')updateBoss(dt);
+ // Apply player model pose and a bit of squash / stretch.
+ hero.position.set(heroState.x,heroState.y,heroState.z);
+ const speed=Math.hypot(heroState.vx,heroState.vz);if(speed>.35){const facing=Math.atan2(-heroState.vx,-heroState.vz);let diff=((facing-hero.rotation.y+Math.PI*3)%(Math.PI*2))-Math.PI;hero.rotation.y+=diff*(1-Math.exp(-13*dt));}
+ let squashY=heroState.groundPound?.72:1;let squashXZ=heroState.groundPound?1.18:1;if(!heroState.grounded&&!heroState.groundPound)squashY=1.04;
+ const bounce=heroState.grounded?Math.sin(worldTime*10)*Math.min(.028,speed*.003):0;hero.scale.set(squashXZ, squashY+bounce,squashXZ);
+ hero.children.forEach(()=>{});
+}
+function updateBoss(dt){if(!boss||!boss.alive)return;boss.hitFlash=Math.max(0,boss.hitFlash-dt);boss.group.rotation.y=Math.sin(worldTime*.55)*.13;boss.group.position.x=Math.sin(worldTime*.42)*1.6;boss.x=boss.group.position.x;boss.group.position.y=boss.y+Math.sin(worldTime*2.2)*.12;
+ // Boss core lights up mint during recovery: that is your ground-pound window.
+ const core=boss.group.userData.core;if(core&&core.material){core.material.color.set(boss.state==='recover'?0x9ffff0:0x75ffcf);core.material.emissive=new THREE.Color(boss.state==='recover'?0x25e8a3:0x1c6057);core.material.emissiveIntensity=boss.state==='recover'?2.2:.5;}
+ boss.timer-=dt;
+ if(boss.state==='idle'&&boss.timer<=0){boss.state='windup';boss.timer=.9;boss.slamX=THREE.MathUtils.clamp(heroState.x,-15,15);boss.slamZ=THREE.MathUtils.clamp(heroState.z,-15,15);boss.slamRadius=.1;boss.ringHit=false;if(bossWarning){bossWarning.position.set(boss.slamX,.64,boss.slamZ);bossWarning.scale.set(.2,1,.2);bossWarning.visible=true;bossWarning.material.color.set(0xff526f);bossWarning.material.opacity=.84;}showToast('SPOON SLAM INCOMING! MOVE!',.8);}
+ else if(boss.state==='windup'){
+  if(bossWarning){const p=1-boss.timer/.9;bossWarning.scale.set(.25+p*1.2,1,.25+p*1.2);bossWarning.material.opacity=.45+.4*Math.sin(worldTime*22);}
+  if(boss.timer<=0){boss.state='slam';boss.timer=1.15;boss.slamRadius=.1;if(bossWarning){bossWarning.material.color.set(0xffb45a);}createParticleBurst([boss.x,boss.y+3,boss.z],0xffb45a,18,6);}
+ }else if(boss.state==='slam'){
+  boss.slamRadius+=(17/1.15)*dt;if(bossWarning){bossWarning.scale.set(boss.slamRadius,1,boss.slamRadius);bossWarning.material.opacity=Math.max(0,boss.timer/1.15);}
+  const d=Math.hypot(heroState.x-boss.slamX,heroState.z-boss.slamZ);if(!boss.ringHit&&d<boss.slamRadius+1.05&&d>boss.slamRadius-1.8&&heroState.y<boss.y+1.7){boss.ringHit=true;hurt(boss.slamX,boss.slamZ);}
+  if(boss.timer<=0){boss.state='recover';boss.timer=1.8;if(bossWarning)bossWarning.visible=false;showToast('THE SPOON IS STUNNED! GROUND POUND!',1.25);createPoundRing(new THREE.Vector3(boss.x,boss.y,boss.z),0xff7fa8,5);}
+ }else if(boss.state==='recover'){
+  if(boss.timer<=0){boss.state='idle';boss.timer=1.25+Math.random()*.55;}
+ }
+}
+function updateWorld(dt){worldTime+=dt;
+ for(const c of collectibles){if(!c.visible||c.userData.taken)continue;c.rotation.y+=dt*1.35;c.position.y=c.userData.baseY+Math.sin(worldTime*2.6+c.userData.phase)*.18;if(c.userData.ring)c.userData.ring.rotation.y+=dt*1.1;for(const child of c.children){if(child.geometry&&child.geometry.type==='CylinderGeometry'&&child.material&&child.material.transparent){child.material.opacity=.105+.045*(.5+.5*Math.sin(worldTime*2.8+c.userData.phase));}}const dx=heroState.x-c.position.x,dz=heroState.z-c.position.z,dy=(heroState.y+1.0)-c.position.y;if(Math.hypot(dx,dz)<1.15&&Math.abs(dy)<1.8){c.userData.taken=true;c.visible=false;worldCakes=Math.min(4,worldCakes+1);totalCakes++;createParticleBurst([c.position.x,c.position.y,c.position.z],0xffdc77,15,4.5);showToast(`CHEESECAKE ${worldCakes}/4! ROCKET FUEL +25% 🍰`,1.1);updateHud();}}
+ for(const en of enemies){if(!en.alive)continue;en.phase+=dt*(en.variant===1?3.7:2.2);en.group.position.x=en.baseX+Math.sin(en.phase)*1.0;en.group.position.y=en.y+Math.abs(Math.sin(en.phase*1.4))*.11;en.group.rotation.z=Math.sin(en.phase)*.08;}
+ for(const hz of hazards){hz.group.children.forEach(o=>{if(hz.type==='goo'&&o.material&&o.material.emissive){o.material.emissiveIntensity=.45+.6*(.5+.5*Math.sin(worldTime*3+hz.phase));}});}
+ for(const p of particles){if(p.userData.vel){p.position.addScaledVector(p.userData.vel,dt);p.userData.vel.y-=9*dt;p.userData.life-=dt;if(p.material)p.material.opacity=Math.max(0,p.userData.life);if(p.userData.life<=0)p.userData.dead=true;}else if(p.userData.life!==undefined){p.userData.life-=dt;const f=1-dt/.42;p.scale.multiplyScalar(1.12);p.material.opacity=Math.max(0,p.userData.life/.42);if(p.userData.life<=0)p.userData.dead=true;}}
+ for(let i=particles.length-1;i>=0;i--){const p=particles[i];if(p.userData.dead){levelRoot.remove(p);if(p.geometry)p.geometry.dispose();if(p.material)p.material.dispose();particles.splice(i,1);}}
+ if(rocket){rocket.rotation.z=Math.sin(worldTime*1.2)*.006;if(rocket.userData.launching){rocket.position.y+=dt*11;if(rocket.position.y>rocket.userData.baseY+22)rocket.userData.launching=false;}else{rocket.position.y=rocket.userData.baseY+Math.sin(worldTime*1.8)*.025;}if(rocket.userData.flameMeshes){for(let i=0;i<rocket.userData.flameMeshes.length;i++){const fl=rocket.userData.flameMeshes[i],f=.76+.24*Math.sin(worldTime*19+i*2.2);fl.scale.y=(fl.userData.baseScale||1)*f*(worldCakes===4?1.55:.07);if(fl.material&&fl.material.color)fl.material.color.set(worldCakes===4?0xffe68b:(i%2?0xff6d32:0xffa143));if(fl.material)fl.material.opacity=(worldCakes===4?.72:.10)+.18*(.5+.5*Math.sin(worldTime*17+i));}}if(rocket.userData.ring)rocket.userData.ring.rotation.y+=dt*.7;}
+ if(bossWarning&&bossWarning.visible)bossWarning.rotation.z+=dt*.22;
+ updatePrompt();if(toastTimer>0){toastTimer-=dt;if(toastTimer<=0)ui.toast.classList.remove('show');}
+}
+function updatePrompt(){if(gameState==='boss'){ui.prompt.style.display='block';if(boss&&boss.state==='recover')ui.prompt.textContent='⚡ SPOON STUNNED! Jump near it, then press Q / POUND to strike!';else ui.prompt.textContent='Dodge the red slam ring. Ground-pound the spoon only when its core turns MINT GREEN.';return;}
+ if(!rocket){ui.prompt.style.display='none';return;}const d=Math.hypot(heroState.x-rocket.position.x,heroState.z-rocket.position.z);if(d<6.0){ui.prompt.style.display='block';if(worldCakes<4)ui.prompt.textContent=`🍰 Rocket fuel ${worldCakes}/4 · Find ${4-worldCakes} more cheesecake${4-worldCakes===1?'':'s'}!`;else ui.prompt.textContent='🚀 ROCKET READY · Press E / tap ROCKET to launch';}else{ui.prompt.style.display='none';}}
+function updateCamera(dt){if(!hero)return;const distance=13.2;const horiz=Math.cos(cameraPitch)*distance;camDesired.set(heroState.x+Math.sin(cameraYaw)*horiz,heroState.y+2.8+Math.sin(cameraPitch)*distance,heroState.z+Math.cos(cameraYaw)*horiz);camera.position.lerp(camDesired,1-Math.exp(-7.5*dt));camTarget.set(heroState.x,heroState.y+1.15,heroState.z);camera.lookAt(camTarget);}
+function doResize(){if(!renderer)return;const w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,IS_TOUCH?1.35:1.7));}
+function gameLoop(now){requestAnimationFrame(gameLoop);const dt=Math.min(.034,Math.max(.001,(now-lastTimestamp)/1000||.016));lastTimestamp=now;
+ if(gameState==='playing'||gameState==='boss'){updatePlayer(dt);updateWorld(dt);if(gameState==='transition'){transitionTimer-=dt;if(transitionTimer<=0)completeLaunch();}}
+ if(gameState==='transition'){transitionTimer-=dt;if(transitionTimer<=0)completeLaunch();}
+ else if(gameState==='playing'||gameState==='boss'){updateCamera(dt);}
+ renderer.render(scene,camera);
+}
+function init(){
+ try{renderer=new THREE.WebGLRenderer({antialias:!IS_TOUCH,alpha:false,powerPreference:'high-performance'});}catch(e){ui.start.querySelector('.subtitle').textContent='This device could not start WebGL. Try a browser with hardware acceleration enabled.';$('startBtn').disabled=true;return;}
+ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,IS_TOUCH?1.35:1.7));renderer.setSize(window.innerWidth,window.innerHeight);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;renderer.shadowMap.enabled=false;renderer.domElement.tabIndex=0;ui.game.appendChild(renderer.domElement);
+ scene=new THREE.Scene();scene.background=new THREE.Color(0x9edcff);scene.fog=new THREE.Fog(0x9edcff,165,370);camera=new THREE.PerspectiveCamera(62,window.innerWidth/window.innerHeight,.1,550);camera.position.set(0,7,16);
+ const hemi=new THREE.HemisphereLight(0xfff4dd,0x454168,2.2);scene.add(hemi);const key=new THREE.DirectionalLight(0xffe5bc,2.6);key.position.set(-35,58,28);scene.add(key);const rim=new THREE.DirectionalLight(0x9deaff,1.15);rim.position.set(42,25,-38);scene.add(rim);
+ hero=createHero();scene.add(hero);clock=new THREE.Clock();
+ $('startBtn').addEventListener('click',startGame);$('howBtn').addEventListener('click',()=>{const h=$('howCopy');h.style.display=h.style.display==='none'?'block':'none';});$('resumeBtn').addEventListener('click',()=>setState(boss?'boss':'playing'));$('restartWorldBtn').addEventListener('click',restartCurrent);$('quitBtn').addEventListener('click',()=>{gameState='menu';setScreen('menu');ui.transition.classList.remove('show');});$('againBtn').addEventListener('click',startGame);$('titleBtn').addEventListener('click',()=>{gameState='menu';setScreen('menu');ui.transition.classList.remove('show');});
+ window.addEventListener('resize',doResize);
+ window.addEventListener('keydown',e=>{if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(!keys[e.code]){if(e.code==='Space')jumpQueued=true;if(e.code==='KeyQ')poundQueued=true;if(e.code==='KeyS'&&!heroState.grounded)poundQueued=true;if(e.code==='KeyE')actionQueued=true;if(e.code==='Escape'){if(gameState==='playing'||gameState==='boss')pauseGame();else if(gameState==='paused')pauseGame();}}keys[e.code]=true;if(e.code==='Enter'&&gameState==='menu')startGame();},{passive:false});
+ window.addEventListener('keyup',e=>{keys[e.code]=false;});window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mobileSprint=false;});
+ // Drag to orbit the chase camera on desktop. Touch camera swipes are handled by the right look zone.
+ renderer.domElement.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button===0){pointer.dragging=true;pointer.id=e.pointerId;pointer.x=e.clientX;pointer.y=e.clientY;renderer.domElement.setPointerCapture?.(e.pointerId);}});
+ renderer.domElement.addEventListener('pointermove',e=>{if(pointer.dragging&&pointer.id===e.pointerId){const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;cameraYaw-=dx*.006;cameraPitch=THREE.MathUtils.clamp(cameraPitch+dy*.003,-.05,.88);pointer.x=e.clientX;pointer.y=e.clientY;}});
+ renderer.domElement.addEventListener('pointerup',e=>{if(pointer.id===e.pointerId){pointer.dragging=false;pointer.id=null;}});renderer.domElement.addEventListener('pointercancel',()=>{pointer.dragging=false;pointer.id=null;});
+ const look=$('lookZone');look.addEventListener('pointerdown',e=>{pointer.lookTouch=e.pointerId;pointer.x=e.clientX;pointer.y=e.clientY;look.setPointerCapture?.(e.pointerId);e.preventDefault();});look.addEventListener('pointermove',e=>{if(pointer.lookTouch!==e.pointerId)return;const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;cameraYaw-=dx*.009;cameraPitch=THREE.MathUtils.clamp(cameraPitch+dy*.005,-.05,.9);pointer.x=e.clientX;pointer.y=e.clientY;e.preventDefault();});const endLook=e=>{if(pointer.lookTouch===e.pointerId)pointer.lookTouch=null;};look.addEventListener('pointerup',endLook);look.addEventListener('pointercancel',endLook);
+ // Virtual joystick tracks any drag inside its base.
+ const base=$('joystickBase'),knob=$('joystickKnob');let joyId=null,baseRect=null;
+ function updateJoy(e){if(joyId!==e.pointerId)return;if(!baseRect)baseRect=base.getBoundingClientRect();const cx=baseRect.left+baseRect.width/2,cy=baseRect.top+baseRect.height/2;let dx=(e.clientX-cx)/(baseRect.width*.36),dy=(e.clientY-cy)/(baseRect.height*.36);const d=Math.hypot(dx,dy);if(d>1){dx/=d;dy/=d;}joy.x=dx;joy.y=dy;knob.style.transform=`translate(${dx*36}px,${dy*36}px)`;}
+ base.addEventListener('pointerdown',e=>{joyId=e.pointerId;baseRect=base.getBoundingClientRect();base.setPointerCapture?.(e.pointerId);updateJoy(e);e.preventDefault();});base.addEventListener('pointermove',e=>{if(joyId===e.pointerId){updateJoy(e);e.preventDefault();}});function endJoy(e){if(joyId===e.pointerId){joyId=null;joy.x=0;joy.y=0;knob.style.transform='translate(0,0)';}}base.addEventListener('pointerup',endJoy);base.addEventListener('pointercancel',endJoy);
+ function bindTap(id,fn){const el=$(id);el.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();fn(e);});}
+ bindTap('touchJump',()=>{jumpQueued=true;});bindTap('touchPound',()=>{poundQueued=true;});bindTap('touchAction',()=>{actionQueued=true;});bindTap('touchPause',()=>pauseGame());
+ const sprintBtn=$('touchSprint');sprintBtn.addEventListener('pointerdown',e=>{e.preventDefault();mobileSprint=true;sprintBtn.setPointerCapture?.(e.pointerId);});const releaseSprint=()=>{mobileSprint=false;};sprintBtn.addEventListener('pointerup',releaseSprint);sprintBtn.addEventListener('pointercancel',releaseSprint);sprintBtn.addEventListener('lostpointercapture',releaseSprint);
+ doResize();setScreen('menu');requestAnimationFrame(gameLoop);
+}
+init();
+})();
+</script>
+</body>
+</html>
