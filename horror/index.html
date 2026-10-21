@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><meta name="theme-color" content="#030608"><meta name="description" content="BLUB CLUB: Deep Friends, a first-person aquatic psychological horror game."><title>BLUB CLUB: DEEP FRIENDS | v2.0 | THE LONG NIGHT</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Share+Tech+Mono&display=swap');
+:root{--red:#e52d3b;--cyan:#8de7e8;--ink:#05080b}*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#030608;color:#e8e8e3;font-family:'Share Tech Mono',monospace}canvas{display:block}#game{position:fixed;inset:0;display:none}#overlay{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 28%,#0008 72%,#000e 100%);z-index:2}#grain{position:fixed;inset:-50%;width:200%;height:200%;pointer-events:none;z-index:3;opacity:.085;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");animation:grain .22s steps(2) infinite}@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(2%,-1%)}50%{transform:translate(-1%,2%)}75%{transform:translate(1%,1%)}}#scan{position:fixed;inset:0;pointer-events:none;z-index:4;background:repeating-linear-gradient(0deg,#0000 0 3px,#0005 4px 5px);opacity:.3}#menu{position:fixed;inset:0;z-index:10;display:flex;align-items:center;padding:clamp(22px,6vw,90px);background:radial-gradient(ellipse at 76% 48%,#183039 0,#081116 40%,#020304 79%);overflow:hidden}#menu:before{content:'';position:absolute;right:5%;bottom:-20%;width:min(52vw,700px);height:min(70vh,650px);border-radius:47% 53% 40% 60%;background:radial-gradient(ellipse at 35% 30%,#63706a 0,#283a39 17%,#111b1e 42%,#05090c 72%);box-shadow:inset -40px -25px 70px #000,0 0 100px #2e7d7d22;transform:rotate(-13deg);filter:blur(1px);animation:float 6s ease-in-out infinite}#menu:after{content:'◉         ◉';position:absolute;right:13%;bottom:29%;font-size:clamp(32px,5vw,74px);letter-spacing:clamp(20px,4vw,60px);color:#e1ffff;text-shadow:0 0 12px #a6ffff,0 0 36px #a6ffff66;transform:rotate(-13deg);opacity:.8;pointer-events:none}@keyframes float{0%,100%{transform:translateY(0) rotate(-13deg)}50%{transform:translateY(-14px) rotate(-11deg)}}.menucol{position:relative;z-index:1;width:min(570px,100%)}.eyebrow{font-size:12px;letter-spacing:5px;color:#92c3c3}.logo{font-family:'Special Elite',serif;font-size:clamp(60px,11vw,130px);line-height:.78;letter-spacing:-7px;margin:23px 0 22px;text-shadow:5px 4px 0 #6c1018,0 0 28px #ff293122}.logo span{color:#e9e6df}.tag{color:#b4c7c5;letter-spacing:4px;font-size:12px;margin-bottom:34px}.menuBtns{display:grid;gap:5px;width:min(290px,100%)}button{font-family:inherit;cursor:pointer;color:#dce8e5;background:transparent;border:1px solid transparent;padding:12px 15px;text-align:left;letter-spacing:2px;transition:.18s}button:hover,button:focus{outline:none;color:#ff4653;border-color:#79222a;background:#290b0d88;padding-left:25px}button.primary{color:#ff4956;border-color:#7e2b32;background:#270c10a8}#menufoot{margin-top:40px;font-size:10px;line-height:1.8;color:#61777a;letter-spacing:1px}.version{position:absolute;right:24px;top:22px;color:#829092;font-size:10px;letter-spacing:2px}.modal{display:none;position:fixed;inset:0;z-index:15;background:#020507eF;align-items:center;justify-content:center;padding:20px}.modalCard{max-width:520px;width:100%;border:1px solid #344c50;background:#091115;padding:28px;box-shadow:0 0 80px #000}.modalCard h2{font-family:'Special Elite';font-size:30px;color:#ff4a54}.modalCard p{color:#afc0bf;line-height:1.7}.modalCard label{display:block;margin:18px 0;color:#b9cece;font-size:12px}.modalCard input[type=range]{width:100%}.modalCard button{margin-top:8px}.hud{position:fixed;z-index:5;inset:0;pointer-events:none;padding:22px;display:none}.hudTop{display:flex;justify-content:space-between;gap:16px;font-size:11px;letter-spacing:2px;text-shadow:0 2px 4px black}.objective{color:#c6d8d6}.objective strong{color:#ff505a}.tapes{margin-top:8px;color:#829998}.statusRight{text-align:right}.healthWrap{position:absolute;left:24px;bottom:25px;width:190px}.healthLabel{font-size:10px;letter-spacing:2px;color:#9eb2b0}.healthBar{height:4px;background:#293234;margin-top:8px}.healthFill{height:100%;width:100%;background:#d83a45;transition:width .2s}.prompt{position:absolute;left:50%;bottom:19%;transform:translateX(-50%);font-size:12px;letter-spacing:2px;color:#d5e6e4;text-shadow:0 2px 5px black;text-align:center;max-width:90vw}.cross{position:absolute;left:50%;top:50%;width:4px;height:4px;border-radius:50%;background:#d8e6e5;box-shadow:0 0 5px white}.toast{position:absolute;left:50%;top:20%;transform:translateX(-50%);color:#ff626b;font-size:13px;letter-spacing:3px;text-align:center;text-shadow:0 0 15px #f22}.#jumpscare{}#scare{position:fixed;inset:0;z-index:30;display:none;background:#020303;align-items:center;justify-content:center;flex-direction:column;overflow:hidden}.scareface{font-size:min(52vw,450px);line-height:1;filter:contrast(1.8) grayscale(1);text-shadow:0 0 35px #f00;animation:shake .07s infinite}.scaretext{font-family:'Special Elite';font-size:clamp(25px,5vw,60px);color:#f1eeee;text-shadow:4px 2px #e00;letter-spacing:8px}@keyframes shake{0%{transform:translate(7px,-3px) rotate(1deg)}50%{transform:translate(-8px,4px) rotate(-2deg)}100%{transform:translate(3px,5px) rotate(1deg)}}#ending{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;text-align:center;background:#030607f5;padding:24px}.endcard{max-width:560px}.endcard h2{font:clamp(40px,8vw,82px) 'Special Elite';color:#ff3647}.endcard p{color:#b5c3c1;line-height:1.8}.tiny{font-size:10px;color:#708281;letter-spacing:2px}
+
+/* Maintenance minigames: the facility keeps running while you're busy. */
+#taskScreen{position:fixed;inset:0;z-index:24;display:none;align-items:center;justify-content:center;padding:18px;background:radial-gradient(ellipse at center,#071014d9,#000e 95%);backdrop-filter:blur(3px)}
+.taskCard{width:min(760px,100%);max-height:min(88vh,850px);overflow:auto;padding:clamp(18px,3vw,32px);border:1px solid #425b5b;background:linear-gradient(145deg,#0c171a,#05090b 75%);box-shadow:0 0 70px #000,0 0 35px #5d171e24;position:relative}
+.taskCard:before{content:'AUTHORIZED PERSONNEL ONLY';position:absolute;right:17px;top:15px;color:#7f3439;font-size:9px;letter-spacing:2px}
+.taskKick{font-size:10px;letter-spacing:3px;color:#78aaa8}.taskCard h2{font:clamp(25px,5vw,38px) 'Special Elite',serif;color:#e9e8df;margin:13px 0 8px}.taskCard p{font-size:12px;line-height:1.7;color:#98abaa;max-width:620px}.taskStep{margin:20px 0 12px;font-size:10px;letter-spacing:2px;color:#ff5962;display:flex;justify-content:space-between;gap:12px}.taskProgressRail{height:3px;background:#263337;margin-bottom:21px}.taskProgressFill{height:100%;width:0;background:#e3434c;transition:width .2s}.taskBody{min-height:205px;padding:15px;border:1px solid #25383a;background:#061014;display:flex;flex-direction:column;justify-content:center;gap:13px}.taskInstructions{font-size:11px;letter-spacing:1px;color:#c3d1cc;line-height:1.8}.taskBtns{display:flex;flex-wrap:wrap;gap:9px;justify-content:center}.taskBtn{min-width:75px;text-align:center;padding:13px 15px;background:#111f23;border:1px solid #3c595a;color:#dfebdf;letter-spacing:1px}.taskBtn:hover{border-color:#ee515b;color:#ff727b;padding-left:15px}.taskBtn.ok{background:#102b21;border-color:#4fbb86;color:#84f0b3}.taskBtn.bad{background:#351316;border-color:#b93a46;color:#ff9ca2}.taskBtn:disabled{opacity:.32;cursor:default}.wireRow{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 0}.wireSrc{display:flex;align-items:center;gap:8px;min-width:115px}.wireDot{display:inline-block;width:14px;height:14px;border-radius:50%;border:1px solid #dfe8df}.wirePorts{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}.taskReadout{font:24px 'Share Tech Mono',monospace;text-align:center;letter-spacing:7px;color:#b0efdf;text-shadow:0 0 15px #53dfc144;overflow-wrap:anywhere}.taskInput{width:100%;max-width:320px;align-self:center;color:#e8ffff;background:#03090b;border:1px solid #496365;padding:13px;text-align:center;font:22px 'Share Tech Mono',monospace;letter-spacing:5px}.taskFeedback{min-height:24px;font-size:11px;letter-spacing:1px;color:#ff626b;text-align:center;padding-top:9px}.taskBottom{display:flex;justify-content:space-between;gap:10px;margin-top:14px;align-items:center}.taskBottom .tiny{max-width:65%;line-height:1.7}.taskAbort{border-color:#55252b;color:#d77f83;font-size:10px}.taskMeter{height:10px;background:#202d30;border:1px solid #405354;overflow:hidden}.taskMeterFill{height:100%;width:0;background:linear-gradient(90deg,#a21e2c,#f15b56,#c6d9ae)}.taskTiny{font-size:10px;letter-spacing:1px;color:#738c8b;text-align:center}.taskDread{animation:taskDread .18s steps(2) 4}@keyframes taskDread{0%,100%{filter:none}50%{filter:hue-rotate(150deg) contrast(1.8)}}
+
+#taskLog{position:fixed;inset:0;z-index:23;display:none;align-items:center;justify-content:center;padding:18px;background:#020507ed;backdrop-filter:blur(4px)}
+.logCard{width:min(820px,100%);max-height:88vh;display:flex;flex-direction:column;padding:25px;border:1px solid #354b4d;background:linear-gradient(150deg,#0b1518,#030607);box-shadow:0 0 70px #000}.logCard h2{font:clamp(25px,5vw,38px) 'Special Elite',serif;color:#e7eee5;margin:0 0 7px}.logCard>p{font-size:11px;color:#8ea5a3;line-height:1.7}.logRows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;overflow:auto;padding:4px 3px 10px}.logRow{border:1px solid #223336;background:#091114;padding:11px;display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.4px;color:#9fb2b0}.logNum{font-size:10px;color:#d5a6a6;min-width:28px}.logState{margin-left:auto;font-size:9px;letter-spacing:1px;color:#bd6066}.logRow.done{border-color:#27583f;color:#a8e2bc}.logRow.done .logNum,.logRow.done .logState{color:#72e2a0}.logRow.active{border-color:#765c2a;color:#f0d99a}.logActions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}.logActions .tiny{line-height:1.6}@media(max-width:560px){.logRows{grid-template-columns:1fr}.logCard{padding:17px}}
+</style></head><body>
+<div id="game"></div><div id="overlay"></div><div id="grain"></div><div id="scan"></div>
+<div id="menu"><div class="version">BLUB CLUB ARCHIVE // BUILD 2.0 // NIGHT SHIFT</div><div class="menucol"><div class="eyebrow">A BLUB CLUB INTERACTIVE NIGHTMARE</div><div class="logo"><span>BLUB</span><br>CLUB</div><div class="tag">THE WATER REMEMBERS YOU.</div><div class="menuBtns"><button class="primary" id="start">▶ &nbsp; BEGIN DESCENT</button><button id="how">? &nbsp; SURVIVAL NOTES</button><button id="settings">⚙ &nbsp; SETTINGS</button></div><div id="menufoot">PROPERTY OF BLUB CLUB RECREATION DEPARTMENT<br>PLEASE DO NOT FEED THE FRIENDS AFTER MIDNIGHT.<br><span style="color:#a7353e">IF YOU HEAR YOUR NAME, DO NOT ANSWER.</span><br><span style="color:#475c60">WEBGL + INTERNET REQUIRED FOR THE 3D ENGINE.</span></div></div></div>
+<div class="modal" id="modal"><div class="modalCard" id="modalContent"></div></div>
+<div id="taskLog"><div class="logCard"><div class="taskKick">NIGHT SHIFT // TECHNICIAN'S COPY</div><h2>MAINTENANCE MANIFEST</h2><p>18 procedures. Three stages each. Three archive tapes. The exit remains sealed until the 30-minute shift has ended, even if every repair is finished early. The list is updated locally. If a task is marked restored, its terminal will go dark.</p><div class="logRows" id="taskLogRows"></div><div class="logActions"><div class="tiny">TAB: CLOSE MANIFEST<br>Do not read the log aloud.</div><button id="closeTaskLog" class="taskAbort">RETURN TO SHIFT [TAB]</button></div></div></div>
+<div id="taskScreen"><div class="taskCard" id="taskCard"><div class="taskKick">BLUB CLUB // FACILITY MAINTENANCE</div><h2 id="taskTitle">SYSTEM OFFLINE</h2><p id="taskDesc"></p><div class="taskStep"><span id="taskStepLabel">PROCEDURE 1 / 3</span><span id="taskSystemCode">BC-000</span></div><div class="taskProgressRail"><div class="taskProgressFill" id="taskProgressFill"></div></div><div class="taskBody" id="taskBody"></div><div class="taskFeedback" id="taskFeedback" aria-live="polite"></div><div class="taskBottom"><div class="tiny">THE FACILITY DOES NOT PAUSE WHILE YOU WORK.<br>LISTEN FOR FOOTSTEPS. THEY MAY NOT BE YOURS.</div><button class="taskAbort" id="taskAbort">CLOSE TERMINAL [ESC]</button></div></div></div>
+<div class="hud" id="hud"><div class="hudTop"><div><div>BLUB CLUB // DEEP FACILITY</div><div class="tapes" id="tapes">ARCHIVE TAPES: 0 / 3</div><div class="tapes" id="taskProgress">FACILITY TASKS: 0 / 18</div><div class="tapes" id="shiftTimer">SHIFT TIME: 00:00 / 30:00</div><div class="tapes" id="taskObjective">RESTORE THE FACILITY. DO NOT TRUST THE FRIENDS.</div></div><div class="statusRight"><div id="clock">02:13 AM</div><div class="tapes" id="threat">WATER PRESSURE: UNSTABLE</div></div></div><div class="cross"></div><div class="healthWrap"><div class="healthLabel">COMPOSURE</div><div class="healthBar"><div class="healthFill" id="healthFill"></div></div></div><div class="prompt" id="prompt">WASD MOVE · MOUSE LOOK · SHIFT RUN · E INTERACT · CLICK TO REFOCUS</div><div class="toast" id="toast"></div></div>
+<div id="scare"><div class="scareface">☻</div><div class="scaretext">YOU LOOK FAMILIAR.</div></div>
+<div id="ending"><div class="endcard"><div class="tiny">ARCHIVE RECORD // FILE 003</div><h2 id="endTitle">WELCOME HOME.</h2><p id="endText">The club has been expecting you.</p><button id="again">▶ &nbsp; DESCEND AGAIN</button><button id="mainmenu">RETURN TO TITLE</button></div></div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+(() => {
+const $=id=>document.getElementById(id);let renderer,scene,camera,clock,player,creature,creature2,flashlight,raycaster;
+let running=false,locked=false,dead=false,won=false,hasStarted=false;let yaw=0,pitch=0,velY=0,health=100,composure=100,tapes=0,keys={},interactables=[],walls=[],doors=[],lastScare=0,creatureMode='stalk',stalkTimer=0,stepTimer=0,toastTimer=0,damageCooldown=0,settings={sensitivity:.002,volume:.55,flashlight:true};
+const WORLD=58, colliders=[], sounds={};let audioCtx=null,masterGain=null;const mats={};
+let activeTask=null, taskStatus={}, completedTasks=new Set(), activeMini=null, miniHoldTimer=null, miniHoldStarted=0, horrorTimer=0, blackoutTimer=0, blackoutOn=false, animating=false;
+const taskDefs=[
+{id:'generator',name:'Emergency Generator',desc:'The generator is coughing up voltage. Reconnect the live circuits, tune the regulator, and hold the output steady.',x:-21,z:-21,kinds:['wires','calibrate','hold'],steps:['Reconnect the four live feeds.','Tune output to the safe voltage.','Hold the regulator until power stabilizes.']},
+{id:'oxygen',name:'Oxygen Recycler',desc:'The recycler reports breathable air, but the needle is pinned in the red. Verify the sensor and purge the false reading.',x:-21,z:-4,kinds:['calibrate','samples','sequence'],steps:['Calibrate the oxygen sensor.','Identify the contaminated filters.','Enter the sensor acknowledgement.']},
+{id:'lights',name:'Emergency Lighting',desc:'The corridor lights keep going out in sequence. Route power and verify the breaker pattern before they go dark again.',x:-21,z:8,kinds:['wires','sequence','valves'],steps:['Reconnect the light circuits.','Repeat the emergency breaker pattern.','Set the three backup relays in order.']},
+{id:'pump',name:'Primary Water Pump',desc:'Something has jammed the pump intake. Rebalance pressure, route the bypass, and run a sustained purge.',x:-21,z:21,kinds:['valves','route','hold'],steps:['Balance pressure across the four valves.','Route water through the bypass nodes.','Keep the purge engaged until the pipe clears.']},
+{id:'pressure',name:'Floodgate Pressure',desc:'The floodgate is flexing inward. A pressure warning is blinking from the other side of the glass.',x:21,z:-21,kinds:['valves','calibrate','hold'],steps:['Equalize all pressure valves.','Calibrate the floodgate actuator.','Hold the seal while the pressure drops.']},
+{id:'cameras',name:'Security Camera Rack',desc:'Camera 04 is showing a hallway that does not exist. Reboot the feeds and compare the diagnostic sequence.',x:21,z:-4,kinds:['sequence','cipher','route'],steps:['Repeat the camera reboot sequence.','Decode the remote maintenance token.','Route the feeds into the correct order.']},
+{id:'relay',name:'Radio Relay',desc:'The relay keeps receiving a signal from inside the sealed tank. Repair the wire bus, decode the signal, then acknowledge the channel.',x:21,z:8,kinds:['wires','cipher','sequence'],steps:['Reconnect the four signal wires.','Decode the incoming signal.','Acknowledge the radio pattern.']},
+{id:'antenna',name:'Communications Array',desc:'The array is transmitting a second voice beneath the emergency channel. Align its carrier and restore the outbound burst.',x:21,z:21,kinds:['calibrate','sequence','cipher'],steps:['Tune the carrier frequency.','Repeat the uplink handshake.','Decode the outbound authorization.']},
+{id:'drain',name:'Drainage Controls',desc:'The floor drains are pushing water up. Trace the pump route and flush the valves before the waterline rises.',x:-6,z:-16,kinds:['route','valves','hold'],steps:['Route the drainage through numbered nodes.','Set valves from lowest to highest pressure.','Hold the flush cycle until the water clears.']},
+{id:'specimens',name:'Specimen Cold Storage',desc:'The labels are wet, and the samples keep changing places. Isolate the matching cultures without opening the wrong vial.',x:6,z:-16,kinds:['samples','sequence','wires'],steps:['Isolate the requested specimens.','Enter the cold-store sequence.','Reconnect the refrigeration bus.']},
+{id:'ventilation',name:'Ventilation Scrubber',desc:'The scrubber fan is running backward. One of the ducts contains something that keeps scraping from the inside.',x:-6,z:16,kinds:['hold','calibrate','samples'],steps:['Hold the scrubber purge.','Set the fan speed to its calibration mark.','Remove the matching contaminated filters.']},
+{id:'bioLab',name:'Bio-Lab Analyzer',desc:'A blood-red sample is marked as distilled water. Cross-check the specimen panel and restore the analyzer memory.',x:6,z:16,kinds:['samples','cipher','calibrate'],steps:['Find the flagged sample set.','Decode the analyzer override.','Calibrate the analyzer lens.']},
+{id:'archive',name:'Archive Decoder',desc:'The final recordings have been encrypted using the facility symbols. Do not play the audio fragments.',x:-6,z:-5,kinds:['cipher','memory','wires'],steps:['Decode the archive authorization.','Repeat the displayed access memory.','Repair the recorder wiring.']},
+{id:'bulkhead',name:'Bulkhead Lock Controls',desc:'Bulkhead 3 is opening and closing on its own. Reset the lock order and balance the pressure in the hatch.',x:6,z:-5,kinds:['sequence','valves','hold'],steps:['Reset the bulkhead lock sequence.','Balance the hatch pressure.','Hold the lock drive until it engages.']},
+{id:'motion',name:'Motion Sensor Grid',desc:'The sensors detect movement while the entire floor is empty. Re-route the grid and recalibrate its blind spots.',x:-6,z:8,kinds:['route','memory','wires'],steps:['Route the sensor signal through all nodes.','Repeat the sensor acknowledgement.','Repair the grid wiring.']},
+{id:'cooling',name:'Cooling Core',desc:'The coolant temperature is dropping below zero, but the pipes are warm to the touch. A handprint appears behind the meter.',x:6,z:8,kinds:['hold','calibrate','valves'],steps:['Keep the core flush running.','Calibrate the coolant temperature.','Equalize the cooling valves.']},
+{id:'uplink',name:'Surface Uplink',desc:'The surface channel is answering before you transmit. Establish the line, match the response, and finish the handshake.',x:0,z:-16,kinds:['wires','cipher','sequence'],steps:['Connect the uplink wires.','Decode the surface response.','Repeat the handshake sequence.']},
+{id:'containment',name:'Containment Seal',desc:'The containment ring is losing pressure. The log says the room is empty. Something inside keeps knocking back.',x:0,z:16,kinds:['valves','samples','hold'],steps:['Set the containment pressure.','Confirm the correct sealant samples.','Hold the containment seal for a full cycle.']}
+];
+function mat(color,rough=.8,metal=0,extra={}){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal,...extra})}
+function box(w,h,d,material,x,y,z,group=scene){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;group.add(m);return m}
+function makeTextSprite(text,color='#d8e5df'){const c=document.createElement('canvas');c.width=512;c.height=128;const x=c.getContext('2d');x.fillStyle='rgba(0,0,0,.72)';x.fillRect(0,0,512,128);x.strokeStyle='#466060';x.strokeRect(3,3,506,122);x.font='26px monospace';x.fillStyle=color;x.fillText(text,20,72);const t=new THREE.CanvasTexture(c);const s=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true}));s.scale.set(4.8,1.2,1);return s}
+function addLamp(x,y,z,color=0x9be8e5,intensity=2){const l=new THREE.PointLight(color,intensity,12,2);l.position.set(x,y,z);scene.add(l);return l}
+function makeCreature(x,z,scale=1,secondary=false){const g=new THREE.Group();scene.add(g);g.position.set(x,0,z);g.scale.setScalar(scale);const skin=mat(0x334744,.42,0,{color:0x52645f});const dark=mat(0x101918,.35);const wet=mat(0x131b1b,.12,.15);const eye=mat(0xe8eee1,.12,0,{emissive:0x718b7c,emissiveIntensity:1.2});const black=mat(0x010303,.08);const red=mat(0x9d111b,.4,0,{emissive:0x5d0208,emissiveIntensity:.4});
+// Tall, uncanny fish-person silhouette.
+const torso=new THREE.Mesh(new THREE.SphereGeometry(.58,16,12),skin);torso.scale.set(.8,1.4,.52);torso.position.y=1.55;torso.castShadow=true;g.add(torso);
+const head=new THREE.Mesh(new THREE.SphereGeometry(.55,18,14),skin);head.scale.set(1.15,.82,.82);head.position.set(0,2.72,.1);g.add(head);
+const jaw=new THREE.Mesh(new THREE.SphereGeometry(.38,14,10),dark);jaw.scale.set(1.2,.45,.85);jaw.position.set(0,2.35,.47);g.add(jaw);
+for(const s of [-1,1]){const e=new THREE.Mesh(new THREE.SphereGeometry(.16,12,12),eye);e.position.set(s*.27,2.83,.75);g.add(e);const pupil=new THREE.Mesh(new THREE.SphereGeometry(.085,10,10),black);pupil.position.set(s*.27,2.83,.89);g.add(pupil);const arm=box(.19,1.5,.2,skin,s*.66,1.4,.02,g);arm.rotation.z=s*.12;const hand=new THREE.Mesh(new THREE.SphereGeometry(.18,10,8),wet);hand.position.set(s*.7,.6,.1);g.add(hand);for(let f=0;f<3;f++){const finger=box(.055,.35,.07,skin,s*.7+(f-1)*.1,.36,.13,g);finger.rotation.z=(f-1)*.2}}
+const mouth=box(.38,.07,.035,red,0,2.47,.84,g);for(let i=0;i<7;i++){const tooth=box(.045,.09,.035,mat(0xc7c4ad),-.16+i*.053,2.48,.87,g)}
+for(let i=0;i<4;i++){const fin=new THREE.Mesh(new THREE.ConeGeometry(.17,.6,5),skin);fin.position.set((i-1.5)*.23,3.25-Math.abs(i-1.5)*.08,-.12);fin.rotation.z=Math.PI;g.add(fin)}
+const leg1=box(.23,1.15,.25,skin,-.25,.52,0,g),leg2=box(.23,1.15,.25,skin,.25,.52,0,g);g.userData={torso,head,legs:[leg1,leg2],arms:g.children.filter((_,i)=>false),secondary};return g}
+function init(){const root=$('game');root.innerHTML='';renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;root.appendChild(renderer.domElement);scene=new THREE.Scene();scene.background=new THREE.Color(0x03090d);scene.fog=new THREE.FogExp2(0x071116,.034);camera=new THREE.PerspectiveCamera(76,innerWidth/innerHeight,.08,100);camera.position.set(0,1.7,18);clock=new THREE.Clock();raycaster=new THREE.Raycaster();
+scene.add(new THREE.HemisphereLight(0x77949a,0x080d11,.42));const moon=new THREE.DirectionalLight(0x9cc3cc,.55);moon.position.set(-12,20,4);moon.castShadow=true;moon.shadow.mapSize.set(1024,1024);scene.add(moon);
+const floorMat=mat(0x192327,.95),wallMat=mat(0x263235,.88),ceilingMat=mat(0x0c1316),rust=mat(0x55302b,.72),water=mat(0x091a20,.18,.3),stripe=mat(0x8c9b8f,.6),blood=mat(0x460b12,.5);
+// Huge submerged maintenance complex with central corridors and side rooms.
+box(58,.5,58,floorMat,0,-.3,0);box(58,.5,58,ceilingMat,0,4.5,0);
+const wall=(x,z,w,d,h=4)=>{let m=box(w,h,d,wallMat,x,h/2,z);colliders.push({x:x-w/2,z:z-d/2,w,d});return m};
+wall(0,-29,58,1);wall(0,29,58,1);wall(-29,0,1,58);wall(29,0,1,58);
+// Hall partitions with deliberate gaps to make navigable routes.
+wall(-12,-16,1,22);wall(-12,8,1,20);wall(12,-16,1,22);wall(12,8,1,20);
+wall(-20,0,10,1);wall(-4,0,15,1);wall(20,0,10,1);wall(4,0,15,1);
+wall(-20,-10,10,1);wall(20,-10,10,1);wall(-20,12,10,1);wall(20,12,10,1);
+wall(0,-5,1,8);wall(0,8,1,8);wall(-5,-22,10,1);wall(5,22,10,1);
+// industrial details: pillars, pipes, grated lights, warning stripes.
+for(let i=0;i<25;i++){let x=(Math.random()-.5)*52,z=(Math.random()-.5)*52;if(Math.abs(x)<4&&Math.abs(z)<4)continue;if(Math.random()<.65){box(.35,3.7,.35,rust,x,1.8,z);box(.52,.12,.52,stripe,x,3.5,z)}}
+for(let z=-24;z<=24;z+=8){box(.22,.22,6,rust,-26,3.6,z);box(.22,.22,6,rust,26,3.6,z);const l=addLamp(-25.5,3.35,z,z%16?0x74b9b6:0xff2638,z%16?1.4:1.8);}
+// Wet patches and smeared, non-graphic warning marks.
+for(let i=0;i<35;i++){let x=(Math.random()-.5)*52,z=(Math.random()-.5)*52;const puddle=new THREE.Mesh(new THREE.CircleGeometry(.3+Math.random()*1.3,12),i%4===0?blood:water);puddle.rotation.x=-Math.PI/2;puddle.position.set(x,-.035,z);puddle.scale.y=.45;scene.add(puddle)}
+// Pipes overhead.
+for(let z=-22;z<=22;z+=11){const pipe=new THREE.Mesh(new THREE.CylinderGeometry(.12,.12,52,10),mat(0x34454a,.4,.6));pipe.rotation.z=Math.PI/2;pipe.position.set(0,3.7,z);scene.add(pipe)}
+// Blub Club neon sign and unreadable warnings.
+const sign=makeTextSprite('BLUB CLUB // KEEP SMILING','#ff4651');sign.position.set(0,3.1,-27.9);sign.scale.set(8,1.7,1);scene.add(sign);addLamp(0,3,-26,0xff192d,4);
+for(const [x,z,txt] of [[-20,-20,'STAFF ONLY'],[20,-20,'YOU ARE SAFE'],[-20,19,'DO NOT FEED'],[20,19,'SMILE FOR US']]){const s=makeTextSprite(txt);s.position.set(x,2.4,z);scene.add(s)}
+// Interactable archive tapes, with little amber lights.
+interactables=[];const positions=[[-21, -22],[21, 3],[0,19]];positions.forEach((p,i)=>{const g=new THREE.Group();g.position.set(p[0],.15,p[1]);scene.add(g);const body=box(.65,.35,.48,mat(0x14191a,.4,.4),0,0,0,g);box(.2,.05,.05,mat(0xe2a25c,.3,0,{emissive:0x9d4310,emissiveIntensity:1}),0,.19,.25,g);const l=new THREE.PointLight(0xff8b42,1.2,3);l.position.y=.8;g.add(l);const label=makeTextSprite('ARCHIVE TAPE '+(i+1),'#ffc58b');label.position.set(0,1,.2);label.scale.set(2.6,.55,1);g.add(label);interactables.push({type:'tape',group:g,position:new THREE.Vector3(p[0],.4,p[1]),used:false,index:i})});
+// Eighteen multi-stage maintenance stations. Every station has a unique silhouette and a cold light.
+for(let i=0;i<taskDefs.length;i++){
+ const t=taskDefs[i],g=new THREE.Group();g.position.set(t.x,0,t.z);scene.add(g);
+ const cabinet=box(.92,1.25,.48,mat(0x182427,.58,.25),0,.68,0,g);
+ box(.76,.66,.035,mat(0x071113,.25,.4),0,.91,.255,g);
+ const screen=box(.62,.45,.025,mat(0x163d3b,.25,.15,{emissive:0x1c7974,emissiveIntensity:1.4}),0,.94,.28,g);
+ box(.28,.035,.035,mat(0xff4f5d,.25,0,{emissive:0x9b1422,emissiveIntensity:1.5}),0,.54,.28,g);
+ const gl=new THREE.PointLight(i%4===0?0xff3445:0x76e4d5,i%4===0?1.3:.9,4);gl.position.set(0,1.35,.55);g.add(gl);
+ const label=makeTextSprite('TASK '+String(i+1).padStart(2,'0')+' // '+t.name.toUpperCase(),'#b7e7df');label.position.set(0,2.05,0);label.scale.set(3.6,.75,1);g.add(label);
+ // A small floor locator remains visible through the gloom.
+ const marker=new THREE.Mesh(new THREE.RingGeometry(.48,.61,20),mat(0x3f7772,.5,.1,{emissive:0x183d3a,emissiveIntensity:.55}));marker.rotation.x=-Math.PI/2;marker.position.set(0,.015,0);g.add(marker);
+ interactables.push({type:'task',taskId:t.id,group:g,position:new THREE.Vector3(t.x,.7,t.z),used:false,index:i,light:gl,screen});
+}
+// Exit console.
+const exit=box(1.1,1.4,.7,mat(0x293b3c,.4),0,.7,-24);const exitLight=new THREE.PointLight(0x4effb5,1.4,5);exitLight.position.set(0,1.6,-24);scene.add(exitLight);const exText=makeTextSprite('EXIT // 18 TASKS + 3 TAPES + 30 MIN','#8dffc8');exText.position.set(0,2.2,-24);scene.add(exText);interactables.push({type:'exit',position:new THREE.Vector3(0,0,-24),used:false});
+// The friend: too tall, too wet, and not meant to be here.
+creature=makeCreature(0,-15,1.05);creature2=makeCreature(23,17,.8,true);creature2.visible=false;
+// First person flashlight and beam.
+flashlight=new THREE.SpotLight(0xc9f3f0,42,24,Math.PI/7,.42,1.3);flashlight.position.set(0,0,0);flashlight.target.position.set(0,0,-1);camera.add(flashlight);camera.add(flashlight.target);scene.add(camera);
+// A small first-person flashlight model.
+const lampBody=box(.11,.12,.34,mat(0x252d30,.3,.7),.27,-.25,-.42,camera);const lampLens=box(.085,.085,.025,mat(0x8ce9e3,.2,.1,{emissive:0x4caaaa,emissiveIntensity:1.4}),.27,-.25,-.6,camera);
+player={position:camera.position,velocity:new THREE.Vector3(),speed:3.2};window.addEventListener('resize',resize);renderer.domElement.addEventListener('click',()=>{if(running&&!dead&&!won)renderer.domElement.requestPointerLock()});document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===renderer.domElement});document.addEventListener('mousemove',e=>{if(!locked||!running)return;yaw-=e.movementX*settings.sensitivity;pitch-=e.movementY*settings.sensitivity;pitch=Math.max(-1.35,Math.min(1.35,pitch));camera.rotation.order='YXZ';camera.rotation.set(pitch,yaw,0)});
+}
+function resize(){if(!renderer)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}
+// Collision checks against every wall rectangle. Axis-separated movement lets
+// the player slide along corners instead of getting snagged on them.
+function canOccupy(x,z,r=.31){
+ if(x < -WORLD/2+r || x > WORLD/2-r || z < -WORLD/2+r || z > WORLD/2-r) return false;
+ for(const c of colliders){
+  if(x+r>c.x && x-r<c.x+c.w && z+r>c.z && z-r<c.z+c.d) return false;
+ }
+ return true;
+}
+function moveActor(actor,dx,dz,r=.4){
+ const nx=actor.position.x+dx;
+ if(canOccupy(nx,actor.position.z,r)) actor.position.x=nx;
+ const nz=actor.position.z+dz;
+ if(canOccupy(actor.position.x,nz,r)) actor.position.z=nz;
+}
+function audioStart(){try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();masterGain=audioCtx.createGain();masterGain.gain.value=settings.volume;masterGain.connect(audioCtx.destination)}catch(e){}}
+function tone(freq,dur,type='sine',vol=.1,slide=0){if(!audioCtx||!masterGain)return;const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.setValueAtTime(freq,audioCtx.currentTime);if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(20,freq+slide),audioCtx.currentTime+dur);g.gain.setValueAtTime(vol,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);o.connect(g);g.connect(masterGain);o.start();o.stop(audioCtx.currentTime+dur)}
+function noise(dur=.4,vol=.08){if(!audioCtx||!masterGain)return;const n=Math.floor(audioCtx.sampleRate*dur),b=audioCtx.createBuffer(1,n,audioCtx.sampleRate),d=b.getChannelData(0);for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);const s=audioCtx.createBufferSource(),g=audioCtx.createGain();s.buffer=b;g.gain.value=vol;s.connect(g);g.connect(masterGain);s.start()}
+function whisper(){tone(110+Math.random()*70,1.3,'sawtooth',.035,-70);noise(.6,.025)}
+function toast(t,d=2400){$('toast').textContent=t;toastTimer=d/1000}
+function interact(){
+ if(!running||dead||won||activeTask)return;
+ let nearest=null,dist=2.75;
+ for(const item of interactables){
+  const dx=camera.position.x-item.position.x,dz=camera.position.z-item.position.z;
+  const d=Math.hypot(dx,dz);
+  if(d<dist&&((item.type==='tape'&&!item.used)||(item.type==='task'&&!completedTasks.has(item.taskId))||item.type==='exit')){dist=d;nearest=item}
+ }
+ if(!nearest){toast('NO RESPONSE. THERE IS BREATHING INSIDE THE WALL.');tone(100,.12,'triangle',.03);return}
+ if(nearest.type==='task'){openTask(nearest);return}
+ if(nearest.type==='tape'){
+  nearest.used=true;tapes++;$('tapes').textContent='ARCHIVE TAPES: '+tapes+' / 3';
+  scene.remove(nearest.group);
+  toast(['THEY RECORDED IT SMILING.','IT KNOWS YOUR VOICE.','THE LAST TAPE IS DATED TOMORROW.'][nearest.index],3500);
+  tone(520,.15,'sine',.08);tone(760,.4,'sine',.04);
+  if(tapes===1){creature2.visible=true;creature2.position.set(23,0,17);toast('SOMETHING ELSE WOKE UP.',3200);whisper()}
+  if(tapes===2){creatureMode='hunt';toast('IT IS DONE PRETENDING.',3200);tone(55,1,'sawtooth',.12,-40)}
+  updateObjectiveUI();return;
+ }
+ if(nearest.type==='exit'){
+  const jobsLeft=taskDefs.length-completedTasks.size;
+  if(tapes<3||jobsLeft>0){
+   if(jobsLeft>0)toast('EXIT DENIED. MAINTENANCE TASKS REMAIN: '+jobsLeft,3000);
+   else toast('EXIT DENIED. ARCHIVE TAPES REQUIRED: '+(3-tapes),3000);
+   tone(140,.4,'square',.07);return;
+  }
+  if(clock.elapsedTime<1800){const remaining=Math.ceil(1800-clock.elapsedTime);toast('EXIT SEALED. NIGHT SHIFT REMAINS: '+Math.floor(remaining/60)+'M '+String(remaining%60).padStart(2,'0')+'S.',4500);tone(140,.45,'square',.06);return}
+  won=true;running=false;document.exitPointerLock();$('taskScreen').style.display='none';$('ending').style.display='flex';$('endTitle').textContent='WELCOME HOME.';
+  $('endText').textContent='You completed all 18 maintenance procedures and recovered every archive tape. The door opens onto a familiar corridor. Somewhere behind you, a familiar voice says your name. The archive is still recording.';
+  tone(330,.5,'sine',.06);setTimeout(()=>tone(165,1.2,'sine',.05),400)
+ }
+}
+function updateObjectiveUI(){
+ $('taskProgress').textContent='FACILITY TASKS: '+completedTasks.size+' / '+taskDefs.length;
+ $('tapes').textContent='ARCHIVE TAPES: '+tapes+' / 3';
+ const left=taskDefs.length-completedTasks.size;
+ $('taskObjective').textContent=left>0?'MAINTENANCE REMAINING: '+left:'ALL SYSTEMS RESTORED // FIND THE EXIT';
+ renderTaskLog();
+}
+function renderTaskLog(){
+ const rows=$('taskLogRows');if(!rows)return;
+ rows.innerHTML=taskDefs.map((t,i)=>{const done=completedTasks.has(t.id),stage=taskStatus[t.id]?.stage||0;const state=done?'RESTORED':stage>0?'IN PROGRESS':'PENDING';return `<div class="logRow ${done?'done':stage>0?'active':''}"><span class="logNum">${String(i+1).padStart(2,'0')}</span><span>${t.name}</span><span class="logState">${state}</span></div>`}).join('');
+}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function setTaskFeedback(txt){$('taskFeedback').textContent=txt}
+function openTask(item){
+ const def=taskDefs.find(t=>t.id===item.taskId);if(!def||completedTasks.has(def.id))return;
+ activeTask={def,item,stage:taskStatus[def.id]?.stage||0};
+ activeMini=null;clearInterval(miniHoldTimer);miniHoldTimer=null;
+ $('taskScreen').style.display='flex';$('taskCard').classList.remove('taskDread');$('taskTitle').textContent=def.name;$('taskDesc').textContent=def.desc;
+ document.exitPointerLock();tone(95,.16,'triangle',.06);noise(.08,.015);renderTaskStage();
+}
+function closeTask(relock=true){
+ $('taskScreen').style.display='none';clearInterval(miniHoldTimer);miniHoldTimer=null;miniHoldStarted=0;activeMini=null;activeTask=null;
+ if(relock&&running&&!dead&&!won)renderer?.domElement.requestPointerLock?.();
+}
+function renderTaskStage(){
+ if(!activeTask)return;
+ const {def,stage}=activeTask;
+ if(stage>=3){completeTask();return}
+ const kind=def.kinds[stage];
+ $('taskTitle').textContent=def.name;$('taskDesc').textContent=def.steps[stage];
+ $('taskStepLabel').textContent='PROCEDURE '+(stage+1)+' / 3';$('taskSystemCode').textContent='BC-'+String(104+(def.x*7|0)+(def.z*3|0)+stage*19).replace('-','').slice(0,3);
+ $('taskProgressFill').style.width=(stage/3*100)+'%';$('taskBody').innerHTML='';setTaskFeedback('');
+ const body=$('taskBody');activeMini={kind,stage,success:false};
+ const head=document.createElement('div');head.className='taskInstructions';
+ const addHead=t=>{head.textContent=t;body.appendChild(head)};
+ const btn=(label,onClick,extra='')=>{const b=document.createElement('button');b.className='taskBtn '+extra;b.textContent=label;b.onclick=onClick;return b};
+ const content=document.createElement('div');content.className='taskBtns';
+ if(kind==='wires'){
+  const colors=[['CRIMSON','#ef4b5c'],['CYAN','#48c8e2'],['AMBER','#ecc254'],['MINT','#6de2a5']];
+  const order=shuffle([0,1,2,3]);activeMini={kind,stage,colors,order,matched:new Set(),selected:null,success:false};
+  addHead('MATCH EACH LIVE FEED TO ITS HIDDEN PORT. Select a wire on the left, then the port it belongs to. One wrong connection resets the current pair.');
+  const rows=document.createElement('div');rows.style.cssText='display:grid;gap:8px;max-width:570px;width:100%;align-self:center';
+  const src=document.createElement('div');src.className='taskBtns';const dst=document.createElement('div');dst.className='taskBtns';dst.style.marginTop='4px';
+  colors.forEach((c,i)=>{const b=btn(c[0],()=>{if(activeMini?.kind!=='wires'||activeMini.matched.has(i))return;activeMini.selected=i;setTaskFeedback('SELECTED FEED: '+c[0]+'  // NOW SELECT A PORT');[...src.children].forEach(x=>x.style.outline='');b.style.outline='2px solid #fff'});b.style.borderColor=c[1];b.style.color=c[1];b.style.minWidth='118px';src.appendChild(b)});
+  order.forEach((port,pi)=>{const b=btn('PORT '+String(pi+1).padStart(2,'0'),()=>{const st=activeMini;if(!st||st.kind!=='wires'||st.selected===null)return;if(st.selected===port){st.matched.add(port);b.classList.add('ok');b.textContent='LINK OK';b.disabled=true;src.children[port].classList.add('ok');src.children[port].disabled=true;st.selected=null;setTaskFeedback('CIRCUIT '+st.matched.size+' / 4 VERIFIED');if(st.matched.size===4)taskStageSuccess('ALL LIVE FEEDS CONNECTED.')}else{setTaskFeedback('SHORT CIRCUIT. PAIR REJECTED. TRY AGAIN.');$('taskCard').classList.remove('taskDread');void $('taskCard').offsetWidth;$('taskCard').classList.add('taskDread');tone(70,.18,'square',.07);st.selected=null;[...src.children].forEach(x=>x.style.outline='')}});b.style.minWidth='118px';dst.appendChild(b)});
+  rows.append(src,dst);body.appendChild(rows);
+ }else if(kind==='sequence'||kind==='memory'){
+  const symbols=['▲','●','◆','■','✚','◉'];const len=kind==='memory'?6:5;const seq=Array.from({length:len},()=>symbols[Math.floor(Math.random()*symbols.length)]);
+  activeMini={kind,stage,seq,pos:0,success:false};
+  addHead(kind==='memory'?'MEMORIZE THE ACCESS SEQUENCE. IT WILL DISAPPEAR.':'REPEAT THE AUTHORIZATION SEQUENCE IN THE SAME ORDER.');
+  const read=document.createElement('div');read.className='taskReadout';read.textContent=seq.join('  ');body.appendChild(read);
+  const symBtns=document.createElement('div');symBtns.className='taskBtns';
+  symbols.forEach(sym=>symBtns.appendChild(btn(sym,()=>{const st=activeMini;if(!st||!['sequence','memory'].includes(st.kind))return;if(sym===st.seq[st.pos]){st.pos++;setTaskFeedback('SEQUENCE MATCH '+st.pos+' / '+st.seq.length);if(st.pos>=st.seq.length)taskStageSuccess('ACCESS SEQUENCE ACCEPTED.')}else{st.pos=0;setTaskFeedback('INCORRECT PATTERN. START AGAIN.');tone(85,.15,'square',.06)}read.textContent=st.kind==='memory'&&st.masked?'?  ?  ?  ?  ?  ?':seq.join('  ')})));
+  body.appendChild(symBtns);
+  if(kind==='memory'){setTimeout(()=>{if(activeMini&&activeMini.kind==='memory'&&activeMini.stage===stage){activeMini.masked=true;read.textContent='?  ?  ?  ?  ?  ?';setTaskFeedback('MEMORY BUFFER CLEARED. RECONSTRUCT IT.')}},2600)}
+ }else if(kind==='calibrate'){
+  const target=12+Math.floor(Math.random()*77);activeMini={kind,stage,target,success:false};
+  addHead('MOVE THE SENSOR SLIDER INTO THE CALIBRATION WINDOW. TARGET: '+target+' ± 3.');
+  const num=document.createElement('div');num.className='taskReadout';num.textContent='VALUE: 50';
+  const range=document.createElement('input');range.type='range';range.min='0';range.max='100';range.value='50';range.style.width='100%';range.style.accentColor='#7de0cf';range.oninput=()=>num.textContent='VALUE: '+range.value;
+  const lock=btn('LOCK CALIBRATION',()=>{if(Math.abs(+range.value-target)<=3){taskStageSuccess('CALIBRATION LOCKED AT '+range.value+'.')}else{setTaskFeedback('OUT OF TOLERANCE. ADJUST AND RETRY.');tone(105,.12,'triangle',.04)}});
+  body.append(num,range,lock);
+ }else if(kind==='valves'||kind==='route'){
+  const values=shuffle([12,27,43,68,85,96].slice(0,kind==='route'?6:4));activeMini={kind,stage,values,expected:values.slice().sort((a,b)=>a-b),pos:0,success:false};
+  addHead(kind==='route'?'ROUTE POWER THROUGH NODES FROM LOWEST TO HIGHEST NUMBER.':'SET EACH VALVE IN ASCENDING PRESSURE ORDER. Wrong order resets the procedure.');
+  const read=document.createElement('div');read.className='taskReadout';read.textContent=kind==='route'?'NODE PATH 01 → 02 → 03 → 04 → 05 → 06':'PRESSURE SEQUENCE';body.appendChild(read);
+  const opts=document.createElement('div');opts.className='taskBtns';
+  values.forEach(v=>{const b=btn(String(v),()=>{const st=activeMini;if(!st||!['valves','route'].includes(st.kind)||b.disabled)return;const correct=st.expected[st.pos];if(v===correct){st.pos++;b.classList.add('ok');b.disabled=true;setTaskFeedback('LOCKED '+st.pos+' / '+st.values.length);if(st.pos===st.values.length)taskStageSuccess('PRESSURE ROUTE VERIFIED.')}else{st.pos=0;[...opts.children].forEach(x=>{x.disabled=false;x.classList.remove('ok')});setTaskFeedback('PRESSURE SPIKE. RESET AND START FROM LOWEST.');tone(70,.2,'square',.06)}});opts.appendChild(b)});body.appendChild(opts);
+ }else if(kind==='samples'){
+  const symbols=['●','◈','▲','✚','◆'];const target=symbols[Math.floor(Math.random()*symbols.length)];const contents=[target,target,target,...Array.from({length:5},()=>{let v=symbols[Math.floor(Math.random()*symbols.length)];while(v===target)v=symbols[Math.floor(Math.random()*symbols.length)];return v})];const shuffled=shuffle(contents);
+  activeMini={kind,stage,target,found:0,used:new Set(),success:false};addHead('ISOLATE THREE VIALS WITH THIS CONTAMINATION MARK: '+target+'. Five other samples are decoys.');
+  const read=document.createElement('div');read.className='taskReadout';read.textContent='TARGET: '+target;body.appendChild(read);const opts=document.createElement('div');opts.className='taskBtns';
+  shuffled.forEach((sym,i)=>{const b=btn('VIAL '+String(i+1).padStart(2,'0')+'  '+sym,()=>{const st=activeMini;if(!st||st.kind!=='samples'||st.used.has(i))return;st.used.add(i);if(sym===target){st.found++;b.classList.add('ok');b.disabled=true;setTaskFeedback('SAMPLE ISOLATED '+st.found+' / 3');if(st.found===3)taskStageSuccess('SAMPLE SET SEALED.')}else{b.classList.add('bad');b.disabled=true;setTaskFeedback('WRONG SAMPLE. BIOHAZARD FLAG RAISED.');tone(85,.2,'square',.06)}});opts.appendChild(b)});body.appendChild(opts);
+ }else if(kind==='cipher'){
+  const icons=['▲','●','◆','■'];const digits=shuffle(['1','2','3','4']);const map={};icons.forEach((x,i)=>map[x]=digits[i]);const symbols=Array.from({length:4},()=>icons[Math.floor(Math.random()*icons.length)]);const answer=symbols.map(x=>map[x]).join('');activeMini={kind,stage,answer,success:false};
+  addHead('DECODE THE AUTHORIZATION. Use the symbol key to translate the four encrypted glyphs, then transmit the digits.');
+  const key=document.createElement('div');key.className='taskReadout';key.style.fontSize='18px';key.style.letterSpacing='2px';key.textContent=icons.map(x=>x+' = '+map[x]).join('     ');const code=document.createElement('div');code.className='taskReadout';code.textContent=symbols.join('  ');const input=document.createElement('input');input.className='taskInput';input.inputMode='numeric';input.maxLength=4;input.placeholder='4 DIGITS';
+  const send=btn('TRANSMIT CODE',()=>{if(input.value===answer)taskStageSuccess('AUTHORIZATION ACCEPTED.');else{setTaskFeedback('ACCESS DENIED. RECHECK THE GLYPH KEY.');input.value='';tone(80,.15,'square',.05)}});
+  body.append(key,code,input,send);
+ }else if(kind==='hold'){
+  activeMini={kind,stage,progress:0,success:false};addHead('KEEP THE PURGE CONTROL HELD UNTIL THE ENTIRE CYCLE COMPLETES. Letting go resets the pressure.');
+  const meter=document.createElement('div');meter.className='taskMeter';const fill=document.createElement('div');fill.className='taskMeterFill';meter.appendChild(fill);const read=document.createElement('div');read.className='taskReadout';read.textContent='PURGE 0%';const hold=btn('PRESS AND HOLD TO STABILIZE',()=>{});hold.style.width='100%';hold.style.userSelect='none';
+  const stop=()=>{clearInterval(miniHoldTimer);miniHoldTimer=null;miniHoldStarted=0;if(activeMini&&activeMini.kind==='hold'&&!activeMini.success){activeMini.progress=0;fill.style.width='0%';read.textContent='PURGE 0%';setTaskFeedback('PRESSURE LOST. HOLD THE CONTROL CONTINUOUSLY.')}};
+  hold.addEventListener('pointerdown',e=>{e.preventDefault();if(!activeMini||activeMini.kind!=='hold'||activeMini.success)return;clearInterval(miniHoldTimer);miniHoldStarted=performance.now();miniHoldTimer=setInterval(()=>{if(!activeMini||activeMini.kind!=='hold')return;activeMini.progress=Math.min(100,((performance.now()-miniHoldStarted)/6500)*100);fill.style.width=activeMini.progress+'%';read.textContent='PURGE '+Math.floor(activeMini.progress)+'%';if(activeMini.progress>=100){clearInterval(miniHoldTimer);miniHoldTimer=null;taskStageSuccess('PRESSURE CYCLE COMPLETE.')}} ,50)});
+  hold.addEventListener('pointerup',stop);hold.addEventListener('pointerleave',stop);hold.addEventListener('pointercancel',stop);body.append(meter,read,hold);
+ }
+}
+function taskStageSuccess(message){
+ if(!activeTask||!activeMini||activeMini.success)return;
+ activeMini.success=true;setTaskFeedback(message);tone(520,.13,'sine',.06);tone(710,.2,'sine',.045);
+ const buttons=$('taskBody').querySelectorAll('button,input');buttons.forEach(b=>b.disabled=true);
+ setTimeout(()=>{if(!activeTask)return;activeTask.stage++;taskStatus[activeTask.def.id]={stage:activeTask.stage};if(activeTask.stage>=3)completeTask();else renderTaskStage()},750);
+}
+function completeTask(){
+ if(!activeTask)return;const def=activeTask.def,item=activeTask.item;completedTasks.add(def.id);taskStatus[def.id]={stage:3};item.used=true;
+ if(item.screen){item.screen.material.color.setHex(0x274a35);item.screen.material.emissive.setHex(0x35a36b);item.screen.material.emissiveIntensity=.8}
+ if(item.light)item.light.color.setHex(0x55ff9c);
+ scene.remove(item.group); // station cabinet remains in the scene; its console goes dark when its group is removed
+ // Leave a small green completion marker in the facility.
+ const marker=new THREE.Mesh(new THREE.RingGeometry(.48,.61,20),mat(0x58d995,.5,.1,{emissive:0x226a42,emissiveIntensity:.6}));marker.rotation.x=-Math.PI/2;marker.position.set(def.x,.02,def.z);marker.userData.taskCompletion=true;scene.add(marker);
+ const name=def.name;activeTask=null;activeMini=null;clearInterval(miniHoldTimer);miniHoldTimer=null;$('taskScreen').style.display='none';updateObjectiveUI();
+ toast('SYSTEM RESTORED: '+name.toUpperCase(),3000);tone(410,.2,'sine',.07);tone(620,.3,'sine',.05);composure=Math.min(100,composure+8);updateHealth();
+ const work=completedTasks.size;
+ if(work===2){creature2.visible=true;creature2.position.set(24,0,20);whisper();toast('A SECOND SET OF FOOTSTEPS JOINS YOURS.',3500)}
+ if(work===4){creatureMode='hunt';$('taskObjective').textContent='THE FRIENDS KNOW YOU ARE REPAIRING THE FACILITY.';toast('THE LIGHTS ARE NOT YOURS ANYMORE.',3500);noise(.7,.13)}
+ if(work===7||work===12){scare(true);whisper()}
+ if(work===9){blackoutTimer=9;blackoutOn=true;toast('POWER FAILURE. KEEP MOVING.',3500)}
+ if(work===14){creature.position.set(camera.position.x+4,0,camera.position.z-3);toast('YOU HEAR IT SMILE RIGHT BEHIND YOU.',3500);noise(.55,.12)}
+ if(running&&!dead&&!won)renderer?.domElement.requestPointerLock?.();
+}
+function fakeSystemMessage(){
+ if(!running)return;
+ const lines=['REMOTE SESSION CONNECTED: YOU','PLEASE STOP REPAIRING THE DOOR','THERE ARE 19 TASKS. YOU ONLY SEE 18.','THE FRIEND IS STANDING IN THE ROOM WITH YOU','YOUR EXIT REQUEST HAS BEEN DENIED','YOU WERE NOT ASSIGNED TO THIS SHIFT','DO NOT TURN AROUND TO CHECK'];
+ if(activeTask){$('taskFeedback').textContent=lines[Math.floor(Math.random()*lines.length)];$('taskCard').classList.add('taskDread');whisper();if(Math.random()<.38)scare(true)}else{toast(lines[Math.floor(Math.random()*lines.length)],2300);whisper()}
+}
+function scare(force=false){const now=performance.now();if(now-lastScare<9000&&!force)return;lastScare=now;const sc=$('scare');sc.style.display='flex';tone(48,.65,'sawtooth',.25,300);noise(.65,.3);setTimeout(()=>{sc.style.display='none'},force?850:620);if(!force){health-=12;composure-=18;updateHealth();toast('DON’T LOOK AWAY.',1400)}}
+function updateHealth(){ $('healthFill').style.width=Math.max(0,composure)+'%';if(composure<=0){endGame(false);}}
+function endGame(survive){running=false;dead=!survive;activeTask=null;activeMini=null;clearInterval(miniHoldTimer);miniHoldTimer=null;$('taskScreen').style.display='none';document.exitPointerLock();$('ending').style.display='flex';$('endTitle').textContent=survive?'WELCOME HOME.':'IT LEARNED YOUR FACE.';$('endText').textContent=survive?'The archive is complete. Your file has been marked: FRIEND.':'The last thing you hear is a wet little laugh. A new tape clicks into the recorder, labelled with your name.';}
+function update(dt){if(!running)return;damageCooldown=Math.max(0,damageCooldown-dt);stepTimer-=dt;stalkTimer+=dt;horrorTimer+=dt;blackoutTimer=Math.max(0,blackoutTimer-dt);toastTimer-=dt;if(toastTimer<=0)$('toast').textContent='';$('clock').textContent='02:'+String(13+Math.floor(clock.elapsedTime/7)%47).padStart(2,'0')+' AM';const shiftElapsed=Math.floor(clock.elapsedTime);$('shiftTimer').textContent='SHIFT TIME: '+String(Math.floor(shiftElapsed/60)).padStart(2,'0')+':'+String(shiftElapsed%60).padStart(2,'0')+' / 30:00';
+// Escalating director: unsettling interruptions can happen while a task is open.
+if(horrorTimer>48+Math.random()*38){horrorTimer=0;const chance=.25+completedTasks.size*.018;if(Math.random()<chance){fakeSystemMessage();if(Math.random()<.4){creature.position.set(THREE.MathUtils.clamp(camera.position.x+(Math.random()<.5?-1:1)*(7+Math.random()*5),-WORLD/2+2,WORLD/2-2),0,THREE.MathUtils.clamp(camera.position.z+(Math.random()<.5?-1:1)*(7+Math.random()*5),-WORLD/2+2,WORLD/2-2));}}else{const phrases=['IT IS WAITING FOR YOU TO FINISH','SOMEONE ELSE IS USING YOUR TERMINAL','THAT WAS NOT YOUR FOOTSTEP','CHECK THE WATERLINE','YOU HEARD IT SAY THANK YOU'];toast(phrases[Math.floor(Math.random()*phrases.length)],2300);if(Math.random()<.5)whisper();}}
+if(blackoutOn&&blackoutTimer<=0){blackoutOn=false;toast('EMERGENCY POWER RESTORED. FOR NOW.',2200)}
+const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));let dir=new THREE.Vector3();if(!activeTask&&$('taskLog').style.display!=='flex'){if(keys.KeyW)dir.add(forward);if(keys.KeyS)dir.sub(forward);if(keys.KeyD)dir.add(right);if(keys.KeyA)dir.sub(right);if(dir.lengthSq()>0)dir.normalize();let speed=(keys.ShiftLeft||keys.ShiftRight)?5.4:3.2;moveActor(camera,dir.x*speed*dt,dir.z*speed*dt,.32);camera.position.x=THREE.MathUtils.clamp(camera.position.x,-27.5,27.5);camera.position.z=THREE.MathUtils.clamp(camera.position.z,-27.5,27.5);}camera.position.y=1.68+Math.sin(clock.elapsedTime*7)*Math.min(.035,dir.length()*.035);if(dir.lengthSq()>.1&&stepTimer<=0){stepTimer=(speed>4? .29:.46);tone(65+Math.random()*20,.07,'triangle',.025);if(Math.random()<.13)noise(.08,.018)}
+// The creature tracks through the corridors, with brief pauses to make it feel observed.
+const target=new THREE.Vector3(camera.position.x,0,camera.position.z);const cpos=creature.position;const dist=cpos.distanceTo(target);const toward=target.clone().sub(cpos);toward.y=0;if(toward.lengthSq()>0)toward.normalize();let speedC=creatureMode==='hunt'?2.45:.65;const aggression=Math.min(1.65,1+completedTasks.size*.035+tapes*.09);if(dist<12)speedC=creatureMode==='hunt'?3.7:1.25;if(dist<7)speedC=creatureMode==='hunt'?4.2:1.7;speedC*=aggression;if(activeTask)speedC*=1.16;if(dist>2.2)moveActor(creature,toward.x*speedC*dt,toward.z*speedC*dt,.48);creature.rotation.y=Math.atan2(toward.x,toward.z);creature.position.y=Math.sin(clock.elapsedTime*2.1)*.06;creature.children[1].rotation.x=Math.sin(clock.elapsedTime*1.2)*.08;
+if(creature2.visible){const d2=creature2.position.distanceTo(target);if(d2>3){const v=target.clone().sub(creature2.position).setY(0).normalize();moveActor(creature2,v.x*(creatureMode==='hunt'?3.0:.85)*dt,v.z*(creatureMode==='hunt'?3.0:.85)*dt,.4);creature2.rotation.y=Math.atan2(v.x,v.z)}if(d2<8&&Math.random()<.004)whisper()}
+// Keep the creature from walking through the outer wall; imperfect pathing is part of the nightmare.
+if(dist<13&&Math.random()<dt*.18)whisper();$('threat').textContent=dist<6?'PROXIMITY ALERT':dist<13?'MOTION DETECTED':'WATER PRESSURE: UNSTABLE';$('threat').style.color=dist<8?'#ff4654':'#829998';
+if(dist<1.55&&damageCooldown<=0){damageCooldown=1.15;health-=22;composure-=22;updateHealth();if(activeTask){setTaskFeedback('TERMINAL CONNECTION LOST. IT FOUND YOU.');closeTask(false)}scare();if(health<=0||composure<=0){scare(true);setTimeout(()=>endGame(false),700)}}
+// Occasional distant silhouette flash, only when not staring directly at it.
+if(stalkTimer>12&&dist>15&&Math.random()<dt*.025){stalkTimer=0;const back=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw));creature.position.set(camera.position.x+back.x*10,0,camera.position.z+back.z*10);creature.rotation.y=yaw+Math.PI;toast('DID YOU SEE THAT?',1600);noise(.3,.05)}
+// Flashlight flicker and composure drain while creature is close.
+if(blackoutOn){flashlight.intensity=settings.flashlight?(Math.random()<.72?3:20):0;scene.fog.density=.055}else{scene.fog.density=.034;if(settings.flashlight&&Math.random()<dt*(.12+completedTasks.size*.012))flashlight.intensity=4+Math.random()*35;else flashlight.intensity=settings.flashlight?42:0;}if(dist<10)composure=Math.max(0,composure-dt*(dist<5?2.3:.6));else composure=Math.min(100,composure+dt*.35);if(composure<30&&Math.random()<dt*.65){tone(38+Math.random()*15,.5,'sine',.025,-8);if(Math.random()<.25)noise(.18,.025)}updateHealth();
+// E interaction prompt.
+let nearest=null,nd=2.75;for(const it of interactables){if(it.type==='tape'&&it.used)continue;if(it.type==='task'&&completedTasks.has(it.taskId))continue;const d=Math.hypot(camera.position.x-it.position.x,camera.position.z-it.position.z);if(d<nd){nearest=it;nd=d}}$('prompt').textContent=nearest?(nearest.type==='tape'?'[ E ] RECOVER ARCHIVE TAPE':nearest.type==='task'?'[ E ] REPAIR '+taskDefs.find(t=>t.id===nearest.taskId).name.toUpperCase():'[ E ] ACCESS EXIT CONSOLE'):'WASD MOVE · SHIFT RUN · E INTERACT · TAB TASK LOG · CLICK TO LOOK';
+}
+function animate(){if(!animating)return;requestAnimationFrame(animate);if(!renderer)return;const dt=Math.min(clock.getDelta(),.05);if(running)update(dt);renderer.render(scene,camera)}
+function start(){
+ $('menu').style.display='none';$('ending').style.display='none';$('hud').style.display='block';$('game').style.display='block';$('taskScreen').style.display='none';$('taskLog').style.display='none';
+ if(!hasStarted){init();hasStarted=true}else{
+  camera.position.set(0,1.68,18);yaw=0;pitch=0;camera.rotation.set(0,0,0);health=100;composure=100;tapes=0;dead=false;won=false;creatureMode='stalk';stalkTimer=0;horrorTimer=0;lastScare=0;damageCooldown=0;keys={};activeTask=null;activeMini=null;completedTasks.clear();taskStatus={};clearInterval(miniHoldTimer);miniHoldTimer=null;blackoutOn=false;blackoutTimer=0;scene.fog.density=.034;
+  for(const i of interactables){if(i.type==='tape'){i.used=false;if(!scene.children.includes(i.group))scene.add(i.group)}else if(i.type==='task'){i.used=false;if(i.group&& !scene.children.includes(i.group))scene.add(i.group);if(i.screen){i.screen.material.color.setHex(0x163d3b);i.screen.material.emissive.setHex(0x1c7974);i.screen.material.emissiveIntensity=1.4}if(i.light)i.light.color.setHex(i.index%4===0?0xff3445:0x76e4d5)}else i.used=false}
+  // Remove completion rings left behind by the previous shift.
+  for(const obj of [...scene.children])if(obj.userData&&obj.userData.taskCompletion)scene.remove(obj);
+  creature.position.set(0,0,-15);creature2.position.set(23,0,17);creature2.visible=false;$('tapes').textContent='ARCHIVE TAPES: 0 / 3';updateObjectiveUI();updateHealth();$('shiftTimer').textContent='SHIFT TIME: 00:00 / 30:00';
+ }
+ audioStart();if(audioCtx&&audioCtx.state==='suspended')audioCtx.resume();running=true;clock.start();renderer.domElement.requestPointerLock?.();toast('SHIFT OBJECTIVE: 18 TASKS. 3 TAPES. SURVIVE 30 MINUTES. ONE EXIT.',5000);
+ if(!animating){animating=true;animate()}
+}
+$('start').onclick=start;$('again').onclick=()=>{start()};$('taskProgress').textContent='FACILITY TASKS: 0 / '+taskDefs.length;updateObjectiveUI();$('mainmenu').onclick=()=>{$('ending').style.display='none';$('taskLog').style.display='none';$('taskScreen').style.display='none';$('hud').style.display='none';$('game').style.display='none';$('menu').style.display='flex';running=false};
+$('how').onclick=()=>showModal(`<h2>SURVIVAL NOTES</h2><p><b>WASD</b> to move. Mouse to look around. <b>SHIFT</b> to run. <b>E</b> to interact with tapes and consoles.</p><p>Complete all 18 three-stage maintenance procedures, recover three archive tapes, survive the full 30-minute night shift, and reach the exit console. The friends grow faster as systems come back online. Terminals take time; the facility never pauses while you work. Running is faster, but it makes you easier to find. The flashlight helps you see, not fight.</p><p>Headphones recommended. This game uses sudden audio and visual scares.</p><button id="closeModal">UNDERSTOOD</button>`);
+$('settings').onclick=()=>showModal(`<h2>SETTINGS</h2><label>LOOK SENSITIVITY <input id="sens" type="range" min="0.0007" max="0.004" step="0.0001" value="${settings.sensitivity}"></label><label>VOLUME <input id="vol" type="range" min="0" max="1" step="0.05" value="${settings.volume}"></label><label><input id="light" type="checkbox" ${settings.flashlight?'checked':''}> FLASHLIGHT ENABLED</label><button id="saveSettings">SAVE SETTINGS</button><button id="closeModal">BACK</button>`);
+function showModal(html){$('modalContent').innerHTML=html;$('modal').style.display='flex';$('closeModal').onclick=()=>$('modal').style.display='none';if($('saveSettings'))$('saveSettings').onclick=()=>{settings.sensitivity=+$('sens').value;settings.volume=+$('vol').value;settings.flashlight=$('light').checked;if(masterGain)masterGain.gain.value=settings.volume;$('modal').style.display='none';toast('SETTINGS SAVED.')}}
+window.addEventListener('keydown',e=>{if(e.code==='Tab'){e.preventDefault();if(!running||activeTask)return;const show=$('taskLog').style.display!=='flex';$('taskLog').style.display=show?'flex':'none';keys={};if(show)document.exitPointerLock();else renderer?.domElement.requestPointerLock?.();return}if($('taskLog').style.display==='flex'){if(e.code==='Escape'||e.code==='Tab'){$('taskLog').style.display='none';renderer?.domElement.requestPointerLock?.()}return}if(activeTask){if(e.code==='Escape'){closeTask(true);toast('YOU HEAR A FOOTSTEP WHEN THE SCREEN GOES DARK.',2200)}return}keys[e.code]=true;if(e.code==='KeyE'&&!e.repeat)interact();if(e.code==='Escape'&&running&&!dead&&!won){toast('DON’T STAY STILL TOO LONG.',1200)}});window.addEventListener('keyup',e=>keys[e.code]=false);$('taskAbort').onclick=()=>{closeTask(true);toast('TERMINAL LOCKED. THE WORK IS STILL WAITING.',1800)};$('closeTaskLog').onclick=()=>{$('taskLog').style.display='none';renderer?.domElement.requestPointerLock?.()};
+// Menu title ambience.
+let ambientStarted=false;document.addEventListener('pointerdown',()=>{if(!ambientStarted){ambientStarted=true;try{audioStart();tone(48,2,'sine',.035,-15);setInterval(()=>{if(!running&&audioCtx){tone(40+Math.random()*20,2.5,'sine',.018,-10);if(Math.random()<.25)whisper()}},5000)}catch(e){}}},{once:true});
+})();
+</script></body></html>
