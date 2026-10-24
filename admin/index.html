@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BLUB CLUB • Admin</title>
+    <title>BLUB CLUB • Atelier Luxe Admin</title>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -469,6 +469,355 @@
                 flex: 1;
             }
         }
+
+
+        /* ==========================================================
+           ATELIER LUXE — BLUB CLUB ADMIN DESIGN SYSTEM
+           Pure CSS treatment; existing Supabase/admin behavior stays intact.
+        ========================================================== */
+        :root {
+            color-scheme: dark;
+            --lux-bg: #080908;
+            --lux-panel: rgba(19, 20, 17, .88);
+            --lux-panel-solid: #141510;
+            --lux-panel-raised: #1a1b15;
+            --lux-line: rgba(215, 184, 105, .19);
+            --lux-line-soft: rgba(255, 255, 255, .075);
+            --lux-gold: #d8bc78;
+            --lux-gold-bright: #f1d99a;
+            --lux-gold-dim: #927947;
+            --lux-ivory: #f3eee2;
+            --lux-muted: #9b9a8f;
+            --lux-green: #8ac6a0;
+            --lux-red: #f08b83;
+            --lux-radius: 18px;
+            --lux-shadow: 0 24px 80px rgba(0,0,0,.35);
+        }
+
+        html { min-height: 100%; background: var(--lux-bg); }
+        body {
+            min-height: 100vh;
+            color: var(--lux-ivory);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            letter-spacing: .005em;
+            background:
+                radial-gradient(ellipse at 11% 0%, rgba(142, 111, 49, .17), transparent 34rem),
+                radial-gradient(ellipse at 96% 20%, rgba(97, 105, 71, .10), transparent 31rem),
+                linear-gradient(145deg, #10110e 0%, #090a08 48%, #070807 100%);
+            background-attachment: fixed;
+            position: relative;
+            isolation: isolate;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+            opacity: .18;
+            background-image: linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+            background-size: 56px 56px;
+            mask-image: linear-gradient(to bottom, black, transparent 82%);
+        }
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 32%, rgba(0,0,0,.3) 100%);
+        }
+        button, input, textarea { font: inherit; }
+        button { transition: transform .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease, color .2s ease; }
+        button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--lux-gold-bright); outline-offset: 3px; }
+        ::selection { color: #11120e; background: var(--lux-gold-bright); }
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: #090a08; }
+        ::-webkit-scrollbar-thumb { background: #48402c; border: 2px solid #090a08; border-radius: 99px; }
+
+        .login-screen {
+            position: relative;
+            min-height: 100svh;
+            padding: 28px 20px;
+            overflow: hidden;
+            background: transparent;
+        }
+        .login-screen::before, .login-screen::after {
+            content: "";
+            position: absolute;
+            pointer-events: none;
+            border: 1px solid rgba(216,188,120,.09);
+            border-radius: 50%;
+            width: 520px; height: 520px;
+        }
+        .login-screen::before { left: -270px; top: 13%; box-shadow: 0 0 0 36px rgba(216,188,120,.018), 0 0 0 82px rgba(216,188,120,.014); }
+        .login-screen::after { right: -310px; bottom: -20%; width: 620px; height: 620px; }
+        .login-box {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            width: min(100%, 450px);
+            padding: 42px 42px 28px;
+            border: 1px solid rgba(216,188,120,.30);
+            border-radius: 24px;
+            background: linear-gradient(145deg, rgba(29,30,24,.96), rgba(12,13,11,.97) 70%);
+            box-shadow: 0 35px 100px rgba(0,0,0,.58), inset 0 1px 0 rgba(255,255,255,.055), 0 0 80px rgba(169,133,60,.075);
+            animation: luxe-rise .7s cubic-bezier(.2,.75,.25,1) both;
+        }
+        .login-box::before {
+            content: "";
+            position: absolute;
+            inset: 0 14% auto;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--lux-gold-bright), transparent);
+            opacity: .8;
+        }
+        .login-box::after {
+            content: "BC";
+            position: absolute;
+            right: -32px;
+            bottom: -65px;
+            color: rgba(216,188,120,.035);
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 230px;
+            font-weight: 700;
+            line-height: 1;
+            pointer-events: none;
+            z-index: -1;
+        }
+        .login-kicker, .eyebrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--lux-gold);
+            font-size: 9px;
+            line-height: 1.6;
+            font-weight: 800;
+            letter-spacing: .23em;
+            text-transform: uppercase;
+        }
+        .kicker-rule, .eyebrow-line { display: inline-block; width: 20px; height: 1px; background: linear-gradient(90deg, transparent, var(--lux-gold)); }
+        .kicker-dot { font-size: 7px; opacity: .68; }
+        .logo {
+            width: 78px; height: 78px;
+            display: grid; place-items: center;
+            margin: 28px auto 17px;
+            border: 1px solid rgba(216,188,120,.36);
+            border-radius: 50%;
+            font-size: 35px;
+            background: radial-gradient(circle at 34% 22%, rgba(243,225,169,.17), rgba(216,188,120,.035) 68%);
+            box-shadow: 0 0 0 8px rgba(216,188,120,.025), inset 0 0 30px rgba(216,188,120,.06), 0 10px 35px rgba(0,0,0,.2);
+        }
+        h1 {
+            color: var(--lux-ivory);
+            font-family: Georgia, "Times New Roman", serif;
+            font-weight: 500;
+            font-size: clamp(29px, 4vw, 36px);
+            line-height: 1.1;
+            letter-spacing: .16em;
+            text-indent: .16em;
+        }
+        .login-rule { display: flex; align-items: center; gap: 12px; justify-content: center; margin: 20px 0 17px; }
+        .login-rule::before, .login-rule::after { content: ""; width: 52px; height: 1px; background: linear-gradient(90deg, transparent, var(--lux-line)); }
+        .login-rule::after { transform: scaleX(-1); }
+        .login-rule span { width: 5px; height: 5px; border: 1px solid var(--lux-gold); transform: rotate(45deg); }
+        .subtitle { color: #aaa89c; margin: 0 0 26px; font-size: 13px; letter-spacing: .025em; }
+        label { color: #c2bca9; margin: 19px 0 8px; font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+        input, textarea {
+            width: 100%;
+            padding: 14px 15px;
+            border: 1px solid rgba(255,255,255,.105);
+            border-radius: 11px;
+            background: rgba(4,5,4,.56);
+            color: var(--lux-ivory);
+            font-size: 14px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,.24);
+            transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+        }
+        input::placeholder, textarea::placeholder { color: #66675d; }
+        input:focus, textarea:focus { border-color: rgba(216,188,120,.68); background: rgba(4,5,4,.82); box-shadow: 0 0 0 3px rgba(216,188,120,.08); outline: none; }
+        .login-button, .add-button, .save-button {
+            color: #1a180f;
+            background: linear-gradient(115deg, #bda05f, #efdaa0 46%, #c2a562 100%);
+            border: 1px solid rgba(255,238,185,.48);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.42), 0 8px 24px rgba(140,106,41,.14);
+            letter-spacing: .12em;
+            font-size: 10px;
+            font-weight: 900;
+        }
+        .login-button { width: 100%; padding: 16px; margin-top: 23px; border-radius: 11px; }
+        .login-button:hover, .add-button:hover, .save-button:hover { background: linear-gradient(115deg, #d4b96f, #ffedb1 48%, #d9bd78 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 12px 28px rgba(140,106,41,.22); transform: translateY(-1px); }
+        .login-button:active, .add-button:active, .save-button:active { transform: translateY(0); }
+        .login-button:disabled, .save-button:disabled { opacity: .55; cursor: wait; transform: none; }
+        .error { color: #f18b82; font-size: 12px; }
+        .login-footnote { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-top: 23px; padding-top: 19px; border-top: 1px solid rgba(255,255,255,.065); color: #737368; font-size: 8px; font-weight: 800; letter-spacing: .14em; }
+        .footnote-divider { color: var(--lux-gold-dim); }
+        .status-dot { display: inline-block; flex: 0 0 auto; width: 6px; height: 6px; border-radius: 100%; background: var(--lux-green); box-shadow: 0 0 0 4px rgba(138,198,160,.09), 0 0 12px rgba(138,198,160,.34); }
+
+        .admin-panel { position: relative; min-height: 100vh; }
+        .container { width: min(1220px, calc(100% - 48px)); padding: 42px 0 80px; }
+        .topbar {
+            position: relative;
+            padding: 27px 30px;
+            margin-bottom: 24px;
+            border: 1px solid var(--lux-line);
+            border-radius: 20px;
+            background: linear-gradient(110deg, rgba(27,28,22,.94), rgba(14,15,12,.88));
+            box-shadow: var(--lux-shadow), inset 0 1px 0 rgba(255,255,255,.035);
+            overflow: hidden;
+        }
+        .topbar::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 2px; background: linear-gradient(180deg, transparent, var(--lux-gold), transparent); }
+        .topbar::after { content: ""; position: absolute; width: 290px; height: 290px; right: 12%; top: -238px; border: 1px solid rgba(216,188,120,.13); border-radius: 50%; box-shadow: 0 0 0 24px rgba(216,188,120,.018), 0 0 0 50px rgba(216,188,120,.015); pointer-events: none; }
+        .title { position: relative; font-size: 30px; font-weight: 600; letter-spacing: 0; z-index: 1; }
+        .eyebrow { justify-content: flex-start; gap: 9px; margin-bottom: 10px; font-size: 8px; letter-spacing: .2em; color: #9f8a58; }
+        .eyebrow-line { width: 22px; }
+        .title-main { font-family: Georgia, "Times New Roman", serif; font-size: clamp(27px, 3.5vw, 39px); font-weight: 500; line-height: 1.05; letter-spacing: .095em; color: var(--lux-ivory); }
+        .title-main span { color: var(--lux-gold); }
+        .bookmarklet-link {
+            display: inline-flex !important;
+            align-items: center;
+            gap: 8px;
+            margin-top: 15px;
+            padding: 9px 12px !important;
+            border: 1px solid rgba(216,188,120,.30) !important;
+            border-radius: 7px !important;
+            color: #d9c894 !important;
+            background: rgba(216,188,120,.055) !important;
+            box-shadow: none !important;
+            font-size: 8px !important;
+            font-weight: 800 !important;
+            letter-spacing: .13em;
+            text-decoration: none !important;
+            transition: background .2s ease, border-color .2s ease, transform .2s ease;
+        }
+        .bookmarklet-link::before { content: "✧"; font-size: 14px; line-height: 1; color: var(--lux-gold-bright); }
+        .bookmarklet-link:hover { background: rgba(216,188,120,.12) !important; border-color: rgba(216,188,120,.65) !important; transform: translateY(-1px); }
+        .welcome { margin-top: 12px; color: #8f9084; font-size: 11px; letter-spacing: .04em; }
+        .welcome::before { content: "SIGNED IN  /  "; color: #77715b; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
+        .topbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: 12px; position: relative; z-index: 1; }
+        .secure-badge { display: flex; align-items: center; gap: 9px; padding: 10px 12px; color: #aaa997; border: 1px solid rgba(138,198,160,.18); border-radius: 8px; background: rgba(138,198,160,.035); font-size: 8px; font-weight: 850; letter-spacing: .13em; white-space: nowrap; }
+        .secure-badge .status-dot { width: 5px; height: 5px; }
+        .logout { padding: 11px 14px; border: 1px solid rgba(255,255,255,.12); border-radius: 8px; background: rgba(255,255,255,.035); color: #c9c6ba; font-size: 9px; font-weight: 850; letter-spacing: .12em; }
+        .logout:hover { color: var(--lux-gold-bright); border-color: rgba(216,188,120,.44); background: rgba(216,188,120,.07); }
+        .logout-icon { margin-right: 6px; color: var(--lux-gold); font-size: 14px; vertical-align: -1px; }
+
+        .stats { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 16px; margin-bottom: 25px; }
+        .stat {
+            position: relative;
+            overflow: hidden;
+            padding: 24px 27px;
+            min-height: 135px;
+            border: 1px solid var(--lux-line);
+            border-radius: var(--lux-radius);
+            background: linear-gradient(130deg, rgba(28,29,22,.96), rgba(16,17,14,.93));
+            box-shadow: 0 14px 40px rgba(0,0,0,.17), inset 0 1px 0 rgba(255,255,255,.03);
+        }
+        .stat::after { content: ""; position: absolute; width: 138px; height: 138px; right: -44px; bottom: -77px; border: 1px solid rgba(216,188,120,.17); border-radius: 50%; box-shadow: 0 0 0 12px rgba(216,188,120,.018), 0 0 0 28px rgba(216,188,120,.012); }
+        .stat-number { position: relative; z-index: 1; font-family: Georgia, "Times New Roman", serif; font-size: 42px; font-weight: 400; line-height: 1.1; color: var(--lux-gold-bright); letter-spacing: -.035em; }
+        .stat-label { position: relative; z-index: 1; margin-top: 12px; color: #949385; font-size: 9px; font-weight: 850; letter-spacing: .18em; text-transform: uppercase; }
+        .stat:first-child .stat-label::before { content: "◈  "; color: var(--lux-gold-dim); }
+        .stat:nth-child(2) .stat-label::before { content: "◇  "; color: #a66e5c; }
+
+        .tabs { gap: 5px; padding: 5px; margin-bottom: 28px; width: fit-content; max-width: 100%; border: 1px solid rgba(255,255,255,.075); border-radius: 12px; background: rgba(4,5,4,.47); }
+        .tab-button { padding: 12px 19px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: #87877d; font-size: 9px; font-weight: 850; letter-spacing: .15em; }
+        .tab-button:hover { color: #f3eee2; border-color: rgba(255,255,255,.07); background: rgba(255,255,255,.025); }
+        .tab-button.active { color: #211d11; border-color: rgba(255,236,177,.48); background: linear-gradient(115deg, #bda05f, #ead398); box-shadow: 0 4px 15px rgba(140,106,41,.14), inset 0 1px 0 rgba(255,255,255,.45); }
+        .tab { animation: luxe-fade .3s ease both; }
+        .section-header { justify-content: space-between; padding-bottom: 17px; margin-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,.075); }
+        .section-header h2 { display: flex; align-items: center; gap: 12px; color: var(--lux-ivory); font-family: Georgia, "Times New Roman", serif; font-size: 25px; font-weight: 500; letter-spacing: .015em; }
+        .section-header h2::before { content: ""; display: inline-block; width: 3px; height: 21px; background: linear-gradient(180deg, var(--lux-gold-bright), var(--lux-gold-dim)); border-radius: 5px; }
+        .add-button { padding: 12px 16px; border-radius: 9px; font-size: 9px; }
+
+        .visitor-list, .staff-list { gap: 12px; }
+        .visitor, .staff-member {
+            position: relative;
+            overflow: hidden;
+            padding: 20px 21px;
+            border: 1px solid rgba(255,255,255,.075);
+            border-radius: 14px;
+            background: linear-gradient(112deg, rgba(24,25,20,.88), rgba(15,16,13,.88));
+            box-shadow: 0 8px 26px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.025);
+            transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+            animation: luxe-fade .35s ease both;
+        }
+        .visitor::before, .staff-member::before { content: ""; position: absolute; left: 0; top: 16px; bottom: 16px; width: 2px; background: linear-gradient(180deg, transparent, rgba(216,188,120,.42), transparent); opacity: .7; }
+        .visitor:hover, .staff-member:hover { transform: translateY(-2px); border-color: rgba(216,188,120,.22); background: linear-gradient(112deg, rgba(29,30,23,.96), rgba(17,18,14,.96)); box-shadow: 0 13px 32px rgba(0,0,0,.2); }
+        .visitor-info, .staff-info { padding-left: 5px; }
+        .visitor-name, .staff-name { margin-bottom: 7px; color: #f0eadc; font-family: Georgia, "Times New Roman", serif; font-size: 19px; font-weight: 500; letter-spacing: .01em; }
+        .visitor-id { color: #66675e; font-size: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+        .joined { color: #8e8d81; margin-top: 8px; font-size: 11px; }
+        .status { margin-top: 11px; padding: 5px 9px; border: 1px solid rgba(240,139,131,.23); border-radius: 5px; background: rgba(240,139,131,.075); color: var(--lux-red); font-size: 8px; letter-spacing: .12em; }
+        .staff-role { color: var(--lux-gold); margin-bottom: 8px; font-size: 10px; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
+        .staff-description { color: #9c9b8f; font-size: 12px; line-height: 1.65; max-width: 680px; }
+        .actions { gap: 8px; }
+        .ban-button, .unban-button, .edit-button, .delete-button { padding: 10px 13px; border-radius: 8px; font-size: 8px; font-weight: 900; letter-spacing: .11em; }
+        .ban-button { color: #f6b1aa; border: 1px solid rgba(240,139,131,.22); background: rgba(142,44,39,.20); }
+        .ban-button:hover { background: rgba(160,46,40,.35); border-color: rgba(240,139,131,.55); transform: translateY(-1px); }
+        .unban-button { color: #a2d7b2; border: 1px solid rgba(138,198,160,.25); background: rgba(41,103,62,.19); }
+        .unban-button:hover { background: rgba(41,126,69,.3); border-color: rgba(138,198,160,.55); transform: translateY(-1px); }
+        .edit-button { color: #ded4b7; border: 1px solid rgba(216,188,120,.23); background: rgba(216,188,120,.075); }
+        .edit-button:hover { background: rgba(216,188,120,.15); border-color: rgba(216,188,120,.5); transform: translateY(-1px); }
+        .delete-button { color: #efaaa1; border: 1px solid rgba(240,139,131,.2); background: rgba(111,38,34,.2); }
+        .delete-button:hover { background: rgba(152,45,39,.34); border-color: rgba(240,139,131,.5); transform: translateY(-1px); }
+        .loading, .empty { padding: 50px 24px; color: #8d8d80; border: 1px dashed rgba(216,188,120,.15); border-radius: 14px; background: rgba(255,255,255,.012); font-size: 12px; letter-spacing: .035em; }
+        .loading::before { content: "✧"; display: block; margin-bottom: 10px; color: var(--lux-gold); font-size: 24px; animation: luxe-pulse 1.8s ease-in-out infinite; }
+
+        .modal { padding: 20px; background: rgba(3,4,3,.82); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+        .modal-box { position: relative; overflow: hidden; max-width: 570px; padding: 32px; border: 1px solid rgba(216,188,120,.3); border-radius: 20px; background: linear-gradient(145deg, #1b1c16, #10110e 75%); box-shadow: 0 35px 120px rgba(0,0,0,.68), inset 0 1px 0 rgba(255,255,255,.05); animation: luxe-rise .25s ease both; }
+        .modal-box::before { content: ""; position: absolute; inset: 0 18% auto; height: 1px; background: linear-gradient(90deg, transparent, var(--lux-gold), transparent); }
+        .modal-box h2 { color: var(--lux-ivory); font-family: Georgia, "Times New Roman", serif; font-size: 26px; font-weight: 500; letter-spacing: .025em; }
+        .modal-subtitle { color: #929185; font-size: 11px; line-height: 1.6; margin-bottom: 23px; }
+        .modal-actions { gap: 10px; }
+        .save-button, .cancel-button { flex: 1; padding: 14px; border-radius: 9px; font-size: 9px; font-weight: 900; letter-spacing: .12em; }
+        .cancel-button { color: #c8c5b9; border: 1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.035); }
+        .cancel-button:hover { background: rgba(255,255,255,.075); border-color: rgba(255,255,255,.18); }
+        .form-error { color: #f18b82; font-size: 11px; }
+
+        @keyframes luxe-rise { from { opacity: 0; transform: translateY(12px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes luxe-fade { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes luxe-pulse { 0%, 100% { opacity: .45; transform: scale(.96); } 50% { opacity: 1; transform: scale(1.06); } }
+
+        @media (min-width: 900px) {
+            .topbar { padding: 31px 34px; }
+            .stats { gap: 18px; }
+        }
+        @media (max-width: 700px) {
+            .container { width: min(100% - 28px, 1220px); padding: 18px 0 48px; }
+            .login-box { padding: 32px 24px 23px; }
+            .login-kicker { font-size: 7px; letter-spacing: .15em; }
+            .topbar { align-items: flex-start; padding: 23px 20px; gap: 20px; }
+            .title { font-size: 25px; }
+            .title-main { font-size: 29px; }
+            .topbar-actions { width: 100%; justify-content: space-between; }
+            .secure-badge { padding: 9px 10px; font-size: 7px; }
+            .logout { white-space: nowrap; }
+            .stats { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+            .stat { padding: 19px 17px; min-height: 112px; }
+            .stat-number { font-size: 34px; }
+            .stat-label { font-size: 8px; letter-spacing: .11em; }
+            .tabs { width: 100%; }
+            .tab-button { flex: 1; padding: 12px 10px; }
+            .section-header { align-items: flex-start; }
+            .section-header h2 { font-size: 22px; }
+            .visitor, .staff-member { align-items: flex-start; padding: 18px 16px; }
+            .visitor-info, .staff-info { width: 100%; }
+            .actions { width: 100%; }
+            .actions button { flex: 1; }
+            .modal-box { padding: 27px 21px 22px; }
+        }
+        @media (max-width: 390px) {
+            .stats { grid-template-columns: 1fr; }
+            .stat { min-height: 96px; }
+            .topbar-actions { align-items: stretch; flex-direction: column; }
+            .secure-badge { justify-content: center; }
+            .logout { width: 100%; }
+            .login-kicker { flex-wrap: wrap; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+        }
+
     </style>
 </head>
 
@@ -476,12 +825,14 @@
 
 <div class="login-screen" id="loginScreen">
     <div class="login-box">
+        <div class="login-kicker"><span class="kicker-rule"></span> THE BLUBVERSE <span class="kicker-dot">◆</span> PRIVATE OFFICE</div>
         <div class="logo">🫧</div>
 
         <h1>BLUB CLUB</h1>
+        <div class="login-rule"><span></span></div>
 
         <div class="subtitle">
-            Administrator Access
+            A quieter place to run the kingdom.
         </div>
 
         <label for="adminName">Admin Name</label>
@@ -503,10 +854,11 @@
         >
 
         <button class="login-button" id="loginButton">
-            ENTER ADMIN PANEL
+            UNLOCK CONTROL ROOM
         </button>
 
         <div class="error" id="loginError"></div>
+        <div class="login-footnote"><span class="status-dot"></span> AUTHORIZED PERSONNEL ONLY <span class="footnote-divider">/</span> BLUB CLUB ADMIN</div>
     </div>
 </div>
 
@@ -518,10 +870,11 @@
         <div class="topbar">
             <div>
                 <div class="title">
-                    BLUB CONTROL
+                    <div class="eyebrow"><span class="eyebrow-line"></span> THE BLUBVERSE / ADMINISTRATION</div>
+                    <div class="title-main">BLUB <span>CONTROL</span></div>
                     <a href="javascript:(()=>{if(typeof CONFIG==='undefined')return alert('Open the Blub Club game first!');if(window.__blubCheats)return alert('Cheats already active!');window.__blubCheats=true;const NE=CONFIG.enemiesPerWave,NF=CONFIG.playerFireRate,NS=CONFIG.playerSpeed;let swarm=false,godMode=false,helperStacks=0;const flash=(t,c='gold')=>floatingTexts.push(new FloatingText(window.innerWidth/2,window.innerHeight/2,t,c));const oBW=beginWave;beginWave=function(){const kept=allies;oBW();if(allies!==kept)allies=kept.concat(allies);};const oU=update;update=function(dt){if(swarm&&GAME_STATE==='PLAYING')spawnTimer=0;oU(dt);};const oD=triggerBakeryDamage;triggerBakeryDamage=function(a){if(godMode)return;oD(a);};window.addEventListener('keydown',ev=>{if(ev.repeat)return;if(GAME_STATE!=='PLAYING'&&GAME_STATE!=='WAVE_TRANSITION')return;switch(ev.key.toLowerCase()){case'e':for(const en of enemies)if(en.active)en.hit(en.hp);break;case'r':for(const en of enemies)en.active=false;enemies=[];wave++;audio.playWaveClear();beginWave();flash('WAVE SKIPPED!');break;case'q':{const ty=['cookie','donut','pancake','cookie','donut','pancake','cookie'];const sp=Math.max(75,Math.min(105,(window.innerHeight-100)/6));const sy=Math.max(10,(window.innerHeight-(sp*6+80))/2);const wx=Math.max(90,window.innerWidth-CONFIG.counterWidth-230-helperStacks*70);for(let i=0;i<7;i++)allies.push(new AllyBlub(wx,sy+i*sp,ty[i],i*0.35));helperStacks=helperStacks===4?0:helperStacks+1;flash(%27+7%20HELPERS%20(%27+allies.length+%27%20total)%27,%27hotpink%27);break;}case%27a%27:swarm=!swarm;CONFIG.enemiesPerWave=swarm?Infinity:NE;flash(swarm?%27SWARM%20MODE%20ON%27:%27SWARM%20MODE%20OFF%27,swarm?%27red%27:%27lightgreen%27);break;case%27d%27:bakeryHealth=CONFIG.maxBakeryHealth;updateHud();flash(%27BAKERY%20HEALED!%27,%27lightgreen%27);break;case%27f%27:addScore(100000);flash(%27+100,000%20POINTS!%27);break;case%27z%27:godMode=!godMode;CONFIG.playerFireRate=godMode?0:NF;CONFIG.playerSpeed=godMode?1400:NS;flash(godMode?%27GOD%20MODE%20ON%27:%27GOD%20MODE%20OFF%27,godMode?%27violet%27:%27gray%27);break;}});alert(%27Blub%20cheats%20active!\nE%20=%20kill%20all%20|%20R%20=%20skip%20wave%20|%20Q%20=%20+7%20helpers%20|%20A%20=%20swarm\nD%20=%20heal%20|%20F%20=%20+100k%20points%20|%20Z%20=%20god%20mode%27);})();" 
-   style="display: inline-block; padding: 12px 24px; background-color: #ff4757; color: white; text-decoration: none; border-radius: 6px; font-family: sans-serif; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-   Drag to Bookmarks: Blub Club Cheats
+   class="bookmarklet-link">
+   DRAG TO BOOKMARKS · GAME CHEATS
 </a>
 
                 </div>
@@ -529,9 +882,12 @@
                 <div class="welcome" id="welcomeText"></div>
             </div>
 
-            <button class="logout" id="logoutButton">
-                LOG OUT
-            </button>
+            <div class="topbar-actions">
+                <div class="secure-badge"><span class="status-dot"></span> SESSION ACTIVE</div>
+                <button class="logout" id="logoutButton">
+                    <span class="logout-icon">↗</span> LOG OUT
+                </button>
+            </div>
         </div>
 
 
@@ -897,7 +1253,7 @@ async function login() {
         loginButton.disabled = false;
 
         loginButton.textContent =
-            "ENTER ADMIN PANEL";
+            "UNLOCK CONTROL ROOM";
 
         return;
     }
@@ -911,7 +1267,7 @@ async function login() {
         loginButton.disabled = false;
 
         loginButton.textContent =
-            "ENTER ADMIN PANEL";
+            "UNLOCK CONTROL ROOM";
 
         return;
     }
@@ -939,7 +1295,7 @@ async function login() {
     loginButton.disabled = false;
 
     loginButton.textContent =
-        "ENTER ADMIN PANEL";
+        "UNLOCK CONTROL ROOM";
 
 }
 
